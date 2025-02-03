@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Head from "next/head";
 import axios from "axios";
 import Cookies from "js-cookie";
+import { getData } from "@/services/storage";
+import { useRouter } from "next/router";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -30,12 +32,47 @@ export default function Home() {
     confirmPassword: false,
   });
   const [loading, setLoading] = useState(false);
-
+  async function checkAuth() {
+    const token = Cookies.get("token");
+    if (!token) {
+      // console.log("Nenhum token encontrado, redirecionando...");
+      return false;
+    }
+  
+    try {
+      const response = await axios.get("/api/verifyToken", {
+        headers: {
+          Authorization: `Bearer ${token}`, // Enviando o token como Bearer
+        },
+      });
+  
+      // console.log("Token válido:", response.data);
+      return response;
+    } catch (error) {
+      // console.error("Erro na autenticação:", error.response?.data);
+      return false;
+    }
+  }
+  const r = useRouter()
+  useEffect(()=>{
+    checkAuth().then((isAuthenticated) => {
+      if (isAuthenticated) {
+        r.push("/home")
+      }
+    });
+  },[])
   useEffect(() => {
-    // Verificar se já existe um usuário cadastrado
-    axios.get("/api/checkFirstAccess")
-      .then(response => setIsFirstAccess(response.data.firstAccess))
-      .catch(() => setIsFirstAccess(false));
+    const fetchData = async () => {
+      try {
+        const data = await getData();
+        setIsFirstAccess(data ? false : true); // Se não houver dados, é o primeiro acesso
+      } catch (error) {
+        console.error("Erro ao verificar primeiro acesso:", error);
+        setIsFirstAccess(true);
+      }
+    };
+
+    fetchData();
   }, []);
 
   function changeCredentials(param: string, value: any) {
@@ -59,6 +96,7 @@ export default function Home() {
     if (!checkFieldsIsEmpty()) return;
     setLoading(true);
 
+    if(errors.confirmPassword && isFirstAccess) return;
     try {
       if (isFirstAccess) {
         if (credentials.password !== credentials.confirmPassword) {

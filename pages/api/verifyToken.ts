@@ -14,8 +14,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   // Extrai o token após "Bearer "
-  const token = authHeader.split(" ")[1];
-
+  const token:any = authHeader.split(" ")[1];
   // Verifica se o token é válido
   const decoded = verifyToken(token);
 

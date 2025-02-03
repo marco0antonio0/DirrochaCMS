@@ -172,7 +172,7 @@ export default function Home() {
             ...prev,
             titulo_identificador: "O campo 'Título Identificador' não pode ser vazio.",
         }));
-        console.log(errors)
+        // console.log(errors)
         return;
     }else{
       setErrors((prev) => ({
@@ -401,7 +401,13 @@ export default function Home() {
             </button>
             {/* Título e descrição */}
             <h1 className="m-auto mb-0 text-3xl font-semibold sm:text-2xl">DIRROCHA CMS</h1>
-            <span className="m-auto mt-3 text-lg opacity-65 sm:text-sm sm:mt-0">{itemSelected[0]['id'] != null ? "Atualize os dados deste item de forma rápida e fácil." : "Crie um novo registro para este item com apenas alguns cliques."}</span>
+            <span className="m-auto mt-3 text-lg text-center opacity-65 sm:text-sm sm:mt-0">{itemSelected[0]['id'] != null ? 
+            "Atualize os dados deste item de forma rápida e fácil." : "Crie um novo registro para este item com apenas alguns cliques."}
+            {itemSelected[0]['id'] != null ?<>
+            <br />
+            <a href={url+"?t="+itemSelected[0]['data'][0]["value"]} target="_blank" rel="noopener noreferrer">{url+"?t="+itemSelected[0]['data'][0]["value"]}</a> 
+            </>:null}
+            </span>
             {loading && itemSelected[0]['id'] ? <span className={`absolute right-8 top-[60px] md:top-12 p-2 rounded-full hover:bg-gray-200 transition ${itemSelected || !itemSelected[0]['id']?"":"hidden"} loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin`}></span> :
             <button className={`right-6 top-10 md:top-6 p-2 rounded-full hover:bg-gray-200 transition ${itemSelected[0]['id']!=null?"absolute":"hidden"}`} onClick={async () => {
               setOpenModal(true)
