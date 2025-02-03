@@ -37,7 +37,6 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [data,setdata] = useState([])
   const [dataItem,setdataItem] = useState<any[]>([])
-  const [itens, setItens] = useState<any[]>([]);
   const [itemSelected, setItemSelected] = useState<any>();
   const r = useRouter()
   const [forceUpdate,setForceUpdate] = useState(0)
@@ -256,6 +255,19 @@ export default function Home() {
 
    }
 
+   const [url, setUrl] = useState("");
+
+   useEffect(() => {
+     if (typeof window !== "undefined") {
+       const hostname = window.location.hostname;
+       const protocol = hostname === "0.0.0.0" ? "http://" : "https://";
+       const fullUrl = `${protocol}${hostname === "0.0.0.0" ? "0.0.0.0:3000" : hostname}/api/${r.query.id}`;
+ 
+       setUrl(fullUrl);
+     }
+   }, [r.asPath]);
+ 
+
   return (
     
     <div
@@ -335,7 +347,9 @@ export default function Home() {
             </button>
             {/* Título e descrição */}
             <h1 className="m-auto mb-0 text-3xl font-semibold sm:text-2xl">DIRROCHA CMS</h1>
-            <span className="m-auto mt-3 text-lg opacity-65 sm:text-sm sm:mt-0 text-center px-16">Gerencie suas informações de forma simples. Consulte os dados existentes ou adicione novos rapidamente. 🚀</span>
+            <span className="m-auto mt-3 text-lg opacity-65 sm:text-sm sm:mt-0 text-center px-16">
+              Gerencie suas informações de forma simples. Consulte os dados existentes ou adicione novos rapidamente. 🚀 <br />
+              <a href={url} target="_blank" rel="noopener noreferrer">{url}</a> </span>
             {!loadingData || loading? <span className={`absolute right-8 top-[60px] md:top-12 p-2 rounded-full hover:bg-gray-200 transition ${true?"":"hidden"} loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin`}></span> :
             <button className={`right-6 top-10 md:top-6 p-2 rounded-full hover:bg-gray-200 transition ${true?"absolute":"hidden"}`} onClick={async () => {
               setOpenModal(true)
