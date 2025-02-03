@@ -44,12 +44,6 @@ Antes de começar, você precisará ter as seguintes ferramentas instaladas:
     git clone https://github.com/marco0antonio0/DirrochaCMS
     cd DirrochaCMS
     ```
-2.  **Instale as Dependências:**
-    ```bash
-    npm install
-    # ou
-    yarn install
-    ```
 3.  **Configuração do Firebase:**
 
     *   Crie um projeto no [Firebase Console](https://console.firebase.google.com/).
@@ -57,38 +51,57 @@ Antes de começar, você precisará ter as seguintes ferramentas instaladas:
     *   Crie um arquivo `.env` na raiz do projeto e adicione as suas credenciais:
 
         ```env
-        FIREBASE_API_KEY="SUA_API_KEY"
-        FIREBASE_AUTH_DOMAIN="SEU_AUTH_DOMAIN"
-        FIREBASE_PROJECT_ID="SEU_PROJECT_ID"
-        FIREBASE_STORAGE_BUCKET="SEU_STORAGE_BUCKET"
-        FIREBASE_MESSAGING_SENDER_ID="SEU_MESSAGING_SENDER_ID"
-        FIREBASE_APP_ID="SEU_APP_ID"
+        NEXT_PUBLIC_FIREBASE_API_KEY="SUA_API_KEY"
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="SEU_AUTH_DOMAIN"
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID="SEU_PROJECT_ID"
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="SEU_STORAGE_BUCKET"
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="SEU_MESSAGING_SENDER_ID"
+        NEXT_PUBLIC_FIREBASE_APP_ID="SEU_APP_ID"
+        NEXT_PUBLIC_SECRET_KEY="GERE_UM_SENHA_FORTE_E_ADICIONE_AQUI"
         ```
-4.  **Inicialize a Aplicação:**
+
+### **Opções de Deployer:**
+#### **Deploy em VPS:**
+1.  **Instale as Dependências:**
+    ```bash
+    npm install
+    # ou
+    yarn install
+    ```
+2.  **Inicialize a Aplicação:**
     ```bash
     npm run dev
     # ou
     yarn dev
     ```
-5.  **Iniciando com Docker:**
+2.  **Build a Aplicação:**
+    ```bash
+    npm run build
+    # ou
+    yarn build
+    ```
+3.  **Iniciando com Docker:**
     ```bash
     docker-compose up -d --build
     ```
     A aplicação estará disponível em `http://localhost:3000`.
 
+#### **Deploy em Netlify ou Vercel:**
+1.  **Apenas forneça o arquivo do projeto e pronto:**
+
 ## 🚀 Como Usar
 
-1.  **Acesse a Aplicação:** Abra seu navegador e vá para `http://localhost:3000`.
+1.  **Acesse a Aplicação:** Abra seu navegador e vá para `http://0.0.0.0:3000`.
 2.  **Navegação:** A aplicação tem uma interface simples e intuitiva para criação e gerenciamento de dados.
 3.  **Criação de Endpoints:** Use a interface para criar seus próprios endpoints, definindo nomes, tipos de dados e outros atributos.
-4.  **Gerenciamento de Dados:** Utilize a interface para adicionar, editar, excluir e visualizar seus dados em tempo real.
+4.  **Gerenciamento de Dados:** Utilize a interface para adicionar, editar, excluir e visualizar seus dados de maneira facil.
 
 **Exemplo de requisição para uma API criada:**
 ```bash
 # Exemplo de requisição POST para criar um novo registro
 curl -X GET \
   -H "Content-Type: application/json" \
-  http://localhost:3000/api/posts
+  http://0.0.0.0:3000/api/posts
 ```
 
 **Resposta esperada(varia de acordo com campos que deseja incluir):**
