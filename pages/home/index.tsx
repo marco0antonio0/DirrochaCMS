@@ -6,6 +6,7 @@ import { useRouter } from "next/router";
 import { getEndpoints } from "@/services/getEndpoints";
 import Cookies from "js-cookie";
 import axios from "axios";
+import { logout } from "@/services/logout";
 
 const geistSans = localFont({
   src: "./../fonts/GeistVF.woff",
@@ -49,7 +50,7 @@ export default function Home() {
     }
     checkAuth().then((isAuthenticated) => {
       if (!isAuthenticated) {
-        window.location.href = "/"; // Redireciona para login se token for inválido
+        logout()
       }
     });
   },[])
@@ -69,30 +70,26 @@ export default function Home() {
       setLoading(false);
     });
   }, []);
-  function logout(){
-    Cookies.remove("token"); 
-    window.location.href = "/"; 
-  }
+
   return (
     <div
       className={`${geistSans.variable} ${geistMono.variable} grid grid-rows-[20px_1fr_20px] items-center w-[100%] justify-items-center min-h-screen p-8 pb-20 gap-16 sm:py-10 sm:px-3 font-[family-name:var(--font-geist-sans)]`}
     >
       <Head>
       <title>Home - Listagem de EndPoint Page</title>
-      <meta name="description" content="Dirrocha CMS" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <meta name="description" content="Plataforma de gerenciamento de conteúdos e endpoints" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start w-[100%]">
         <div className="flex flex-col m-auto w-[100%] max-w-[700px] h-auto bg-[#F9FAFC] shadow-lg rounded-2xl md:max-w-[100%] ">
           <div className="relative m-auto mt-0 bg-[#FFFFFF] w-[100%] h-[40%] rounded-t-2xl shadow-sm flex flex-col sm:h-[30%] py-8">
-            {/* Botão de voltar no canto superior esquerdo */}
             <button className="absolute left-10 top-10 md:top-6 p-2 rounded-full hover:bg-gray-200 transition" onClick={() => {logout()}}>
               <svg xmlns="http://www.w3.org/2000/svg" height="70px" viewBox="0 -960 960 960" width="30px" fill="red">
               <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/></svg>
             </button>
             {/* Título e descrição */}
             <h1 className="m-auto mb-0 text-3xl font-semibold sm:text-2xl">DIRROCHA CMS</h1>
-            <span className="m-auto mt-3 text-lg opacity-65 sm:text-sm sm:mt-0 text-center px-16">Listagem de EndPoints</span>
+            <span className="m-auto mt-3 text-lg opacity-65 sm:text-sm sm:mt-0 text-center px-20">Visualize, acesse e crie novos endpoints com facilidade. Clique em um para gerenciar ou adicione um novo.</span>
           </div>
           <div className="flex flex-col h-[100%] w-[100%] mt-5 px-20 lg:px-10">
             

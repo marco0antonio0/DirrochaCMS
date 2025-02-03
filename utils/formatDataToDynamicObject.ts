@@ -7,8 +7,11 @@ export const formatDataToDynamicObject = (data: any) => {
 
     const fieldProperties: { [key: string]: { mult: boolean; type?: string } } = {
         titulo_identificador: { mult: false, type: "string" },
+        link: { mult: false, type: "string" },
+        preco: { mult: false, type: "string" },
         titulo: { mult: false, type: "string" },
         descricao: { mult: true, type: "string" },
+        breve_descricao: { mult: true, type: "string" },
         artigo: { mult: true, type: "string" },
         image: { mult: false, type: "img" },
         nome: { mult: false, type: "string" },

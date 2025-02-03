@@ -16,6 +16,7 @@ import { redirectRouter } from "@/services/redirectRouter";
 import { updateItemForEndpoint } from "@/services/updateItemToEndpoint";
 import axios from "axios";
 import Cookies from "js-cookie";
+import { logout } from "@/services/logout";
 
 const geistSans = localFont({
   src: "./../fonts/GeistVF.woff",
@@ -45,33 +46,32 @@ export default function Home() {
   const triggerUpdate = () => {
     setForceUpdate(prev => prev + 1);
   };
-
-  useEffect(()=>{
-    async function checkAuth() {
-      const token = Cookies.get("token");
-    
-      if (!token) {
-        // console.log("Nenhum token encontrado, redirecionando...");
-        return false;
-      }
-    
-      try {
-        const response = await axios.get("/api/verifyToken", {
-          headers: {
-            Authorization: `Bearer ${token}`, // Enviando o token como Bearer
-          },
-        });
-    
-        // console.log("Token válido:", response.data);
-        return true;
-      } catch (error) {
-        // console.error("Erro na autenticação:", error.response?.data);
-        return false;
-      }
+  async function checkAuth() {
+    const token = Cookies.get("token");
+  
+    if (!token) {
+      // console.log("Nenhum token encontrado, redirecionando...");
+      return false;
     }
+  
+    try {
+      const response = await axios.get("/api/verifyToken", {
+        headers: {
+          Authorization: `Bearer ${token}`, // Enviando o token como Bearer
+        },
+      });
+  
+      // console.log("Token válido:", response.data);
+      return true;
+    } catch (error) {
+      // console.error("Erro na autenticação:", error.response?.data);
+      return false;
+    }
+  }
+  useEffect(()=>{
     checkAuth().then((isAuthenticated) => {
       if (!isAuthenticated) {
-        window.location.href = "/"; // Redireciona para login se token for inválido
+        logout()
       }
     });
   },[])
@@ -133,7 +133,6 @@ export default function Home() {
   function goToItem(value:any){
     var result = dataItem.filter((e:any)=>e.id == value)
     setItemSelected(formatDataToDynamicObject(result[0]))
-    // setImage(result[0])
     if(result[0]['formattedData']['image']){
       setImage(result[0]['formattedData']['image'])
     }
@@ -262,9 +261,11 @@ export default function Home() {
     <div
       className={`${geistSans.variable} ${geistMono.variable} grid grid-rows-[20px_1fr_20px] items-center w-[100%] justify-items-center min-h-screen p-8 pb-20 gap-16 sm:py-10 sm:px-3 font-[family-name:var(--font-geist-sans)]`}
     >
+
+
       <Head>
-      <title>Criar Item EndPoint Page</title>
-      <meta name="description" content="Dirrocha CMS" />
+        <title>Gerenciamento de Itens | Plataforma</title>
+        <meta name="description" content="Plataforma de gerenciamento de conteúdos e endpoints" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start w-[100%] h-auto">
@@ -282,21 +283,28 @@ export default function Home() {
           </button>
           {/* Título e descrição */}
           <h1 className="m-auto mb-0 text-3xl font-semibold sm:text-2xl">DIRROCHA CMS</h1>
-          <span className="m-auto mt-3 text-lg opacity-65 sm:text-sm sm:mt-0 text-center px-16">Voce esta prestes a deletar este estes dado(s), essa ação e irreversivel, deseja continuar mesmo assim ?</span>
+          <span className="m-auto mt-3 text-lg opacity-65 sm:text-sm sm:mt-0 text-center px-16">Você está prestes a excluir este(s) dado(s). Essa ação é irreversível e não poderá ser desfeita. Tem certeza de que deseja continuar?</span>
         </div>
 
         <div className="flex flex-col h-[100%] w-[100%] mt-5 px-20 lg:px-10">
         {loadingData?<>  
           <div className="h-5"></div>
           
-          <h1 className="m-auto mt-0 mb-1 ml-0 opacity-65 sm:text-sm">Confirme sua ação <br /> Voce deseja deletar o {itemSelected?"dados da api de titulo "+itemSelected[0]['data']['titulo_identificador']:"endpoint"}?</h1>
+          <h1 className="m-auto mt-0 mb-1 ml-0 opacity-65 sm:text-sm">Confirme sua ação <br /> Voce deseja deletar o {itemSelected?"dados da api de titulo "+itemSelected[0]['data'][0]["value"]:"endpoint"}?</h1>
           <div className="w-[100%] flex flex-col h-auto gap-3" key={forceUpdate}>
             
           </div>
           <div className="h-5"></div>
           <div className="w-[100%] flex flex-row gap-3">
-          <button className="align-middle w-[100%] h-14 border-2 border-gray-200 rounded-md mt-0 flex justify-center items-center bg-red-400 text-white" onClick={()=>{
-          itemSelected?deleteItemBy_Id(itemSelected[0]["id"]):  deleteEndpoint()}}>
+          <button className="align-middle w-[100%] h-14 border-2 border-gray-200 rounded-md mt-0 flex justify-center items-center bg-red-400 text-white" onClick={async()=> {
+              checkAuth().then((isAuthenticated) => {
+                if (!isAuthenticated) {
+                  logout()
+                }else{
+                  itemSelected?deleteItemBy_Id(itemSelected[0]["id"]):  deleteEndpoint()
+                }
+              });
+          }}>
               {loading ? <span className="loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin"></span> : "Sim"}
           </button>
           <button className="align-middle w-[100%] h-14 border-2 border-gray-200 rounded-md mt-0 flex justify-center items-center bg-green-500 text-white" onClick={()=>{
@@ -327,7 +335,7 @@ export default function Home() {
             </button>
             {/* Título e descrição */}
             <h1 className="m-auto mb-0 text-3xl font-semibold sm:text-2xl">DIRROCHA CMS</h1>
-            <span className="m-auto mt-3 text-lg opacity-65 sm:text-sm sm:mt-0">Pagina de listagem de itens</span>
+            <span className="m-auto mt-3 text-lg opacity-65 sm:text-sm sm:mt-0 text-center px-16">Gerencie suas informações de forma simples. Consulte os dados existentes ou adicione novos rapidamente. 🚀</span>
             {!loadingData || loading? <span className={`absolute right-8 top-[60px] md:top-12 p-2 rounded-full hover:bg-gray-200 transition ${true?"":"hidden"} loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin`}></span> :
             <button className={`right-6 top-10 md:top-6 p-2 rounded-full hover:bg-gray-200 transition ${true?"absolute":"hidden"}`} onClick={async () => {
               setOpenModal(true)
@@ -379,7 +387,7 @@ export default function Home() {
             </button>
             {/* Título e descrição */}
             <h1 className="m-auto mb-0 text-3xl font-semibold sm:text-2xl">DIRROCHA CMS</h1>
-            <span className="m-auto mt-3 text-lg opacity-65 sm:text-sm sm:mt-0">Informações do item</span>
+            <span className="m-auto mt-3 text-lg opacity-65 sm:text-sm sm:mt-0">{itemSelected[0]['id'] != null ? "Atualize os dados deste item de forma rápida e fácil." : "Crie um novo registro para este item com apenas alguns cliques."}</span>
             {loading && itemSelected[0]['id'] ? <span className={`absolute right-8 top-[60px] md:top-12 p-2 rounded-full hover:bg-gray-200 transition ${itemSelected || !itemSelected[0]['id']?"":"hidden"} loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin`}></span> :
             <button className={`right-6 top-10 md:top-6 p-2 rounded-full hover:bg-gray-200 transition ${itemSelected[0]['id']!=null?"absolute":"hidden"}`} onClick={async () => {
               setOpenModal(true)

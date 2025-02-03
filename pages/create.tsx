@@ -6,6 +6,7 @@ import { useRouter } from "next/router";
 import { addEndpoint } from "@/services/addEndpoint";
 import Cookies from "js-cookie";
 import axios from "axios";
+import { logout } from "@/services/logout";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -20,8 +21,11 @@ const geistMono = localFont({
 
 export default function Home() {
   const [selected_titulo, setSelected_titulo] = useState(false);
+  const [selected_link, setSelected_link] = useState(false);
+  const [selected_preco, setSelected_preco] = useState(false);
   const [selected_nome, setSelected_nome] = useState(false);
   const [selected_descricao, setSelected_descricao] = useState(false);
+  const [selected_breve_descricao, setSelected_breve_descricao] = useState(false);
   const [selected_texto, setSelected_texto] = useState(false);
   const [selected_artigo, setSelected_artigo] = useState(false);
   const [selected_senha, setSelected_senha] = useState(false);
@@ -54,7 +58,7 @@ export default function Home() {
     }
     checkAuth().then((isAuthenticated) => {
       if (!isAuthenticated) {
-        window.location.href = "/"; // Redireciona para login se token for inválido
+        logout()
       }
     });
   },[])
@@ -67,11 +71,14 @@ export default function Home() {
     const selectedFields = {
       titulo: selected_titulo,
       nome: selected_nome,
+      breve_descricao: selected_breve_descricao,
       descricao: selected_descricao,
       texto: selected_texto,
       artigo: selected_artigo,
       senha: selected_senha,
       image: selected_image,
+      link: selected_link,
+      preco: selected_preco,
     };
 
     return Object.keys(selectedFields).filter((key) => selectedFields[key as keyof typeof selectedFields]);
@@ -115,9 +122,9 @@ export default function Home() {
       className={`${geistSans.variable} ${geistMono.variable} grid grid-rows-[20px_1fr_20px] items-center w-[100%] justify-items-center min-h-screen p-8 pb-20 gap-16 sm:py-10 sm:px-3 font-[family-name:var(--font-geist-sans)]`}
     >
       <Head>
-        <title>Criar EndPoint Page</title>
-        <meta name="description" content="Dirrocha CMS" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Adicionar Endpoint | Plataforma | Gerenciamento de Conteúdos</title>
+      <meta name="description" content="Plataforma de gerenciamento de conteúdos e endpoints" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start w-[100%] h-auto">
         {
@@ -135,7 +142,7 @@ export default function Home() {
             </button>
             {/* Título e descrição */}
             <h1 className="m-auto mb-0 text-3xl font-semibold sm:text-2xl">DIRROCHA CMS</h1>
-            <span className="m-auto mt-3 text-lg opacity-65 sm:text-sm sm:mt-0">Informações do item</span>
+            <span className="m-auto mt-3 text-lg opacity-65 sm:text-sm sm:mt-0 text-center px-16">Configure o nome e os campos necessários para estruturar seu endpoint de forma rápida e eficiente.</span>
           </div>
           <div className="flex flex-col h-[100%] w-[100%] mt-5 px-20 lg:px-10">
             
@@ -159,47 +166,65 @@ export default function Home() {
             <div className="h-5"></div>
             <h1 className="m-auto mt-3 mb-3 ml-0 opacity-65 sm:text-sm">Quais campos voce quer no endpoint?</h1>
             <div className="flex flex-col gap-3">
-            <div className="flex flex-row ">
-              <ToggleSwitch handleToggle={()=>{ 
-                validateFields()
-                setSelected_titulo(!selected_titulo);}} isChecked={selected_titulo}/>
-              <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Titulo</h1>
+              <div className="flex flex-row ">
+                <ToggleSwitch handleToggle={()=>{ 
+                  validateFields()
+                  setSelected_titulo(!selected_titulo);}} isChecked={selected_titulo}/>
+                <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Titulo</h1>
               </div>
               <div className="flex flex-row ">
-              <ToggleSwitch handleToggle={()=>{ 
-                validateFields()
-                setSelected_descricao(!selected_descricao);}} isChecked={selected_descricao}/>
-              <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Descricao</h1>
+                <ToggleSwitch handleToggle={()=>{ 
+                  validateFields()
+                  setSelected_descricao(!selected_descricao);}} isChecked={selected_descricao}/>
+                <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Descrição</h1>
               </div>
               <div className="flex flex-row ">
-              <ToggleSwitch handleToggle={()=>{ 
-                validateFields()
-                setSelected_artigo(!selected_artigo);}} isChecked={selected_artigo}/>
-              <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Artigo</h1>
+                <ToggleSwitch handleToggle={()=>{ 
+                  validateFields()
+                  setSelected_breve_descricao(!selected_breve_descricao);}} isChecked={selected_breve_descricao}/>
+                <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Breve Descrição</h1>
               </div>
               <div className="flex flex-row ">
-              <ToggleSwitch handleToggle={()=>{ 
-                validateFields()
-                setSelected_image(!selected_image);}} isChecked={selected_image}/>
-              <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Imagem</h1>
+                <ToggleSwitch handleToggle={()=>{ 
+                  validateFields()
+                  setSelected_artigo(!selected_artigo);}} isChecked={selected_artigo}/>
+                <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Artigo</h1>
               </div>
               <div className="flex flex-row ">
-              <ToggleSwitch handleToggle={()=>{ 
-                validateFields()
-                setSelected_nome(!selected_nome);}} isChecked={selected_nome}/>
-              <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Nome</h1>
+                <ToggleSwitch handleToggle={()=>{ 
+                  validateFields()
+                  setSelected_image(!selected_image);}} isChecked={selected_image}/>
+                <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Imagem</h1>
               </div>
               <div className="flex flex-row ">
-              <ToggleSwitch handleToggle={()=>{ 
-                validateFields()
-                setSelected_senha(!selected_senha);}} isChecked={selected_senha}/>
-              <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Senha</h1>
+                <ToggleSwitch handleToggle={()=>{ 
+                  validateFields()
+                  setSelected_nome(!selected_nome);}} isChecked={selected_nome}/>
+                <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Nome</h1>
               </div>
               <div className="flex flex-row ">
-              <ToggleSwitch handleToggle={()=>{ 
-                validateFields()
-                setSelected_texto(!selected_texto);}} isChecked={selected_texto}/>
-              <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Texto</h1>
+                <ToggleSwitch handleToggle={()=>{ 
+                  validateFields()
+                  setSelected_senha(!selected_senha);}} isChecked={selected_senha}/>
+                <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Senha</h1>
+              </div>
+              <div className="flex flex-row ">
+                <ToggleSwitch handleToggle={()=>{ 
+                  validateFields()
+                  setSelected_texto(!selected_texto);}} isChecked={selected_texto}/>
+                <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Texto</h1>
+              </div>
+              <div className="flex flex-row ">
+                <ToggleSwitch handleToggle={()=>{ 
+                  validateFields()
+                  setSelected_link(!selected_link);}} isChecked={selected_link}/>
+                <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Link</h1>
+              </div>
+              <div className="flex flex-row ">
+                <ToggleSwitch handleToggle={()=>{ 
+                  validateFields()
+                  setSelected_preco(!selected_preco);}} isChecked={selected_preco}/>
+                <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Preço</h1>
               </div>
               {errors.campos && <p className="text-red-500 text-sm mt-1">Selecione pelo menos um campo.</p>}
             </div>

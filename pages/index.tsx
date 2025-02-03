@@ -26,6 +26,7 @@ export default function Home() {
   const [errors, setErrors] = useState({
     name: false,
     password: false,
+    Unauthorized: false,
     confirmPassword: false,
   });
   const [loading, setLoading] = useState(false);
@@ -39,6 +40,7 @@ export default function Home() {
 
   function changeCredentials(param: string, value: any) {
     setCredentials((prev) => ({ ...prev, [param]: value.target.value }));
+    setErrors((prev) => ({ ...prev, Unauthorized: false })); 
     setErrors((prev) => ({ ...prev, [param]: value.target.value.trim() === "" }));
   }
 
@@ -47,6 +49,7 @@ export default function Home() {
       name: credentials.name.trim() === "",
       password: credentials.password.trim() === "",
       confirmPassword: isFirstAccess ? credentials.confirmPassword.trim() === "" : false,
+      Unauthorized:false
     };
     setErrors(newErrors);
     return !Object.values(newErrors).includes(true);
@@ -67,19 +70,33 @@ export default function Home() {
           password: credentials.password,
         });
       }
-
       const response = await axios.post("/api/login", {
         name: credentials.name,
         password: credentials.password,
       });
 
-      Cookies.set("token", response.data.token, { expires: 1 }); // Salva JWT por 1 dia
-      window.location.href = "/home"; // Redireciona para a página protegida
+      setTimeout(() => {
+        Cookies.set("token", response.data.token, { expires: 1 }); 
+        window.location.href = "/home"; 
+        setLoading(false);
+    }, 2000);
 
-    } catch (error) {
-      // alert(error.response?.data?.message || "Erro ao autenticar");
-    } finally {
-      setLoading(false);
+    } catch (error: any) {
+      setTimeout(() => {
+        if (error.response) {
+          const status = error.response.status;
+          if (status === 401) {
+            setErrors((prev) => ({ ...prev, Unauthorized: true })); 
+          } else if (status === 400) {
+            setErrors((prev) => ({ ...prev, name: true })); 
+          } else {
+            console.error(`Erro: ${status} - ${error.response.data?.message || "Erro desconhecido"}`);
+          }
+        } else {
+          console.error("Erro na requisição:", error.message);
+        }
+        setLoading(false);
+    }, 2000);
     }
   }
   return (
@@ -88,7 +105,7 @@ export default function Home() {
     >
       <Head>
         <title>Login Page</title>
-        <meta name="description" content="Dirrocha CMS" />
+        <meta name="description" content="Plataforma de gerenciamento de conteúdos e endpoints" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start w-[100%]">
@@ -100,12 +117,14 @@ export default function Home() {
           <div className="flex flex-col h-[100%] w-[100%] px-20 lg:px-10">
             <h1 className="m-auto mb-1 ml-0 opacity-65 sm:text-sm">EMAIL ADRESS</h1>
             <input type="email" className={`m-auto mt-0 mb-0 w-[100%] h-14 rounded-lg ${errors.name?"border-red-500":"border-gray-200"} border-2 px-5 sm:h-12`} placeholder="user@email.com" onChange={(e)=>changeCredentials('name',e)}/>
-            {errors.name && <span className="text-red-500 text-sm mt-1">Email is required</span>}
+            {errors.name && <span className="text-red-500 text-sm mt-1">Campo Email vazio</span>}
+            {errors.Unauthorized && <span className="text-red-500 text-sm mt-1">Campo Email ou Senha incorretos</span>}
             
             <div className="h-5"></div>
             <h1 className="m-auto mt-0 mb-1 ml-0 opacity-65 sm:text-sm">PASSWORD</h1>
             <input type="password" className={`m-auto mt-0 mb-0 w-[100%] h-14 rounded-lg ${errors.password?"border-red-500":"border-gray-200"}  border-2 px-5 sm:h-12`} placeholder="Passwords" onChange={(e)=>changeCredentials('password',e)}/>
-            {errors.password && <span className="text-red-500 text-sm mt-1">Password is required</span>}
+            {errors.password && <span className="text-red-500 text-sm mt-1">Campo senha vazio</span>}
+            {errors.Unauthorized && <span className="text-red-500 text-sm mt-1">Campo Email ou Senha incorretos</span>}
             {isFirstAccess && (
               <>
               <h1 className="m-auto mt-5 mb-0 ml-0 opacity-65 sm:text-sm">CONFIRM PASSWORD</h1>
