@@ -86,17 +86,12 @@ Antes de começar, você precisará ter as seguintes ferramentas instaladas:
 **Exemplo de requisição para uma API criada:**
 ```bash
 # Exemplo de requisição POST para criar um novo registro
-curl -X POST \
+curl -X GET \
   -H "Content-Type: application/json" \
-  -d '{
-    "title": "Novo Post",
-    "content": "Conteúdo do novo post",
-    "author": "Seu Nome"
-  }' \
   http://localhost:3000/api/posts
 ```
 
-**Resposta esperada:**
+**Resposta esperada(varia de acordo com campos que deseja incluir):**
 ```json
 {
   "id": "123456",
@@ -106,34 +101,7 @@ curl -X POST \
 }
 ```
 
-## 📝 Exemplos de Código
-
-```javascript
-// Exemplo de como criar um endpoint em Next.js API
-
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc } from 'firebase/firestore';
-
-const firebaseConfig = {
-  // config do firebase aqui
-  // ...
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-export default async function handler(req, res) {
-  if (req.method === 'POST') {
-      const docRef = await addDoc(collection(db, "posts"), req.body);
-    res.status(200).json({ id: docRef.id, ...req.body });
-  } else {
-    res.status(405).end(); // Method Not Allowed
-  }
-}
-
-```
-
-## 📁 Estrutura de Diretórios
+<!-- ## 📁 Estrutura de Diretórios
 
 ```
 dirrochacms/
@@ -148,7 +116,7 @@ dirrochacms/
 ├── package.json        # Arquivo de dependências
 ├── docker-compose.yml  # Configuração do Docker Compose
 └── Dockerfile          # Configuração do Docker
-```
+``` -->
 
 ## 🤝 Contribuição
 
