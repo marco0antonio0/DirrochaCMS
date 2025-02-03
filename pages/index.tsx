@@ -88,7 +88,7 @@ export default function Home() {
     >
       <Head>
         <title>Login Page</title>
-        <meta name="description" content="Login to your account" />
+        <meta name="description" content="Dirrocha CMS" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start w-[100%]">

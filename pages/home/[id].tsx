@@ -263,8 +263,8 @@ export default function Home() {
       className={`${geistSans.variable} ${geistMono.variable} grid grid-rows-[20px_1fr_20px] items-center w-[100%] justify-items-center min-h-screen p-8 pb-20 gap-16 sm:py-10 sm:px-3 font-[family-name:var(--font-geist-sans)]`}
     >
       <Head>
-        <title>Login Page</title>
-        <meta name="description" content="Login to your account" />
+      <title>Criar Item EndPoint Page</title>
+      <meta name="description" content="Dirrocha CMS" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start w-[100%] h-auto">
