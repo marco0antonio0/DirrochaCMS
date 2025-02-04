@@ -24,6 +24,16 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<any>,
 ) {
+  res.setHeader("Access-Control-Allow-Credentials", 'true');
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, OPTIONS, PATCH, DELETE, POST, PUT"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
+  );
   const {id,t} = req.query
   if(!id){
     return res.status(400).json({ error: "Parâmetro não informado" ,statusCode:400});
@@ -34,7 +44,9 @@ export default async function handler(
     return res.status(404).json({ error: "Endpoint inexistente",statusCode:404 });
   }
   var item:any = endpoints['data']
-  var data = await getItemsByEndpoint(item[0]['id'])
+  var idD = Array.isArray(id) ? id[0] : id;
+  var idData:any = item.filter((e:any)=>e.router===idD)
+  var data = await getItemsByEndpoint(idData[0]['id'])
   if(!data['data']){
     return res.status(500).json({ error: "Error interno",statusCode:500 });
   }
