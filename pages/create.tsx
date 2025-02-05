@@ -97,24 +97,29 @@ export default function Home() {
     return /^[a-zA-Z0-9_]+$/.test(nome);
   };
 
-  const saveData = async() => {
+  const saveData = async () => {
     if (!validateFields()) {
       return;
     }
-    setLoading(true)
-    const result = await addEndpoint(nomeEndpoint, nomeEndpoint, getSelectedFields());
-    if (result.success) {
-      setTimeout(() => {
-        setLoading(false);
-        r.push("/home")
-      }, 1000);
-    } else {
-      setTimeout(() => {
-        setLoading(false);
-      }, 1000);
+    setLoading(true);
+  
+    try {
+      const result = await addEndpoint(nomeEndpoint, nomeEndpoint, getSelectedFields());
+  
+      if (result && result.success) {
+        setTimeout(() => {
+          setLoading(false);
+          r.push("/home");
+        }, 1000);
+      } else {
+        setTimeout(() => {
+          setLoading(false);
+        }, 1000);
+      }
+    } catch (error) {
+      console.error("Erro ao adicionar endpoint:", error);
+      setLoading(false);
     }
-
-    // Aqui pode ser feito o fetch() para enviar os dados
   };
   return (
     
