@@ -72,6 +72,24 @@ Antes de começar, você precisará ter as seguintes ferramentas instaladas:
     A aplicação estará disponível em `http://localhost:3000`.
 
 #### **Deploy em Netlify ou Vercel:**
+0.  **Configure as variaves envs do seu firebase na .env:**
+
+    *   Crie um projeto no [Firebase Console](https://console.firebase.google.com/).
+    *   Obtenha as credenciais do seu projeto (chave de API, ID do projeto, etc).
+    *   Crie um arquivo `.env` na raiz do projeto e adicione as suas credenciais:
+
+    ```env
+    # Caso use a netlify ou vercel
+    # Sett aqui suas credenciais do firebase
+    NEXT_PUBLIC_FIREBASE_API_KEY=
+    NEXT_PUBLIC_FIREBASE_APP_ID=
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+    NEXT_PUBLIC_SECRET_KEY=
+    NEXT_PUBLIC_ENV=
+    ```
 1.  **Apenas forneça o arquivo do projeto e pronto:**
 
 ## 🚀 Como Usar
