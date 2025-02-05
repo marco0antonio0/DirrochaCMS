@@ -80,7 +80,7 @@ export default function Home() {
   },[])
   useEffect(() => {
     getData().then((data) => {
-      console.log("🛠️ Dados retornados de getData():", data);
+      // console.log("🛠️ Dados retornados de getData():", data);
       setIsFirstAccess(!(data != null) ? true : false);
     });
   }, []);
@@ -99,12 +99,12 @@ export default function Home() {
       Unauthorized_firebase:false,
       Unauthorized:false,
       firebaseFields: {
-      apiKey: isFirstAccess ? firebaseCredentials.apiKey.trim() === "" : false,
-      authDomain: isFirstAccess ? firebaseCredentials.authDomain.trim() === "" : false,
-      projectId: isFirstAccess ? firebaseCredentials.projectId.trim() === "" : false,
-      storageBucket: isFirstAccess ? firebaseCredentials.storageBucket.trim() === "" : false,
-      messagingSenderId: isFirstAccess ? firebaseCredentials.messagingSenderId.trim() === "" : false,
-      appId: isFirstAccess ? firebaseCredentials.appId.trim() === "" : false,
+      apiKey: isFirstAccess && !process.env.NEXT_PUBLIC_ENV ? firebaseCredentials.apiKey.trim() === "" : false,
+      authDomain: isFirstAccess && !process.env.NEXT_PUBLIC_ENV ? firebaseCredentials.authDomain.trim() === "" : false,
+      projectId: isFirstAccess && !process.env.NEXT_PUBLIC_ENV ? firebaseCredentials.projectId.trim() === "" : false,
+      storageBucket: isFirstAccess && !process.env.NEXT_PUBLIC_ENV ? firebaseCredentials.storageBucket.trim() === "" : false,
+      messagingSenderId: isFirstAccess && !process.env.NEXT_PUBLIC_ENV ? firebaseCredentials.messagingSenderId.trim() === "" : false,
+      appId: isFirstAccess && !process.env.NEXT_PUBLIC_ENV ? firebaseCredentials.appId.trim() === "" : false,
       },
     };
     setErrors(newErrors);
@@ -123,6 +123,7 @@ export default function Home() {
           return;
         }
     let response:any = null
+    if(!process.env.NEXT_PUBLIC_ENV){
     try {
        response = await axios.post("/api/firebaseConfig", firebaseCredentials,{
         headers: {
@@ -168,7 +169,7 @@ export default function Home() {
           setErrors(newErrors);
           setLoading(false);
           return;
-        }
+        }}
 
 
         await axios.post("/api/register", {
@@ -213,7 +214,7 @@ export default function Home() {
   function handleChange(e: any) {
     const { name, value } = e.target;
     
-    console.log(`🛠️ Alteração detectada: ${name} = "${value}"`);
+    // console.log(`🛠️ Alteração detectada: ${name} = "${value}"`);
   
     setFirebaseCredentials((prev) => ({
       ...prev,
@@ -244,7 +245,7 @@ export default function Home() {
         <div className={`flex flex-col m-auto w-[100%] max-w-[700px]  bg-[#F9FAFC] shadow-lg rounded-2xl ${isFirstAccess?"h-auto":"h-[550px] md:max-w-[100%] sm:h-[450px]"} `}>
           <div className={`m-auto mt-0 bg-[#FFFFFF] w-[100%] h-[40%] rounded-t-2xl shadow-sm flex flex-col sm:h-[30%] ${isFirstAccess?"py-8":""}`}>
             <h1 className="m-auto mb-0 text-3xl font-semibold sm:text-2xl">{isFirstAccess ? "Register" : "Sign In"}</h1>
-            {isFirstAccess?<span className="m-auto mt-3 text-lg opacity-65 sm:text-sm sm:mt-0 text-left px-20">
+            {isFirstAccess && !process.env.NEXT_PUBLIC_ENV?<span className="m-auto mt-3 text-lg opacity-65 sm:text-sm sm:mt-0 text-left px-20">
 👋 Olá, seja bem-vindo! 🚀<br />
 
 🔑 Passo 1: Obtenha suas credenciais do Firebase<br />
@@ -253,39 +254,39 @@ export default function Home() {
 </span>:<span className="m-auto mt-3 text-lg opacity-65 sm:text-sm sm:mt-0 text-left px-20">Use your email and password to sign in</span>}
           </div>
           <div className="flex flex-col h-[100%] w-[100%] px-20 lg:px-10">
-          {isFirstAccess && (
+          {isFirstAccess && !process.env.NEXT_PUBLIC_ENV && (
               <>
               <h1 className="m-auto mt-5 mb-0 ml-0 sm:text-sm">Credenciais firebase</h1>
               <h1 className="m-auto mt-5 mb-0 ml-0 opacity-65 sm:text-sm">APP_KEY</h1>
               <input name="apiKey" type="text" className={`m-auto mt-1 mb-0 w-[100%] h-14 rounded-lg ${errors.firebaseFields['apiKey']?"border-red-500":"border-gray-200"}  border-2 px-5 sm:h-12`} placeholder="digite" onChange={handleChange}/>
               {errors.firebaseFields['apiKey'] && (<span className="text-red-500 text-sm">Campo obrigatório</span>)}
                 
-              <div className={`${isFirstAccess?"h-0":"h-5"}`}></div>
+              <div className={`${isFirstAccess && !process.env.NEXT_PUBLIC_ENV?"h-0":"h-5"}`}></div>
               <h1 className="m-auto mt-5 mb-0 ml-0 opacity-65 sm:text-sm">AUTH_DOMAIN</h1>
               <input name="authDomain" type="text" className={`m-auto mt-1 mb-0 w-[100%] h-14 rounded-lg ${errors.firebaseFields['authDomain']?"border-red-500":"border-gray-200"}  border-2 px-5 sm:h-12`} placeholder="digite" onChange={handleChange}/>
               {errors.firebaseFields['authDomain'] && (<span className="text-red-500 text-sm">Campo obrigatório</span>)}
 
-                 <div className={`${isFirstAccess?"h-0":"h-5"}`}></div>
+                 <div className={`${isFirstAccess && !process.env.NEXT_PUBLIC_ENV?"h-0":"h-5"}`}></div>
               <h1 className="m-auto mt-5 mb-0 ml-0 opacity-65 sm:text-sm">PROJECT_ID</h1>
               <input name="projectId" type="text" className={`m-auto mt-1 mb-0 w-[100%] h-14 rounded-lg ${errors.firebaseFields['projectId']?"border-red-500":"border-gray-200"}  border-2 px-5 sm:h-12`} placeholder="digite" onChange={handleChange}/>
               {errors.firebaseFields['projectId'] && (<span className="text-red-500 text-sm">Campo obrigatório</span>)}
 
-              <div className={`${isFirstAccess?"h-0":"h-5"}`}></div>
+              <div className={`${isFirstAccess && !process.env.NEXT_PUBLIC_ENV?"h-0":"h-5"}`}></div>
               <h1 className="m-auto mt-5 mb-0 ml-0 opacity-65 sm:text-sm">STORAGE_BUCKET</h1>
               <input name="storageBucket" type="text" className={`m-auto mt-1 mb-0 w-[100%] h-14 rounded-lg ${errors.firebaseFields['storageBucket']?"border-red-500":"border-gray-200"}  border-2 px-5 sm:h-12`} placeholder="digite" onChange={handleChange}/>
               {errors.firebaseFields['storageBucket'] && (<span className="text-red-500 text-sm">Campo obrigatório</span>)}
 
-              <div className={`${isFirstAccess?"h-0":"h-5"}`}></div>
+              <div className={`${isFirstAccess && !process.env.NEXT_PUBLIC_ENV?"h-0":"h-5"}`}></div>
               <h1 className="m-auto mt-5 mb-0 ml-0 opacity-65 sm:text-sm">MESSAGING_SENDER_ID</h1>
               <input name="messagingSenderId" type="text" className={`m-auto mt-1 mb-0 w-[100%] h-14 rounded-lg ${errors.firebaseFields['messagingSenderId']?"border-red-500":"border-gray-200"}  border-2 px-5 sm:h-12`} placeholder="digite" onChange={handleChange}/>
               {errors.firebaseFields['messagingSenderId'] && (<span className="text-red-500 text-sm">Campo obrigatório</span>)}
 
-                <div className={`${isFirstAccess?"h-0":"h-5"}`}></div>
+                <div className={`${isFirstAccess && !process.env.NEXT_PUBLIC_ENV?"h-0":"h-5"}`}></div>
               <h1 className="m-auto mt-5 mb-0 ml-0 opacity-65 sm:text-sm">APP_ID</h1>
               <input name="appId" type="text" className={`m-auto mt-1 mb-0 w-[100%] h-14 rounded-lg ${errors.firebaseFields['appId']?"border-red-500":"border-gray-200"}  border-2 px-5 sm:h-12`} placeholder="digite" onChange={handleChange}/>
               {errors.firebaseFields['appId'] && (<span className="text-red-500 text-sm">Campo obrigatório</span>)}
 
-                <div className={`${isFirstAccess?"h-0":"h-5"}`}></div>
+                <div className={`${isFirstAccess && !process.env.NEXT_PUBLIC_ENV?"h-0":"h-5"}`}></div>
                 {/* <h1 className="m-auto mt-5 mb-0 ml-0 opacity-65 sm:text-sm">SECRET_KEY</h1>
               <input type="text" className={`m-auto mt-1 mb-0 w-[100%] h-14 rounded-lg ${errors.password?"border-red-500":"border-gray-200"}  border-2 px-5 sm:h-12`} placeholder="digite" onChange={handleChange}/>
               
