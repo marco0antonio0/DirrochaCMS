@@ -1,5 +1,5 @@
 // 🔹 firebaseConfig.ts
-export const IsStartedfirebaseConfig = true;
+export const IsStartedfirebaseConfig = false;
 export const firebaseConfig = {
   "apiKey": "",
   "authDomain": "",

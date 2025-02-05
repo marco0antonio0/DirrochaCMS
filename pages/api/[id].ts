@@ -34,25 +34,36 @@ export default async function handler(
     "Access-Control-Allow-Headers",
     "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
   );
-  const {id,t} = req.query
-  if(!id){
-    return res.status(400).json({ error: "Parâmetro não informado" ,statusCode:400});
-  }
-  var endpoints = await getEndpoints()
-  var listEndpoints = endpoints['data']?.map((e:any)=>e.title)
-  if(!listEndpoints?.includes(id)){
-    return res.status(404).json({ error: "Endpoint inexistente",statusCode:404 });
-  }
-  var item:any = endpoints['data']
-  var idD = Array.isArray(id) ? id[0] : id;
-  var idData:any = item.filter((e:any)=>e.router===idD)
-  var data = await getItemsByEndpoint(idData[0]['id'])
-  if(!data['data']){
-    return res.status(500).json({ error: "Error interno",statusCode:500 });
+
+  const { id, t } = req.query;
+  if (!id) {
+    return res.status(400).json({ error: "Parâmetro não informado", statusCode: 400 });
   }
 
-  if(t){
-    var item:any = data['data'][0]
+  var endpoints = await getEndpoints();
+  if (!endpoints || !endpoints.data) {
+    return res.status(500).json({ error: "Erro ao buscar endpoints", statusCode: 500 });
+  }
+
+  var listEndpoints = endpoints.data.map((e: any) => e.title);
+  if (!listEndpoints.includes(id)) {
+    return res.status(404).json({ error: "Endpoint inexistente", statusCode: 404 });
+  }
+
+  var item: any = endpoints.data;
+  var idD = Array.isArray(id) ? id[0] : id;
+  var idData: any = item.filter((e: any) => e.router === idD);
+  if (idData.length === 0) {
+    return res.status(404).json({ error: "Rota não encontrada", statusCode: 404 });
+  }
+
+  var data = await getItemsByEndpoint(idData[0]['id']);
+  if (!data || !data.data) {
+    return res.status(500).json({ error: "Erro interno", statusCode: 500 });
+  }
+
+  if (t) {
+    var item: any = data.data[0];
     const searchTerm = Array.isArray(t) ? t[0] : t;
     if (!searchTerm) {
       return res.status(400).json({ error: "Parâmetro 't' é obrigatório", statusCode: 400 });
@@ -61,5 +72,5 @@ export default async function handler(
     return res.status(searchResults.statusCode).json(searchResults);
   }
 
-  return res.status(200).json({ data: data['data'],statusCode:200 });
+  return res.status(200).json({ data: data.data, statusCode: 200 });
 }
