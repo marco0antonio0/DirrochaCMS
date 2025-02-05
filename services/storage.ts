@@ -1,13 +1,15 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
-import { firebaseConfig } from "@/config/config";
+import { firebaseConfig, IsStartedfirebaseConfig } from "@/config/config";
 
 // 🔹 Inicializa o Firebase e o Firestore
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+
 
 // 🔹 Função para obter dados do Firestore
 export const getData = async () => {
+  if(!IsStartedfirebaseConfig) return null
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app); 
   try {
     const docRef = doc(db, "users", "default"); // "default" pode ser qualquer ID padrão
     const docSnap = await getDoc(docRef);
@@ -25,6 +27,9 @@ export const getData = async () => {
 
 // 🔹 Função para salvar dados no Firestore
 export const saveData = async (data: { name: string; password: string }) => {
+  if(!IsStartedfirebaseConfig) return null
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app); 
   try {
     const docRef = doc(db, "users", "default"); // Salvando sempre no mesmo documento "default"
     await setDoc(docRef, data);

@@ -1,4 +1,4 @@
-import { firebaseConfig } from "@/config/config";
+import { firebaseConfig, IsStartedfirebaseConfig } from "@/config/config";
 import { initializeApp } from "firebase/app";
 import { deleteDoc, doc, getFirestore } from "firebase/firestore";
 
@@ -8,11 +8,12 @@ import { deleteDoc, doc, getFirestore } from "firebase/firestore";
  * @returns {Promise<{ success: boolean; error?: any }>}
  */
 
-// 🔹 Inicializa o Firebase e Firestore
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+
 
 export const deleteItemById = async (itemId: string) => {
+  if(!IsStartedfirebaseConfig) return null
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app); 
   try {
     const itemRef = doc(db, "itens", itemId);
     await deleteDoc(itemRef);

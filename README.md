@@ -44,21 +44,6 @@ Antes de começar, você precisará ter as seguintes ferramentas instaladas:
     git clone https://github.com/marco0antonio0/DirrochaCMS
     cd DirrochaCMS
     ```
-3.  **Configuração do Firebase:**
-
-    *   Crie um projeto no [Firebase Console](https://console.firebase.google.com/).
-    *   Obtenha as credenciais do seu projeto (chave de API, ID do projeto, etc).
-    *   Crie um arquivo `.env` na raiz do projeto e adicione as suas credenciais:
-
-        ```env
-        NEXT_PUBLIC_FIREBASE_API_KEY="SUA_API_KEY"
-        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="SEU_AUTH_DOMAIN"
-        NEXT_PUBLIC_FIREBASE_PROJECT_ID="SEU_PROJECT_ID"
-        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="SEU_STORAGE_BUCKET"
-        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="SEU_MESSAGING_SENDER_ID"
-        NEXT_PUBLIC_FIREBASE_APP_ID="SEU_APP_ID"
-        NEXT_PUBLIC_SECRET_KEY="GERE_UM_SENHA_FORTE_E_ADICIONE_AQUI"
-        ```
 
 ### **Opções de Deployer:**
 #### **Deploy em VPS:**

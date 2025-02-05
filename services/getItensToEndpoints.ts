@@ -1,9 +1,13 @@
+import { firebaseConfig, IsStartedfirebaseConfig } from "@/config/config";
+import { initializeApp } from "firebase/app";
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 
-const db = getFirestore();
 
 // 🔹 Função para buscar itens de um endpoint específico
 export const getItemsByEndpoint = async (endpointId: string) => {
+  if(!IsStartedfirebaseConfig) return null
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app); 
   try {
     const itemsRef = collection(db, "itens"); // 🔹 Coleção "itens"
     const q = query(itemsRef, where("endpointId", "==", endpointId)); // 🔹 Filtra apenas os itens do endpoint

@@ -1,13 +1,13 @@
-import { firebaseConfig } from "@/config/config";
+import { firebaseConfig, IsStartedfirebaseConfig } from "@/config/config";
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, addDoc } from "firebase/firestore";
 
-// 🔹 Inicializa o Firebase e Firestore
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 
 // 🔹 Função para adicionar um novo endpoint ao Firestore
 export const addEndpoint = async (title: string, router: string, campos: string[]) => {
+  if(!IsStartedfirebaseConfig) return null
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app); 
   try {
     const docRef = await addDoc(collection(db, "endpoints"), {
       title,

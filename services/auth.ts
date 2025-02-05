@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { getData, saveData } from './storage';
 
-const SECRET_KEY = process.env.NEXT_PUBLIC_SECRET_KEY;
+const SECRET_KEY = 'lA0qUhYC0MnzpZ8';
 
 export const registerUser = async(name: string, password: string) => {
   const data = await getData();

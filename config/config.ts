@@ -1,9 +1,10 @@
 // 🔹 firebaseConfig.ts
+export const IsStartedfirebaseConfig = true;
 export const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+  "apiKey": "AIzaSyAEuiJWG1NSpLXy4WCEwHN5EaMCarbISQA",
+  "authDomain": "cms-demo-cb7fc.firebaseapp.com",
+  "projectId": "cms-demo-cb7fc",
+  "storageBucket": "cms-demo-cb7fc.firebasestorage.app",
+  "messagingSenderId": "743128664817",
+  "appId": "1:743128664817:web:559617db6ad9fc753a3750"
 };

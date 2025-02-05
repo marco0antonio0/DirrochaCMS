@@ -1,10 +1,7 @@
-import { firebaseConfig } from "@/config/config";
+import { firebaseConfig, IsStartedfirebaseConfig } from "@/config/config";
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, updateDoc, arrayUnion, getDoc } from "firebase/firestore";
 
-// 🔹 Inicializa o Firebase e Firestore
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 
 // 🔹 Interface para tipagem dos itens
 interface Item {
@@ -21,6 +18,9 @@ const formatDataObject = (items: Item[]) => {
   }, {} as Record<string, any>);
 };
 export const updateItemForEndpoint = async (itemId: string, items: Item[]) => {
+  if(!IsStartedfirebaseConfig) return null
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app); 
   try {
     const itemRef = doc(db, "itens", itemId);
     const itemSnap = await getDoc(itemRef);
