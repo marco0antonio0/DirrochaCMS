@@ -6,6 +6,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { getData } from "@/services/storage";
 import { useRouter } from "next/router";
+import { loginUser, registerUser } from "@/services/auth";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -19,6 +20,7 @@ const geistMono = localFont({
 });
 
 export default function Home() {
+  const _SECRET_KEY_ = 'lA0qUhYC0MnzpZ8abcdefghij12345678901234567890';
   const [isFirstAccess, setIsFirstAccess] = useState(false);
   const [firebaseCredentials, setFirebaseCredentials] = useState({
     apiKey: "",
@@ -127,7 +129,7 @@ export default function Home() {
     try {
        response = await axios.post("/api/firebaseConfig", firebaseCredentials,{
         headers: {
-          Authorization: `Bearer ${"lA0qUhYC0MnzpZ8"}`,
+          Authorization: `Bearer ${_SECRET_KEY_}`,
         },
       }
     );
@@ -170,23 +172,24 @@ export default function Home() {
           setLoading(false);
           return;
         }}
-
-
-        await axios.post("/api/register", {
+        const token = await registerUser(credentials.name, credentials.password);
+  
+        if (token) {
+          setLoading(false);
+            setTimeout(() => {
+              window.location.href = "/home";
+            }, 100);
+          }
+        }else{
+        const response = await axios.post("/api/login", {
           name: credentials.name,
           password: credentials.password,
         });
-      }
-      const response = await axios.post("/api/login", {
-        name: credentials.name,
-        password: credentials.password,
-      });
-
-      setTimeout(() => {
         Cookies.set("token", response.data.token, { expires: 1 }); 
         window.location.href = "/home"; 
         setLoading(false);
-    }, 0);
+      }
+      
 
     } catch (error: any) {
       setTimeout(() => {
@@ -204,10 +207,6 @@ export default function Home() {
         }
         setLoading(false);
     }, 0);
-    }finally{
-      setTimeout(() => {
-        setLoading(false);
-    }, 2000);
     }
   }
 

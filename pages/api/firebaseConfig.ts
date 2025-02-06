@@ -3,6 +3,9 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import fs from "fs";
 import path from "path";
+import { createSecretKey } from 'crypto';
+
+
 
 // 🔹 Caminho onde o arquivo TypeScript será salvo
 const configPath = path.join(process.cwd(), "config/config.ts");
@@ -24,12 +27,15 @@ const testFirestoreConnection = async (configData: any) => {
 
 // 🔹 API para validar e salvar credenciais Firebase no formato TypeScript
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+
+  const _SECRET_KEY_ = 'lA0qUhYC0MnzpZ8abcdefghij12345678901234567890';
+
   if (req.method !== "POST") {
     return res.status(405).json({ message: "🚫 Método não permitido" });
   }
 
   // 🔒 Verifica autenticação da requisição
-  if (req.headers["authorization"] !== `Bearer ${"lA0qUhYC0MnzpZ8"}`) {
+  if (req.headers["authorization"] !== `Bearer ${_SECRET_KEY_}`) {
     return res.status(403).json({ message: "❌ Acesso negado" });
   }
 
