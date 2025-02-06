@@ -87,7 +87,6 @@ Antes de começar, você precisará ter as seguintes ferramentas instaladas:
     NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
     NEXT_PUBLIC_FIREBASE_PROJECT_ID=
     NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
-    NEXT_PUBLIC_SECRET_KEY=
     NEXT_PUBLIC_ENV=
     ```
 1.  **Apenas forneça o arquivo do projeto e pronto:**
