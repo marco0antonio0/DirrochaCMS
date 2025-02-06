@@ -1,6 +1,7 @@
 import { firebaseConfig, IsStartedfirebaseConfig } from "@/config/config";
 import { initializeApp } from "firebase/app";
 import { deleteDoc, doc, getFirestore } from "firebase/firestore";
+import toast from "react-hot-toast";
 
 /**
  * Deleta um item pelo ID no Firestore.
@@ -13,13 +14,18 @@ export const deleteEndpointIdById = async (endpointId: string) => {
   if(!IsStartedfirebaseConfig) return null
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app); 
-  try {
+    const toastId = toast.loading("Deletando endpoint ...",{duration:4000});
+    try {
     const itemRef = doc(db, "endpoints", endpointId);
     await deleteDoc(itemRef);
 
     // console.log(`Item com ID ${endpointId} deletado com sucesso.`);
+    toast.success("Endpoint deletado com sucesso",{duration:4000})
+    toast.dismiss(toastId)
     return { success: true };
   } catch (error) {
+    toast.error("Erro ao deleta o endpoint ",{duration:4000})
+    toast.dismiss(toastId)
     console.error("Erro ao deletar o item:", error);
     return { success: false, error };
   }

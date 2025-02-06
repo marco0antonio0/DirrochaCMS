@@ -7,6 +7,7 @@ import { addEndpoint } from "@/services/addEndpoint";
 import Cookies from "js-cookie";
 import axios from "axios";
 import { logout } from "@/services/logout";
+import toast from "react-hot-toast";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -98,6 +99,7 @@ export default function Home() {
   };
 
   const saveData = async () => {
+    const toastId = toast.loading("Criando endpoint ...",{duration:4000});
     if (!validateFields()) {
       return;
     }
@@ -109,6 +111,8 @@ export default function Home() {
       if (result && result.success) {
         setTimeout(() => {
           setLoading(false);
+          toast.dismiss(toastId)
+          toast.success("Endpoint criado com sucesso",{duration:4000});
           r.push("/home");
         }, 1000);
       } else {
@@ -117,6 +121,8 @@ export default function Home() {
         }, 1000);
       }
     } catch (error) {
+      toast.dismiss(toastId)
+      toast.error("Erro ao criar o endpoint ",{duration:4000});
       console.error("Erro ao adicionar endpoint:", error);
       setLoading(false);
     }

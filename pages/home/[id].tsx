@@ -17,6 +17,7 @@ import { updateItemForEndpoint } from "@/services/updateItemToEndpoint";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { logout } from "@/services/logout";
+import toast from "react-hot-toast";
 
 const geistSans = localFont({
   src: "./../fonts/GeistVF.woff",
@@ -180,15 +181,22 @@ export default function Home() {
         titulo_identificador: "",
     }));
     }
+
     setLoading(true);
     var dataValue = itemSelected[0]
     var dataLocal = data.filter((e:any)=>e.title == r.query.id) 
     if(!dataValue["id"]){
-      const result = await createItemForEndpoint(dataLocal[0]['id'],dataValue["data"])
+    const toastId = toast.loading("Criando item ...",{duration:4000});
+    const result = await createItemForEndpoint(dataLocal[0]['id'],dataValue["data"])
       await refreshData(result)
-  }else{
+      toast.success("Item criado com sucesso",{duration:4000});
+      toast.dismiss(toastId)
+    }else{
+    const toastId = toast.loading("Atualizando item ...",{duration:4000});
+    toast.success("Item atualizado com sucesso",{duration:4000});
       const result = await updateItemForEndpoint(dataValue["id"],dataValue["data"])
       await refreshData(result)
+      toast.dismiss(toastId)
     
   }
 }

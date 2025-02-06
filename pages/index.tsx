@@ -7,6 +7,7 @@ import Cookies from "js-cookie";
 import { getData } from "@/services/storage";
 import { useRouter } from "next/router";
 import { loginUser, registerUser } from "@/services/auth";
+import toast from "react-hot-toast";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -118,8 +119,10 @@ export default function Home() {
     setLoading(true);
 
     if(errors.confirmPassword && isFirstAccess) return;
+    
+    if (isFirstAccess) {toast("Criando conta ...",{duration:4000});}
     try {
-      if (isFirstAccess) {
+    if (isFirstAccess) {
     if (credentials.password !== credentials.confirmPassword) {
           setErrors((prev) => ({ ...prev, confirmPassword: true }));
           return;
@@ -170,12 +173,15 @@ export default function Home() {
             },}
           setErrors(newErrors);
           setLoading(false);
+          toast.error("Falha ao criar a conta ...",{duration:4000})
           return;
         }}
         const token = await registerUser(credentials.name, credentials.password);
   
         if (token) {
           setLoading(false);
+          toast.success("Conta criada com sucesso",{duration:4000});
+          toast.success("Seja bem vindo(a)",{duration:4000});
             setTimeout(() => {
               window.location.href = "/home";
             }, 100);
@@ -207,6 +213,8 @@ export default function Home() {
         }
         setLoading(false);
     }, 0);
+    }finally{
+          setLoading(false);
     }
   }
 
