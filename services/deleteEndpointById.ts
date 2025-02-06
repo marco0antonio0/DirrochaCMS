@@ -1,6 +1,5 @@
-import { firebaseConfig, IsStartedfirebaseConfig } from "@/config/config";
-import { initializeApp } from "firebase/app";
-import { deleteDoc, doc, getFirestore } from "firebase/firestore";
+import {  db, IsStartedfirebaseConfig } from "@/config/config";
+import { deleteDoc, doc } from "firebase/firestore";
 import toast from "react-hot-toast";
 
 /**
@@ -12,8 +11,6 @@ import toast from "react-hot-toast";
 
 export const deleteEndpointIdById = async (endpointId: string) => {
   if(!IsStartedfirebaseConfig) return null
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app); 
     const toastId = toast.loading("Deletando endpoint ...",{duration:4000});
     try {
     const itemRef = doc(db, "endpoints", endpointId);

@@ -55,9 +55,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   // 🔹 Converte para TypeScript
-  const tsConfig = `// 🔹 firebaseConfig.ts
+  const tsConfig = `
+import { getApp, getApps, initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
+  
+// 🔹 firebaseConfig.ts
 export const IsStartedfirebaseConfig = true;
 export const firebaseConfig = ${JSON.stringify(firebaseConfig, null, 2)};
+
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+export { app, db };
 `;
 
   // 🔹 Salva o arquivo `config.ts`

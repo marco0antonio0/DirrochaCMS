@@ -1,3 +1,6 @@
+import { getApp, getApps, initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
+
 // 🔹 firebaseConfig.ts
 export const IsStartedfirebaseConfig = process.env.NEXT_PUBLIC_ENV || false ;
 export const firebaseConfig = {
@@ -8,3 +11,8 @@ export const firebaseConfig = {
   "messagingSenderId": process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "",
   "appId": process.env.NEXT_PUBLIC_FIREBASE_APP_ID || ""
 };
+
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+export { app, db };

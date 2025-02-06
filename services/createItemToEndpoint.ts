@@ -1,6 +1,5 @@
-import { firebaseConfig, IsStartedfirebaseConfig } from "@/config/config";
-import { initializeApp } from "firebase/app";
-import { getFirestore, doc, getDoc, updateDoc, arrayUnion, addDoc, collection } from "firebase/firestore";
+import { db, IsStartedfirebaseConfig } from "@/config/config";
+import { doc, getDoc, addDoc, collection } from "firebase/firestore";
 
 
 // 🔹 Interface para tipagem dos itens
@@ -22,8 +21,6 @@ const formatDataObject = (items: Item[]) => {
 // 🔹 Função para adicionar um novo item sem sobrescrever os anteriores
 export const createItemForEndpoint = async (endpointId: string, items: Item[]) => {
   if(!IsStartedfirebaseConfig) return null
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app); 
   try {
     const endpointRef = doc(db, "endpoints", endpointId);
     const endpointSnap = await getDoc(endpointRef);

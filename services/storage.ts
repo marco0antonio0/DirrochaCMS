@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
-import { firebaseConfig, IsStartedfirebaseConfig } from "@/config/config";
+import { db, firebaseConfig, IsStartedfirebaseConfig } from "@/config/config";
 
 // 🔹 Inicializa o Firebase e o Firestore
 
@@ -8,8 +8,6 @@ import { firebaseConfig, IsStartedfirebaseConfig } from "@/config/config";
 // 🔹 Função para obter dados do Firestore
 export const getData = async () => {
   if(!IsStartedfirebaseConfig) return null
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app); 
   try {
     const docRef = doc(db, "users", "default"); // "default" pode ser qualquer ID padrão
     const docSnap = await getDoc(docRef);
