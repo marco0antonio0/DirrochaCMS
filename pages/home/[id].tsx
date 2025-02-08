@@ -131,8 +131,13 @@ export default function Home() {
 
 
   function goToItem(value:any){
+    // setDate("")
     var result = dataItem.filter((e:any)=>e.id == value)
     setItemSelected(formatDataToDynamicObject(result[0]))
+    console.log(result)
+    if(result[0]['formattedData']['date']){
+      setDate(result[0]['formattedData']['date'])
+    }
     if(result[0]['formattedData']['image']){
       setImage(result[0]['formattedData']['image'])
     }
@@ -167,6 +172,8 @@ export default function Home() {
 
   async function saveData (){
     const tituloIdentificador = itemSelected[0]?.data.find((e:any) => e.title === "titulo_identificador")?.value;
+    
+    if(errorDate.length>0) return ; 
 
     if (!tituloIdentificador || tituloIdentificador.trim() === "") {
         setErrors((prev) => ({
@@ -276,6 +283,38 @@ export default function Home() {
    }, [r.asPath]);
  
 
+   const [date, setDate] = useState("");
+   const [errorDate, setErrorDate] = useState("");
+ 
+   const formatDateToDDMMYYYY = (input: string) => {
+     if (input.includes("-")) {
+       const [year, month, day] = input.split("-");
+       return `${day}/${month}/${year}`;
+     }
+     return input;
+   };
+ 
+   const validateDate = (input: string) => {
+     console.log("Validando:", input);
+     const dateRegex = /^(?:19|20)\d\d-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])$/
+;
+     if (!dateRegex.test(input)) {
+       setErrorDate("Data inválida! Use o formato dd/mm/yyyy");
+       return true
+     } else {
+       setErrorDate("");
+       return false
+     }
+     return true
+    };
+ 
+   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+     const rawValue = e.target.value;
+     const formattedValue = formatDateToDDMMYYYY(rawValue);
+     setDate(formattedValue);
+     validateDate(formattedValue);
+   };
+ 
   return (
     
     <div
@@ -402,6 +441,8 @@ export default function Home() {
             <button className="absolute left-6 top-10 md:top-6 p-2 rounded-full hover:bg-gray-200 transition" onClick={() => {
               setItemSelected(null)
               setImage(null)
+              setErrorDate("")
+              setDate("")
               }}>
               <svg xmlns="http://www.w3.org/2000/svg" height="50px" viewBox="0 -960 960 960" width="30px" fill="black">
                 <path d="M400-240 160-480l240-240 56 58-142 142h486v80H314l142 142-56 58Z"/>
@@ -473,8 +514,28 @@ export default function Home() {
                 setItemSelected(updatedData);
               }}
             />):
+            e.type==="image"?
               <>
               <ImageUpload file={handleFileChange} handleDrop={handleDrop} image={image}/>
+              </>: 
+              <>
+              <div className="m-auto mt-0 mb-0 w-[100%]">
+              <input
+                type="date"
+                className="h-14 w-full rounded-lg border-2 border-gray-200 px-5 sm:h-12"
+                value={e.value??""}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  const updatedData = [...itemSelected];
+                  handleDateChange
+                  setDate(e.target.value)
+                  updatedData[0].data[i].value = newValue;
+                  setItemSelected(updatedData);
+                }}
+                onBlur={() => validateDate(date)}
+              />
+              {errorDate && <p className="text-red-500 text-sm mt-1">{errorDate}</p>}
+            </div>
               </>
                }
             </div>)):null}
@@ -568,5 +629,4 @@ function ImageUpload({file,handleDrop,image}:{file:any,handleDrop:any,image:any}
     </div>
   );
 }
-
 

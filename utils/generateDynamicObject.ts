@@ -1,6 +1,7 @@
 export const generateDynamicObject = (fields: string[]) => {
     const fieldProperties: { [key: string]: { mult: boolean; type?: string } } = {
         titulo_identificador: { mult: false, type: "string" },
+        data: { mult: false, type: "date" },
         titulo: { mult: false, type: "string" },
         link: { mult: false, type: "string" },
         preco: { mult: false, type: "string" },

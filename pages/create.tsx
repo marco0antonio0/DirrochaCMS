@@ -22,6 +22,7 @@ const geistMono = localFont({
 
 export default function Home() {
   const [selected_titulo, setSelected_titulo] = useState(false);
+  const [selected_data, setSelected_data] = useState(false);
   const [selected_link, setSelected_link] = useState(false);
   const [selected_preco, setSelected_preco] = useState(false);
   const [selected_nome, setSelected_nome] = useState(false);
@@ -71,6 +72,7 @@ export default function Home() {
   const getSelectedFields = () => {
     const selectedFields = {
       titulo: selected_titulo,
+      data: selected_data,
       nome: selected_nome,
       breve_descricao: selected_breve_descricao,
       descricao: selected_descricao,
@@ -182,6 +184,12 @@ export default function Home() {
                   validateFields()
                   setSelected_titulo(!selected_titulo);}} isChecked={selected_titulo}/>
                 <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Titulo</h1>
+              </div>
+              <div className="flex flex-row ">
+                <ToggleSwitch handleToggle={()=>{ 
+                  validateFields()
+                  setSelected_data(!selected_data);}} isChecked={selected_data}/>
+                <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Data</h1>
               </div>
               <div className="flex flex-row ">
                 <ToggleSwitch handleToggle={()=>{ 
