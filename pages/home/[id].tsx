@@ -514,7 +514,7 @@ export default function Home() {
                 setItemSelected(updatedData);
               }}
             />):
-            e.type==="image"?
+            e.type==="img"?
               <>
               <ImageUpload file={handleFileChange} handleDrop={handleDrop} image={image}/>
               </>: 
