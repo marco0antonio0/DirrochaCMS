@@ -11,10 +11,12 @@
   "dependencies": {
     "@panva/jose": "^1.9.3",
     "axios": "^1.7.9",
+    "browser-image-compression": "^2.0.2",
     "firebase": "^11.2.0",
     "jose": "^5.9.6",
     "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
+    "lodash.debounce": "^4.0.8",
     "next": "14.2.12",
     "path": "^0.12.7",
     "react": "^18",
@@ -24,6 +26,7 @@
   "devDependencies": {
     "@types/js-cookie": "^3.0.6",
     "@types/jsonwebtoken": "^9.0.8",
+    "@types/lodash.debounce": "^4.0.9",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

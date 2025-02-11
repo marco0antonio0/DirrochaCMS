@@ -1,12 +1,13 @@
 import Image from "next/image";
 import localFont from "next/font/local";
-import { MouseEventHandler, useEffect, useState } from "react";
+import { MouseEventHandler, useCallback, useEffect, useState } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { getEndpoints } from "@/services/getEndpoints";
 import Cookies from "js-cookie";
 import axios from "axios";
 import { logout } from "@/services/logout";
+import debounce from "lodash.debounce";
 
 const geistSans = localFont({
   src: "./../fonts/GeistVF.woff",
@@ -22,6 +23,7 @@ const geistMono = localFont({
 export default function Home() {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]); // Estado para armazenar dados filtrados
   const [isEmptyData, setIsEmptyData] = useState(false); // Estado para verificar se está vazio
   const r = useRouter();
 
@@ -62,6 +64,7 @@ export default function Home() {
         setIsEmptyData(true);
       } else {
         setData(response.data);
+        setFilteredData(response.data);
         setIsEmptyData(false);
       }
       setLoading(false);
@@ -70,7 +73,20 @@ export default function Home() {
       setLoading(false);
     });
   }, []);
-
+  const handleSearch = useCallback(
+    debounce((value: string) => {
+      if (!value) {
+        setFilteredData(data);
+        return;
+      }
+      
+      const filtered = data.filter((item: any) =>
+        item.title.toLowerCase().includes(value.toLowerCase())
+      );
+      setFilteredData(filtered);
+    }, 300), // 300ms de debounce para evitar execuções excessivas
+    [data]
+  );
   return (
     <div
       className={`${geistSans.variable} ${geistMono.variable} grid grid-rows-[20px_1fr_20px] items-center w-[100%] justify-items-center min-h-screen p-8 pb-20 gap-16 sm:py-10 sm:px-3 font-[family-name:var(--font-geist-sans)]`}
@@ -92,17 +108,19 @@ export default function Home() {
             <span className="m-auto mt-3 text-lg opacity-65 sm:text-sm sm:mt-0 text-center px-20">Visualize, acesse e crie novos endpoints com facilidade. Clique em um para gerenciar ou adicione um novo.</span>
           </div>
           <div className="flex flex-col h-[100%] w-[100%] mt-5 px-20 lg:px-10">
-            
             <div className="h-5"></div>
-            
+            <h1 className="m-auto mt-0 mb-1 ml-0 opacity-65 sm:text-sm">Pesquisa</h1>
+            <input name="search" type="text" className={`m-auto mt-1 mb-0 w-[100%] h-14 rounded-lg border-gray-200 border-2 px-5 sm:h-12`} placeholder="digite" 
+             onChange={(e) => handleSearch(e.target.value)}/>
+            <div className="h-5"></div>
             <h1 className="m-auto mt-0 mb-1 ml-0 opacity-65 sm:text-sm">EndPoints</h1>
             {loading ? (
               <span className="loader border-8 border-black border-t-transparent rounded-full w-12 h-12 animate-spin m-auto my-20"></span>
-            ) :  isEmptyData ? (
+            ) :  isEmptyData ? (  
               <h1 className="m-auto my-10 text-center text-lg">Nenhum dado encontrado</h1>
             ) :null}
             <div className="w-[100%] flex flex-col h-auto gap-3">
-                {data.map((e:any,i)=>(<div key={i}><Item text={e.title} onClick={()=>{r.push("/home/"+e.router)}}/></div>))}
+                {filteredData.map((e:any,i)=>(<div key={i}><Item text={e.title} onClick={()=>{r.push("/home/"+e.router)}}/></div>))}
             </div>
             <div className="h-5"></div>
             <button className="align-middle w-[100%] h-14 border-2 border-gray-200 rounded-md mt-0 flex justify-center items-center" onClick={()=>{r.push("/create")}}>

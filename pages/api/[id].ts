@@ -1,4 +1,3 @@
-// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import { getEndpoints } from "@/services/getEndpoints";
 import { getItemsByEndpoint } from "@/services/getItensToEndpoints";
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -24,7 +23,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<any>,
 ) {
-  res.setHeader("Access-Control-Allow-Credentials", 'true');
+  res.setHeader("Access-Control-Allow-Credentials", "true");
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
     "Access-Control-Allow-Methods",
@@ -62,8 +61,12 @@ export default async function handler(
     return res.status(500).json({ error: "Erro interno", statusCode: 500 });
   }
 
+  // Ordena os itens pela data de criação (assumindo que há um campo `createdAt` no formato ISO)
+  data.data.sort((a: any, b: any) => {
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(); // Ordem decrescente (mais recentes primeiro)
+  });
+
   if (t) {
-    var item: any = data.data[0];
     const searchTerm = Array.isArray(t) ? t[0] : t;
     if (!searchTerm) {
       return res.status(400).json({ error: "Parâmetro 't' é obrigatório", statusCode: 400 });

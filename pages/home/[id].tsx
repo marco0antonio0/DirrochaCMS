@@ -1,6 +1,6 @@
 import Image from "next/image";
 import localFont from "next/font/local";
-import { MouseEventHandler, useEffect, useState } from "react";
+import { MouseEventHandler, useCallback, useEffect, useState } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { getEndpoints } from "@/services/getEndpoints";
@@ -18,6 +18,8 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { logout } from "@/services/logout";
 import toast from "react-hot-toast";
+import debounce from "lodash.debounce";
+import { optimizeImage } from "@/services/optimizeImage";
 
 const geistSans = localFont({
   src: "./../fonts/GeistVF.woff",
@@ -42,6 +44,7 @@ export default function Home() {
   const r = useRouter()
   const [forceUpdate,setForceUpdate] = useState(0)
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [filteredData, setFilteredData] = useState<any[]>([]); // Estado para armazenar dados filtrados
   const [openModal,setOpenModal] = useState(false)
   const triggerUpdate = () => {
     setForceUpdate(prev => prev + 1);
@@ -98,6 +101,7 @@ export default function Home() {
   
         if (fetch.data && fetch.data.length > 0) {
           setdataItem(fetch['data']);
+          setFilteredData(fetch['data']);
           setLoadingData(true);
           triggerUpdate();
         }else{
@@ -208,37 +212,48 @@ export default function Home() {
   }
 }
 
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const file = event.dataTransfer.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImage(e.target?.result as string);
-        itemSelected[0]['data'].map((ee:any,i:any)=>{
-          if(ee['type'] == 'img'){
-            itemSelected[0]['data'][i]['value'] = e.target?.result as string
-          }
-        })
-      };
-      reader.readAsDataURL(file);
-      
-    }
-  };
+const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
+  event.preventDefault();
+  const file = event.dataTransfer.files[0];
+  if (file) {
+    try {
+      const optimizedBase64 = await optimizeImage(file);
+      setImage(optimizedBase64);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      if (itemSelected) {
+        const updatedData = [...itemSelected];
+        updatedData[0].data.forEach((ee: any, i: number) => {
+          if (ee.type === "img") {
+            updatedData[0].data[i].value = optimizedBase64;
+          }
+        });
+        setItemSelected(updatedData);
+      }
+    } catch (error) {
+      console.error("Erro ao processar a imagem:", error);
+    }
+  }
+};
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImage(e.target?.result as string);
-        itemSelected[0]['data'].map((ee:any,i:any)=>{
-          if(ee['type'] == 'img'){
-            itemSelected[0]['data'][i]['value'] = e.target?.result as string
-          }
-        })
-      };
-      reader.readAsDataURL(file);
+      try {
+        const optimizedBase64 = await optimizeImage(file);
+        setImage(optimizedBase64);
+  
+        if (itemSelected) {
+          const updatedData = [...itemSelected];
+          updatedData[0].data.forEach((ee: any, i: number) => {
+            if (ee.type === "img") {
+              updatedData[0].data[i].value = optimizedBase64;
+            }
+          });
+          setItemSelected(updatedData);
+        }
+      } catch (error) {
+        console.error("Erro ao processar a imagem:", error);
+      }
     }
   };
  
@@ -275,12 +290,20 @@ export default function Home() {
    useEffect(() => {
      if (typeof window !== "undefined") {
        const hostname = window.location.hostname;
-       const protocol = hostname === "0.0.0.0" ? "http://" : "https://";
-       const fullUrl = `${protocol}${hostname === "0.0.0.0" ? "0.0.0.0:3000" : hostname}/api/${r.query.id}`;
- 
+       let protocol = "https://";
+       let port = "";
+   
+       // Define o protocolo correto
+       if (hostname === "0.0.0.0" || hostname === "localhost") {
+         protocol = "http://";
+         port = ":3000"; // Defina a porta desejada
+       }
+   
+       const fullUrl = `${protocol}${hostname}${port}/api/${r.query.id}`;
        setUrl(fullUrl);
      }
    }, [r.asPath]);
+   
  
 
    const [date, setDate] = useState("");
@@ -314,7 +337,24 @@ export default function Home() {
      setDate(formattedValue);
      validateDate(formattedValue);
    };
- 
+   const handleSearch = useCallback(
+    debounce((value: string) => {
+      if (!value.trim()) {
+        setFilteredData(dataItem); // Restaura todos os itens caso o campo esteja vazio
+        return;
+      }
+  
+      const filtered = dataItem.filter((item: any) =>
+        item?.formattedData?.titulo_identificador?.toLowerCase().includes(value.toLowerCase())
+      );
+  
+      setFilteredData(filtered);
+    }, 300), // Debounce de 300ms para evitar execuções excessivas
+    [dataItem] // Atualiza a função sempre que dataItem mudar
+  );
+  useEffect(() => {
+    setFilteredData(dataItem); // Garante que filteredData inicie com todos os itens
+  }, [dataItem]); // Atualiza sempre que dataItem mudar
   return (
     
     <div
@@ -408,14 +448,16 @@ export default function Home() {
 
           <div className="flex flex-col h-[100%] w-[100%] mt-5 px-20 lg:px-10">
           {loadingData?<>  
+            <h1 className="m-auto mt-0 mb-1 ml-0 opacity-65 sm:text-sm">Pesquisa</h1>
+            <input name="search" type="text" className={`m-auto mt-1 mb-0 w-[100%] h-14 rounded-lg border-gray-200 border-2 px-5 sm:h-12`} placeholder="digite" 
+             onChange={(e) => handleSearch(e.target.value)}/>
             <div className="h-5"></div>
-            
             <h1 className="m-auto mt-0 mb-1 ml-0 opacity-65 sm:text-sm">Listagem</h1>
-            {isEmpytdata && dataItem.length==0?(<>
+            {isEmpytdata && filteredData.length==0?(<>
               <h1 className="m-auto my-10">Nenhum dado encontrado</h1>
             </>):null}
             <div className="w-[100%] flex flex-col h-auto gap-3" key={forceUpdate}>
-              {dataItem.map((e,i)=>{
+              {filteredData.map((e,i)=>{
               return  (<div key={i}><Item text={e['formattedData'].titulo_identificador} 
                 onClick={()=>{goToItem(e.id)}}/></div>)
                
