@@ -1,38 +1,80 @@
-import { getData, saveData } from './storage';
+import { getData, saveData } from "./storage";
 import Cookies from "js-cookie";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 
+const SECRET_KEY = "lA0qUhYC0MnzpZ8abcdefghij12345678901234567890"; // Chave secreta
+const SALT_ROUNDS = 10; // Número de rounds para a criptografia
 
-
+/**
+ * Registra um novo usuário, criptografa a senha e gera um token JWT.
+ * @param name Nome do usuário
+ * @param password Senha do usuário
+ * @returns Token JWT
+ */
 export const registerUser = async (name: string, password: string): Promise<string> => {
-const _SECRET_KEY_ = 'lA0qUhYC0MnzpZ8abcdefghij12345678901234567890';
-  const data = await getData();
-  if (data) {
-    throw new Error('Registration is closed');
+  const existingUser = await getData();
+  if (existingUser) {
+    throw new Error("Registration is closed");
   }
-  
-  await saveData({ name, password });
+
+  // Criptografa a senha antes de armazená-la
+  const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+
+  // Salva o usuário com a senha criptografada
+  await saveData({ name, password: hashedPassword });
+
   try {
-    const token = _SECRET_KEY_
+    // Gera um token JWT com o nome do usuário e tempo de expiração de 1 dia
+    const token = jwt.sign({ name }, SECRET_KEY, { expiresIn: "1d" });
+
+    // Salva o token nos cookies por 1 dia
     Cookies.set("token", token, { expires: 1 });
 
     return token;
   } catch (error) {
-    throw new Error('Erro ao gerar token');
+    throw new Error("Erro ao gerar token");
   }
 };
 
+/**
+ * Realiza o login do usuário, verifica a senha criptografada e retorna um token JWT válido.
+ * @param name Nome do usuário
+ * @param password Senha do usuário
+ * @returns Token JWT
+ */
+export const loginUser = async (name: string, password: string): Promise<string> => {
+  const user: any = await getData();
 
-export const loginUser = async(name: string, password: string) => {
-const _SECRET_KEY_ = 'lA0qUhYC0MnzpZ8abcdefghij12345678901234567890';
-  const user:any = await getData();
-  // var data = user['config']['data']
-  if (!user || user.name !== name || user.password !== password) {
-    throw new Error('Invalid credentials');
+  if (!user) {
+    throw new Error("Usuário não encontrado");
   }
-  return _SECRET_KEY_
+
+  // Verifica se a senha fornecida corresponde à senha criptografada
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    throw new Error("Credenciais inválidas");
+  }
+
+  // Gera um novo token JWT ao logar
+  const token = jwt.sign({ name }, SECRET_KEY, { expiresIn: "1d" });
+
+  // Salva o token nos cookies
+  Cookies.set("token", token, { expires: 1 });
+
+  return token;
 };
 
-export const verifyToken = async (token: string) => {
-  const _SECRET_KEY_ = 'lA0qUhYC0MnzpZ8abcdefghij12345678901234567890';
-  return _SECRET_KEY_ === token
+/**
+ * Verifica a autenticidade de um token JWT.
+ * @param token Token JWT fornecido
+ * @returns Retorna `true` se o token for válido, caso contrário, `false`
+ */
+export const verifyToken = async (token: string): Promise<boolean> => {
+  try {
+    const decoded = jwt.verify(token, SECRET_KEY);
+    return !!decoded;
+  } catch (error) {
+    return false; // Token inválido ou expirado
+  }
 };

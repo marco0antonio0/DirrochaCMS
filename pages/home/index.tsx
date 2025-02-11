@@ -42,7 +42,7 @@ export default function Home() {
             Authorization: `Bearer ${token}`, // Enviando o token como Bearer
           },
         });
-    
+        console.log(response)
         // console.log("Token válido:", response.data);
         return true;
       } catch (error) {

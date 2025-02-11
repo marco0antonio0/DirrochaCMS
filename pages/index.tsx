@@ -116,12 +116,6 @@ export default function Home() {
     let response:any = null
     if(!process.env.NEXT_PUBLIC_ENV){
     try {
-       response = await axios.post("/api/firebaseConfig", firebaseCredentials,{
-        headers: {
-          Authorization: `Bearer ${_SECRET_KEY_}`,
-        },
-      }
-    );
     } catch (error) {
       let newErrors = {
         name: credentials.name.trim() === "",
@@ -148,7 +142,7 @@ export default function Home() {
           return;
         }}
         const token = await registerUser(credentials.name, credentials.password);
-  
+        
         if (token) {
           setLoading(false);
           toast.success("Conta criada com sucesso",{duration:4000});
