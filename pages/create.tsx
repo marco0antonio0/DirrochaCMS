@@ -179,72 +179,17 @@ export default function Home() {
             <div className="h-5"></div>
             <h1 className="m-auto mt-3 mb-3 ml-0 opacity-65 sm:text-sm">Quais campos voce quer no endpoint?</h1>
             <div className="flex flex-col gap-3">
-              <div className="flex flex-row ">
-                <ToggleSwitch handleToggle={()=>{ 
-                  validateFields()
-                  setSelected_titulo(!selected_titulo);}} isChecked={selected_titulo}/>
-                <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Titulo</h1>
-              </div>
-              <div className="flex flex-row ">
-                <ToggleSwitch handleToggle={()=>{ 
-                  validateFields()
-                  setSelected_data(!selected_data);}} isChecked={selected_data}/>
-                <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Data</h1>
-              </div>
-              <div className="flex flex-row ">
-                <ToggleSwitch handleToggle={()=>{ 
-                  validateFields()
-                  setSelected_descricao(!selected_descricao);}} isChecked={selected_descricao}/>
-                <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Descrição</h1>
-              </div>
-              <div className="flex flex-row ">
-                <ToggleSwitch handleToggle={()=>{ 
-                  validateFields()
-                  setSelected_breve_descricao(!selected_breve_descricao);}} isChecked={selected_breve_descricao}/>
-                <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Breve Descrição</h1>
-              </div>
-              <div className="flex flex-row ">
-                <ToggleSwitch handleToggle={()=>{ 
-                  validateFields()
-                  setSelected_artigo(!selected_artigo);}} isChecked={selected_artigo}/>
-                <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Artigo</h1>
-              </div>
-              <div className="flex flex-row ">
-                <ToggleSwitch handleToggle={()=>{ 
-                  validateFields()
-                  setSelected_image(!selected_image);}} isChecked={selected_image}/>
-                <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Imagem</h1>
-              </div>
-              <div className="flex flex-row ">
-                <ToggleSwitch handleToggle={()=>{ 
-                  validateFields()
-                  setSelected_nome(!selected_nome);}} isChecked={selected_nome}/>
-                <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Nome</h1>
-              </div>
-              <div className="flex flex-row ">
-                <ToggleSwitch handleToggle={()=>{ 
-                  validateFields()
-                  setSelected_senha(!selected_senha);}} isChecked={selected_senha}/>
-                <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Senha</h1>
-              </div>
-              <div className="flex flex-row ">
-                <ToggleSwitch handleToggle={()=>{ 
-                  validateFields()
-                  setSelected_texto(!selected_texto);}} isChecked={selected_texto}/>
-                <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Texto</h1>
-              </div>
-              <div className="flex flex-row ">
-                <ToggleSwitch handleToggle={()=>{ 
-                  validateFields()
-                  setSelected_link(!selected_link);}} isChecked={selected_link}/>
-                <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Link</h1>
-              </div>
-              <div className="flex flex-row ">
-                <ToggleSwitch handleToggle={()=>{ 
-                  validateFields()
-                  setSelected_preco(!selected_preco);}} isChecked={selected_preco}/>
-                <h1 className="m-auto  ml-4 mr-0 opacity-65 sm:text-sm">Preço</h1>
-              </div>
+              <SwitchToggle title="Titulo" desc="Campo de texto simples" value={selected_titulo} setValue={setSelected_titulo} onChange={()=>validateFields()}/>
+              <SwitchToggle title="Data" desc="Campo de data dd-mm-yyyy" value={selected_data} setValue={setSelected_data} onChange={()=>validateFields()}/>
+              <SwitchToggle title="Descrição" desc="Campo de texto multi linha" value={selected_descricao} setValue={setSelected_descricao} onChange={()=>validateFields()}/>
+              <SwitchToggle title="Breve Descrição" desc="Campo de texto multi linha" value={selected_breve_descricao} setValue={setSelected_breve_descricao} onChange={()=>validateFields()}/>
+              <SwitchToggle title="Artigo" desc="Campo de texto multi linha" value={selected_artigo} setValue={setSelected_artigo} onChange={()=>validateFields()}/>
+              <SwitchToggle title="Imagem" desc="Campo de imagem" value={selected_image} setValue={setSelected_image} onChange={()=>validateFields()}/>
+              <SwitchToggle title="Nome" desc="Campo de texto simples" value={selected_nome} setValue={setSelected_nome} onChange={()=>validateFields()}/>
+              <SwitchToggle title="Senha" desc="Campo de texto simples" value={selected_senha} setValue={setSelected_senha} onChange={()=>validateFields()}/>
+              <SwitchToggle title="Texto" desc="Campo de texto multi linha" value={selected_texto} setValue={setSelected_texto} onChange={()=>validateFields()}/>
+              <SwitchToggle title="Link" desc="Campo de texto simples" value={selected_link} setValue={setSelected_link} onChange={()=>validateFields()}/>
+              <SwitchToggle title="Preço" desc="Campo de texto simples" value={selected_preco} setValue={setSelected_preco} onChange={()=>validateFields()}/>
               {errors.campos && <p className="text-red-500 text-sm mt-1">Selecione pelo menos um campo.</p>}
             </div>
 
@@ -281,27 +226,37 @@ export default function Home() {
   );
 }
 
+import {Switch, cn} from "@heroui/react";
 
-function ToggleSwitch({isChecked,handleToggle}:{isChecked:any,handleToggle:any}) {
-  // const [isChecked, setIsChecked] = useState(false);
-
-  // const handleToggle = () => {
-  //   setIsChecked(!isChecked);
-  // };
-
+export function SwitchToggle({title,desc,value,setValue,onChange}:{title:string,desc:string,value:any,setValue:any,onChange:any}) {
   return (
-    <label className="relative inline-flex items-center cursor-pointer">
-      <input 
-        type="checkbox" 
-        className="sr-only" 
-        checked={isChecked} 
-        onChange={handleToggle} 
-      />
-      <div className={`w-14 h-8 rounded-full transition-all duration-300 ${isChecked ? "bg-blue-500" : "bg-gray-300"}`}>
-        <div
-          className={`w-6 h-6 bg-white rounded-full shadow-md absolute top-1 transition-transform duration-300 ${isChecked ? "translate-x-6" : "translate-x-1"}`}
-        ></div>
+    <Switch  isSelected={value} onValueChange={setValue} onChange={onChange}
+      className="touch-manipulation"
+      classNames={{
+        base: cn(
+          "inline-flex flex-row-reverse w-full max-w-md bg-content1 hover:bg-content2 items-center",
+          "justify-between cursor-pointer rounded-lg gap-2 p-4 border-2 border-transparent",
+          "data-[selected=true]:border-primary",
+          "touch-manipulation"
+        ),
+        wrapper: "p-0 h-4 overflow-visible",
+        thumb: cn(
+          "w-6 h-6 border-2 shadow-lg",
+          "group-data-[hover=true]:border-primary",
+          //selected
+          "group-data-[selected=true]:ms-6",
+          // pressed
+          "group-data-[pressed=true]:w-7",
+          "group-data-[selected]:group-data-[pressed]:ms-4",
+        ),
+      }}
+    >
+      <div className="flex flex-col gap-1">
+        <p className="text-medium">{title}</p>
+        <p className="text-tiny text-default-400">
+          {desc}
+        </p>
       </div>
-    </label>
+    </Switch>
   );
 }
