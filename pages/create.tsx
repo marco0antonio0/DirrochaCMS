@@ -194,9 +194,9 @@ export default function Home() {
             </div>
 
             <div className="h-5"></div>
-            <button className="align-middle w-[100%] h-14 border-2 border-gray-200 rounded-md mt-0 flex justify-center items-center bg-blue-500 text-white" onClick={()=>{saveData()}}>
-                {loading ? <span className="loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin"></span> : "Criar endpoint"}
-            </button>
+            <Button color="primary" variant="solid" className="h-14" isLoading={loading} onClick={()=>{saveData()}}>
+            Criar endpoint
+            </Button>
             <div className="h-5"></div>
             <div className="h-1"></div>
             <span className="m-auto"></span>
@@ -226,7 +226,7 @@ export default function Home() {
   );
 }
 
-import {Switch, cn} from "@heroui/react";
+import {Button, Switch, cn} from "@heroui/react";
 
 export function SwitchToggle({title,desc,value,setValue,onChange}:{title:string,desc:string,value:any,setValue:any,onChange:any}) {
   return (

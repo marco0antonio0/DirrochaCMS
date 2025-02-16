@@ -8,6 +8,7 @@ import Cookies from "js-cookie";
 import axios from "axios";
 import { logout } from "@/services/logout";
 import debounce from "lodash.debounce";
+import { Button } from "@heroui/react";
 
 const geistSans = localFont({
   src: "./../fonts/GeistVF.woff",
@@ -123,9 +124,9 @@ export default function Home() {
                 {filteredData.map((e:any,i)=>(<div key={i}><Item text={e.title} onClick={()=>{r.push("/home/"+e.router)}}/></div>))}
             </div>
             <div className="h-5"></div>
-            <button className="align-middle w-[100%] h-14 border-2 border-gray-200 rounded-md mt-0 flex justify-center items-center" onClick={()=>{r.push("/create")}}>
-                {false ? <span className="loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin"></span> : "Criar endpoint"}
-            </button>
+            <Button color="primary" variant="ghost" className="h-16" isLoading={false} onClick={()=>{r.push("/create")}}>
+            Criar endpoint
+            </Button>
             <div className="h-5"></div>
             <div className="h-1"></div>
             <span className="m-auto"></span>

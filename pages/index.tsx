@@ -8,6 +8,7 @@ import { getData } from "@/services/storage";
 import { useRouter } from "next/router";
 import { loginUser, registerUser } from "@/services/auth";
 import toast from "react-hot-toast";
+import { Button } from "@heroui/react";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -234,9 +235,9 @@ NEXT_PUBLIC_ENV=`;
             <div className={`${isFirstAccess?"h-8":"h-5"}`}></div>
             {errors.Unauthorized_firebase && <span className="text-red-500 text-sm mt-1 text-center">Acesso a firestore negado <br />verifique as se as credenciais estão corretas e o firestore esta ativado</span>}
             <div className={`${isFirstAccess?"h-8":"h-5"}`}></div>
-            <button className="align-middle w-[100%] h-14 border-2 border-gray-200 rounded-md mt-0 flex justify-center items-center" onClick={onClickButton}>
-                {loading ? <span className="loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin"></span> : "Sign in"}
-            </button>
+            <Button color="primary" variant="solid" className="h-16" isLoading={loading} onClick={onClickButton}>
+            Sign in
+            </Button>
             <div className={`${isFirstAccess?"h-10":""}`}></div>
             <div className="h-1"></div>
             <span className="m-auto">
@@ -248,7 +249,7 @@ NEXT_PUBLIC_ENV=`;
               {envText}
               </textarea>
               <div className="h-5"></div>
-              <button className="align-middle w-[100%] h-14 border-2 border-gray-200 rounded-md mt-0 flex justify-center items-center" onClick={()=>{     
+              <Button color="primary" variant="solid" className="h-16 w-[100%]" isLoading={loading} onClick={()=>{     
                 if (textAreaRef.current) {
                 textAreaRef.current.select();
                 navigator.clipboard.writeText(envText).then(() => {
@@ -258,7 +259,7 @@ NEXT_PUBLIC_ENV=`;
                 });
               }}}>
                 {loading ? <span className="loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin"></span> : "Copiar"}
-            </button>
+            </Button>
            </div>
            
            </>}
