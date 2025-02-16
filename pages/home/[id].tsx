@@ -439,7 +439,9 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
             <span className="m-auto mt-3 text-lg opacity-65 sm:text-sm sm:mt-0 text-center px-16">
               Gerencie suas informações de forma simples. Consulte os dados existentes ou adicione novos rapidamente. 🚀 <br />
               
-              <a href={url} target="_blank" rel="noopener noreferrer"><Chip color="primary" className="px-2 py-4">{url}</Chip></a> </span>
+              <a href={url} target="_blank" rel="noopener noreferrer">
+                <Chip color="primary" 
+                className="px-2 py-4 w-full max-w-[90vw] break-words text-center">{url}</Chip></a> </span>
             {!loadingData || loading? <span className={`absolute right-8 top-[60px] md:top-12 p-2 rounded-full hover:bg-gray-200 transition ${true?"":"hidden"} loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin`}></span> :
             <button className={`right-6 top-10 md:top-6 p-2 rounded-full hover:bg-gray-200 transition ${true?"absolute":"hidden"}`} onClick={async () => {
               setOpenModal(true)
@@ -500,8 +502,13 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
             "Atualize os dados deste item de forma rápida e fácil." : "Crie um novo registro para este item com apenas alguns cliques."}
             {itemSelected[0]['id'] != null ?<>
             <br />
-            <a href={url+"?t="+itemSelected[0]['data'][0]["value"]} target="_blank" rel="noopener noreferrer">
-            <Chip color="primary" className="px-2 py-4">{url+"?t="+itemSelected[0]['data'][0]["value"]}</Chip> </a> 
+            <a href={url + "?t=" + itemSelected[0]['data'][0]["value"]} target="_blank" rel="noopener noreferrer">
+              <Chip 
+                color="primary" 
+                className="px-2 py-4 w-full max-w-[90vw] break-words text-center">
+                {url + "?t=" + itemSelected[0]['data'][0]["value"]}
+              </Chip>
+            </a>
             </>:null}
             </span>
             {loading && itemSelected[0]['id'] ? <span className={`absolute right-8 top-[60px] md:top-12 p-2 rounded-full hover:bg-gray-200 transition ${itemSelected || !itemSelected[0]['id']?"":"hidden"} loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin`}></span> :
