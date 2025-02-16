@@ -20,6 +20,7 @@ import { logout } from "@/services/logout";
 import toast from "react-hot-toast";
 import debounce from "lodash.debounce";
 import { optimizeImage } from "@/services/optimizeImage";
+import { Button } from "@heroui/react";
 
 const geistSans = localFont({
   src: "./../fonts/GeistVF.woff",
@@ -395,7 +396,8 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
           </div>
           <div className="h-5"></div>
           <div className="w-[100%] flex flex-row gap-3">
-          <button className="align-middle w-[100%] h-14 border-2 border-gray-200 rounded-md mt-0 flex justify-center items-center bg-red-400 text-white" onClick={async()=> {
+
+          <Button color="danger" className="align-middle w-[100%] h-14 mt-0 flex justify-center items-center" onClick={async()=> {
               checkAuth().then((isAuthenticated) => {
                 if (!isAuthenticated) {
                   logout()
@@ -405,11 +407,11 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
               });
           }}>
               {loading ? <span className="loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin"></span> : "Sim"}
-          </button>
-          <button className="align-middle w-[100%] h-14 border-2 border-gray-200 rounded-md mt-0 flex justify-center items-center bg-green-500 text-white" onClick={()=>{
+          </Button>
+          <Button color="success" className="align-middle w-[100%] h-14 mt-0 flex justify-center items-center text-white" onClick={()=>{
             setOpenModal(false)}}>
               {loading ? <span className="loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin"></span> : "Não"}
-          </button>
+          </Button>
           </div>
 
           </>:<span className="loader border-8 border-black border-t-transparent rounded-full w-12 h-12 animate-spin m-auto my-20"></span>}
@@ -466,9 +468,10 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
 
             
             <div className="h-5"></div>
-            <button className="align-middle w-[100%] h-14 border-2 border-gray-200 rounded-md mt-0 flex justify-center items-center" onClick={()=>{createDados()}}>
-                {loading ? <span className="loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin"></span> : "Adiciona dados"}
-            </button></>:<span className="loader border-8 border-black border-t-transparent rounded-full w-12 h-12 animate-spin m-auto my-20"></span>}
+            <Button color="primary" variant="ghost" className="h-16" isLoading={loading} onClick={()=>{createDados()}}>
+            Adiciona dados
+            </Button>
+            </>:<span className="loader border-8 border-black border-t-transparent rounded-full w-12 h-12 animate-spin m-auto my-20"></span>}
             <div className="h-5"></div>
             <div className="h-1"></div>
             <span className="m-auto"></span>
@@ -585,9 +588,9 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
             <div className="h-5"></div>
             {errors.titulo_identificador && <span className="text-red-500 text-sm m-auto mt-1">Campo titulo identificador não pode ser vazio</span>}
             <div className="h-5"></div>
-            <button className="align-middle w-[100%] h-14 border-2 border-gray-200 rounded-md mt-0 flex justify-center items-center bg-blue-500 text-white" onClick={()=>{saveData()}}>
-                {loading ? <span className="loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin"></span> : "Salvar dados"}
-            </button>
+            <Button color="primary" variant="solid" className="h-14" isLoading={loading} onClick={()=>{saveData()}}>
+            Salvar dados
+            </Button>
             <div className="h-5"></div>
             <div className="h-1"></div>
             <span className="m-auto"></span>

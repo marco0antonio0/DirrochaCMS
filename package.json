@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@heroui/react": "^2.6.14",
+    "@internationalized/date": "^3.7.0",
     "@panva/jose": "^1.9.3",
     "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",
