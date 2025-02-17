@@ -1,12 +1,15 @@
 import Image from "next/image";
 import localFont from "next/font/local";
-import { MouseEventHandler, useEffect, useState } from "react";
+import React, { MouseEventHandler, useEffect, useState } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import Cookies from "js-cookie";
 import axios from "axios";
 import { logout } from "@/services/logout";
 import toast from "react-hot-toast";
+import { User } from "@/services/user/user";
+import { Button, cn, Switch, Tab, Tabs } from "@heroui/react";
+import { endpointService } from "@/services/endpointService";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -20,6 +23,9 @@ const geistMono = localFont({
 });
 
 export default function Home() {
+  const [selected, setSelected] = React.useState<string>("Endpoint");
+  const [login, setlogin] = useState(false);
+  const [register, setregister] = useState(false);
   const [selected_titulo, setSelected_titulo] = useState(false);
   const [selected_data, setSelected_data] = useState(false);
   const [selected_link, setSelected_link] = useState(false);
@@ -128,6 +134,7 @@ export default function Home() {
       setLoading(false);
     }
   };
+
   return (
     
     <div
@@ -157,7 +164,11 @@ export default function Home() {
             <span className="m-auto mt-3 text-lg opacity-65 sm:text-sm sm:mt-0 text-center px-16">Configure o nome e os campos necessários para estruturar seu endpoint de forma rápida e eficiente.</span>
           </div>
           <div className="flex flex-col h-[100%] w-[100%] mt-5 px-20 lg:px-10">
-            
+          <Tabs key={'lg'} aria-label="Tabs sizes" size={'lg'} className="m-auto" selectedKey={selected} onSelectionChange={(key) => setSelected(String(key))}>
+            <Tab key="Endpoint" title="Endpoint" />
+            <Tab key="Users" title="Users" />
+          </Tabs>
+            {selected==="Endpoint"?(<>
             <div className="h-5"></div>
             <h1 className="m-auto mt-3 mb-1 ml-0 opacity-65 sm:text-sm">Qual sera o nome do endpoint?</h1>
             <input
@@ -199,6 +210,7 @@ export default function Home() {
             <div className="h-5"></div>
             <div className="h-1"></div>
             <span className="m-auto"></span>
+            </>):(<><UserSettings/> </>)}
             </div>
         </div>
         }
@@ -225,8 +237,6 @@ export default function Home() {
   );
 }
 
-import {Button, Switch, cn} from "@heroui/react";
-import { endpointService } from "@/services/endpointService";
 
 export function SwitchToggle({title,desc,value,setValue,onChange}:{title:string,desc:string,value:any,setValue:any,onChange:any}) {
   return (
@@ -260,3 +270,73 @@ export function SwitchToggle({title,desc,value,setValue,onChange}:{title:string,
     </Switch>
   );
 }
+
+
+
+const UserSettings: React.FC = () => {
+  const [login, setLogin] = useState<boolean>(false);
+  const [register, setRegister] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const r = useRouter()
+  useEffect(() => {
+      async function fetchSettings() {
+          const settings = await User.getAuthVisibility();
+          setLogin(settings.loginEnabled);
+          setRegister(settings.registerEnabled);
+      }
+      fetchSettings();
+  }, []);
+
+  const saveData = async () => {
+      const toastId = toast.loading("Salvando alterações ...",{duration:4000});
+      setLoading(true);
+      const success = await User.setAuthVisibility({ login, register });
+      setLoading(false);
+
+      if (success) {
+          setTimeout(() => {
+            setLoading(false);
+            toast.dismiss(toastId)
+            toast.success("Alterações salvas com sucesso",{duration:4000});
+            r.push("/home");
+          }, 1000);
+      } else {
+          setTimeout(() => {
+          toast.dismiss(toastId)
+          toast.error("Erro ao salvar alterações",{duration:4000});
+          setLoading(false);
+        }, 1000);
+      }
+      toast.dismiss(toastId)
+    };
+
+  return (
+      <>
+          <div className="h-5"></div>
+          <h1 className="m-auto mt-3 mb-1 ml-0 opacity-65 sm:text-sm">Sistema de usuários</h1>
+          <div className="h-5"></div>
+          <div className="flex flex-col gap-3">
+              <SwitchToggle
+                  title="Login de usuários"
+                  desc="Esta função habilita o sistema de login no endpoint /api/user/login"
+                  value={login}
+                  setValue={setLogin}
+                  onChange={()=>{}}
+                  />
+              <SwitchToggle
+                  title="Registro de usuários"
+                  desc="Esta função habilita o sistema de registro de usuários no endpoint /api/user/register"
+                  value={register}
+                  setValue={setRegister}
+                  onChange={()=>{}}
+                  />
+          </div>
+          <div className="h-5"></div>
+          <Button color="primary" variant="solid" className="h-14" isLoading={loading} onClick={saveData}>
+              Salvar configuração
+          </Button>
+          <div className="h-5"></div>
+          <div className="h-1"></div>
+      </>
+  );
+};

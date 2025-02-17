@@ -3,8 +3,7 @@ import Cookies from "js-cookie";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
-const SECRET_KEY = "lA0qUhYC0MnzpZ8abcdefghij12345678901234567890"; // Chave secreta
-const SALT_ROUNDS = 10; // Número de rounds para a criptografia
+
 
 /**
  * Registra um novo usuário, criptografa a senha e gera um token JWT.
@@ -13,20 +12,22 @@ const SALT_ROUNDS = 10; // Número de rounds para a criptografia
  * @returns Token JWT
  */
 export const registerUser = async (name: string, password: string): Promise<string> => {
-  const existingUser = await getData();
-  if (existingUser) {
+  const _SECRET_KEY = "lA0qUhYC0MnzpZ8abcdefghij12345678901234567890"; // Chave secreta
+  const _SALT_ROUNDS = 10; // Número de rounds para a criptografia
+  const _existingUser = await getData();
+  if (_existingUser) {
     throw new Error("Registration is closed");
   }
 
   // Criptografa a senha antes de armazená-la
-  const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+  const _hashedPassword = await bcrypt.hash(password, _SALT_ROUNDS);
 
   // Salva o usuário com a senha criptografada
-  await saveData({ name, password: hashedPassword });
+  await saveData({ name, password: _hashedPassword });
 
   try {
     // Gera um token JWT com o nome do usuário e tempo de expiração de 1 dia
-    const token = jwt.sign({ name }, SECRET_KEY, { expiresIn: "1d" });
+    const token = jwt.sign({ name }, _SECRET_KEY, { expiresIn: "1d" });
 
     // Salva o token nos cookies por 1 dia
     Cookies.set("token", token, { expires: 1 });
@@ -44,20 +45,21 @@ export const registerUser = async (name: string, password: string): Promise<stri
  * @returns Token JWT
  */
 export const loginUser = async (name: string, password: string): Promise<string> => {
-  const user: any = await getData();
+  const _SECRET_KEY = "lA0qUhYC0MnzpZ8abcdefghij12345678901234567890"; // Chave secreta
+  const _user: any = await getData();
 
-  if (!user) {
+  if (!_user) {
     throw new Error("Usuário não encontrado");
   }
 
   // Verifica se a senha fornecida corresponde à senha criptografada
-  const isPasswordValid = await bcrypt.compare(password, user.password);
-  if (!isPasswordValid) {
+  const _isPasswordValid = await bcrypt.compare(password, _user.password);
+  if (!_isPasswordValid) {
     throw new Error("Credenciais inválidas");
   }
 
   // Gera um novo token JWT ao logar
-  const token = jwt.sign({ name }, SECRET_KEY, { expiresIn: "1d" });
+  const token = jwt.sign({ name }, _SECRET_KEY, { expiresIn: "1d" });
 
   // Salva o token nos cookies
   Cookies.set("token", token, { expires: 1 });
