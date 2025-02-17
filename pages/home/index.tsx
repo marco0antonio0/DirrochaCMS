@@ -3,12 +3,12 @@ import localFont from "next/font/local";
 import { MouseEventHandler, useCallback, useEffect, useState } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { getEndpoints } from "@/services/getEndpoints";
 import Cookies from "js-cookie";
 import axios from "axios";
 import { logout } from "@/services/logout";
 import debounce from "lodash.debounce";
 import { Button } from "@heroui/react";
+import { endpointService } from "@/services/endpointService";
 
 const geistSans = localFont({
   src: "./../fonts/GeistVF.woff",
@@ -60,7 +60,7 @@ export default function Home() {
 
   useEffect(() => {
     setLoading(true);
-    getEndpoints().then((response: any) => {
+    endpointService.listEndpoints().then((response: any) => {
       if (response.data.length === 0) {
         setIsEmptyData(true);
       } else {

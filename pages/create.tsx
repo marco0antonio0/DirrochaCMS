@@ -3,7 +3,6 @@ import localFont from "next/font/local";
 import { MouseEventHandler, useEffect, useState } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { addEndpoint } from "@/services/addEndpoint";
 import Cookies from "js-cookie";
 import axios from "axios";
 import { logout } from "@/services/logout";
@@ -108,7 +107,7 @@ export default function Home() {
     setLoading(true);
   
     try {
-      const result = await addEndpoint(nomeEndpoint, nomeEndpoint, getSelectedFields());
+      const result = await endpointService.addEndpoint(nomeEndpoint, nomeEndpoint, getSelectedFields());
   
       if (result && result.success) {
         setTimeout(() => {
@@ -227,6 +226,7 @@ export default function Home() {
 }
 
 import {Button, Switch, cn} from "@heroui/react";
+import { endpointService } from "@/services/endpointService";
 
 export function SwitchToggle({title,desc,value,setValue,onChange}:{title:string,desc:string,value:any,setValue:any,onChange:any}) {
   return (

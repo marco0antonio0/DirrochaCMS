@@ -1,0 +1,42 @@
+import { db } from '@/config/config';
+import { collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
+
+export const endpointRepository = {
+  async createEndpoint(title: string, router: string, campos: string[]) {
+    try {
+      const docRef = await addDoc(collection(db, 'endpoints'), {
+        title,
+        router,
+        campos,
+        createdAt: new Date(),
+      });
+      return { success: true, id: docRef.id };
+    } catch (error) {
+      console.error('Erro ao salvar endpoint:', error);
+      return { success: false, error };
+    }
+  },
+  async getEndpoints() {
+    try {
+      const querySnapshot = await getDocs(collection(db, 'endpoints'));
+      const endpoints = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      return { success: true, data: endpoints };
+    } catch (error) {
+      console.error('Erro ao listar endpoints:', error);
+      return { success: false, error };
+    }
+  },
+  async deleteEndpointById(itemId: string) {
+    try {
+      const itemRef = doc(db, 'endpoints', itemId);
+      await deleteDoc(itemRef);
+      return { success: true };
+    } catch (error) {
+      console.error('Erro ao deletar o endpoint:', error);
+      return { success: false, error };
+    }
+  },
+};

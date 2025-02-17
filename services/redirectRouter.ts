@@ -1,9 +1,9 @@
-import { getEndpoints } from "./getEndpoints";
+import { endpointService } from "./endpointService";
 
 export const redirectRouter = async (r:any) => {
     if (r.query.id) {
       try {
-        const fetch: any = await getEndpoints();
+        const fetch: any = await endpointService.listEndpoints();
         const objFormated = fetch.data.filter((e: any) => e.title === r.query.id);
   
         if (objFormated.length > 0) {

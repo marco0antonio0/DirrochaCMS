@@ -3,17 +3,11 @@ import localFont from "next/font/local";
 import { MouseEventHandler, useCallback, useEffect, useState } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { getEndpoints } from "@/services/getEndpoints";
 import {  generateDynamicObject } from "@/utils/generateDynamicObject";
-import { createItemForEndpoint } from "@/services/createItemToEndpoint";
-import { getItemsByEndpoint } from "@/services/getItensToEndpoints";
 import { toKeyValueList } from "@/utils/toKeyValueList";
 import formatDataToDynamicObject from "@/utils/formatDataToDynamicObject";
-import { deleteItemById } from "@/services/deleteItemById";
-import { deleteEndpointIdById } from "@/services/deleteEndpointById";
 import { redirect } from "next/dist/server/api-utils";
 import { redirectRouter } from "@/services/redirectRouter";
-import { updateItemForEndpoint } from "@/services/updateItemToEndpoint";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { logout } from "@/services/logout";
@@ -21,6 +15,8 @@ import toast from "react-hot-toast";
 import debounce from "lodash.debounce";
 import { optimizeImage } from "@/services/optimizeImage";
 import { Button } from "@heroui/react";
+import { endpointService } from "@/services/endpointService";
+import { itemService } from "@/services/itemService";
 
 const geistSans = localFont({
   src: "./../fonts/GeistVF.woff",
@@ -82,7 +78,7 @@ export default function Home() {
   const fetchEndPoint = async () => {
     if (r.query.id) {
       try {
-        const fetch: any = await getEndpoints();
+        const fetch: any = await endpointService.listEndpoints();
         const objFormated = fetch.data.filter((e: any) => e.title === r.query.id);
         if (objFormated.length > 0) {
           setdata(objFormated);
@@ -98,7 +94,7 @@ export default function Home() {
     if (r.query.id && data.length > 0) {
       try {
         const id_endpoint = data[0]['id'];
-        const fetch: any = await getItemsByEndpoint(id_endpoint);
+        const fetch: any = await itemService.getItems(id_endpoint);
   
         if (fetch.data && fetch.data.length > 0) {
           setdataItem(fetch['data']);
@@ -155,7 +151,7 @@ export default function Home() {
 
         if(!loadingData){
           if(r.query.id){
-            getEndpoints().then((e:any)=>{
+            endpointService.listEndpoints().then((e:any)=>{
               var objFormated = e.data.filter((e:any)=>e.title === r.query.id)
               setdata(objFormated)
             })
@@ -199,14 +195,14 @@ export default function Home() {
     var dataLocal = data.filter((e:any)=>e.title == r.query.id) 
     if(!dataValue["id"]){
     const toastId = toast.loading("Criando item ...",{duration:4000});
-    const result = await createItemForEndpoint(dataLocal[0]['id'],dataValue["data"])
+    const result = await itemService.createItem(dataLocal[0]['id'],dataValue["data"])
       await refreshData(result)
       toast.success("Item criado com sucesso",{duration:4000});
       toast.dismiss(toastId)
     }else{
     const toastId = toast.loading("Atualizando item ...",{duration:4000});
     toast.success("Item atualizado com sucesso",{duration:4000});
-      const result = await updateItemForEndpoint(dataValue["id"],dataValue["data"])
+      const result = await itemService.updateItem(dataValue["id"],dataValue["data"])
       await refreshData(result)
       toast.dismiss(toastId)
     
@@ -266,7 +262,7 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
 
  async function deleteItemBy_Id(id:any) {
     setLoading(true)
-    const result = await deleteItemById(id)
+    const result = await itemService.deleteItem(id)
     if(dataItem.length == 1 || dataItem.length == 0){
       setdataItem([])
      }
@@ -275,11 +271,11 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
 
   async function deleteEndpoint() {
     setLoading(true)
-    const fetch: any = await getEndpoints();
+    const fetch: any = await endpointService.listEndpoints();
     const objFormated = fetch.data.filter((e: any) => e.title === r.query.id);
-    const result = await deleteEndpointIdById(objFormated[0]['id'])
+    const result = await endpointService.deleteEndpoint(objFormated[0]['id'])
     dataItem.map((e)=>{
-     deleteItemById(e.endpointId)
+      itemService.deleteItem(e.endpointId)
     })
     await refreshData(result)
     r.push("/home")
