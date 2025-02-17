@@ -1,5 +1,5 @@
-import { getEndpoints } from "@/services/getEndpoints";
-import { getItemsByEndpoint } from "@/services/getItensToEndpoints";
+import { endpointService } from "@/services/endpointService";
+import { itemService } from "@/services/itemService";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 const searchByTituloIdentificador = (data: any, searchTerm: string) => {
@@ -39,7 +39,7 @@ export default async function handler(
     return res.status(400).json({ error: "Parâmetro não informado", statusCode: 400 });
   }
 
-  var endpoints = await getEndpoints();
+  var endpoints = await endpointService.listEndpoints();
   if (!endpoints || !endpoints.data) {
     return res.status(500).json({ error: "Erro ao buscar endpoints", statusCode: 500 });
   }
@@ -56,7 +56,7 @@ export default async function handler(
     return res.status(404).json({ error: "Rota não encontrada", statusCode: 404 });
   }
 
-  var data = await getItemsByEndpoint(idData[0]['id']);
+  var data = await itemService.getItems(idData[0]['id']);
   if (!data || !data.data) {
     return res.status(500).json({ error: "Erro interno", statusCode: 500 });
   }
