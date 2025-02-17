@@ -8,7 +8,7 @@ import axios from "axios";
 import { logout } from "@/services/logout";
 import toast from "react-hot-toast";
 import { User } from "@/services/user/user";
-import { Button, cn, Switch, Tab, Tabs } from "@heroui/react";
+import { Button, Chip, cn, Code, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Switch, Tab, Tabs, useDisclosure } from "@heroui/react";
 import { endpointService } from "@/services/endpointService";
 
 const geistSans = localFont({
@@ -277,6 +277,7 @@ const UserSettings: React.FC = () => {
   const [login, setLogin] = useState<boolean>(false);
   const [register, setRegister] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
+  const {isOpen, onOpen, onOpenChange} = useDisclosure();
   const r = useRouter()
   useEffect(() => {
       async function fetchSettings() {
@@ -313,7 +314,7 @@ const UserSettings: React.FC = () => {
   return (
       <>
           <div className="h-5"></div>
-          <h1 className="m-auto mt-3 mb-1 ml-0 opacity-65 sm:text-sm">Sistema de usuários</h1>
+          <h1 className="m-auto mt-3 mb-1 ml-0 opacity-65 sm:text-sm">Sistema de usuários - <span className="text-blue-700 underline select-none cursor-pointer" onClick={onOpen}>Saiba mais</span></h1>
           <div className="h-5"></div>
           <div className="flex flex-col gap-3">
               <SwitchToggle
@@ -337,6 +338,86 @@ const UserSettings: React.FC = () => {
           </Button>
           <div className="h-5"></div>
           <div className="h-1"></div>
+          <Modal isOpen={isOpen} onOpenChange={onOpenChange} placement={"center"}  scrollBehavior={'inside'}>
+              <ModalContent>
+                {(onClose) => (
+                  <>
+                    <ModalHeader className="flex flex-col gap-1">Saiba mais sobre o Endpoint User</ModalHeader>
+                    <ModalBody>
+                      <p>
+                        Para acessar as funcionalidades do sistema, utilize os endpoints <strong>login</strong> e <strong>register</strong> para autenticação e criação de conta.
+                      </p>
+
+                      {/* Seção de Login */}
+                      <h1>🔑 <strong>Autenticação - Login</strong></h1>
+                      <p>Realize o login enviando uma requisição <strong>POST</strong> para o seguinte endpoint:</p>
+                      
+                      <div className="flex flex-row items-center gap-2"> 
+                        <h2>Endpoint:</h2>
+                        <Chip color="primary">/api/user/login</Chip>
+                      </div>
+
+                      <p><strong>Método:</strong> POST</p>
+                      <p><strong>Corpo da requisição (JSON):</strong></p>
+
+                      <Code size="sm">body: {`{`} <br />
+                         "email":"teste@teste.com" , <br />
+                         "password":"senha123"<br />
+                         {`}`}
+                      </Code>
+
+                      <p>
+                        Se as credenciais estiverem corretas, o servidor retornará um <strong>token JWT (JSON Web Token)</strong>, 
+                        que deverá ser utilizado nas requisições futuras para acessar rotas protegidas do sistema.
+                      </p>
+                      <p><strong>Exemplo de resposta:</strong></p>
+                      <Code size="sm">response: {`{`} <br />
+                        "token": "..."<br />
+                         {`}`}
+                      </Code>
+                      <div className="h-10"></div>
+                      {/* Seção de Registro */}
+                      <h1>📝 <strong>Cadastro - Criar Conta</strong></h1>
+                      <p>Para criar um novo usuário, envie uma requisição <strong>POST</strong> para o seguinte endpoint:</p>
+                      
+                      <div className="flex flex-row items-center gap-2"> 
+                        <h2>Endpoint:</h2>
+                        <Chip color="primary">/api/user/register</Chip>
+                      </div>
+
+                      <p><strong>Método:</strong> POST</p>
+                      <p><strong>Corpo da requisição (JSON):</strong></p>
+
+                      <Code size="sm">body: {`{`} <br />
+                         "name":"teste" , <br />
+                         "email":"teste@teste.com" , <br />
+                         "password":"senha123"<br />
+                         {`}`}
+                      </Code>
+
+                      <p>
+                        Se as credenciais estiverem corretas, o servidor retornará um <strong>token JWT (JSON Web Token)</strong>, 
+                        que deverá ser utilizado nas requisições futuras para acessar rotas protegidas do sistema.
+                      </p>
+                      <p><strong>Exemplo de resposta:</strong></p>
+                      <Code size="sm">response: {`{`} <br />
+                        "token": "..."<br />
+                         {`}`}
+                      </Code>
+
+                  </ModalBody>
+
+                    <ModalFooter>
+                      <Button color="primary" onPress={()=>{
+                        onClose()
+                      }}>
+                        Fechar
+                      </Button>
+                    </ModalFooter>
+                  </>
+                )}
+              </ModalContent>
+            </Modal>
       </>
   );
 };
