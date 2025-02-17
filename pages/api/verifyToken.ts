@@ -1,5 +1,5 @@
+import verifyToken from "@/services/verifyToken";
 import { NextApiRequest, NextApiResponse } from "next";
-import { verifyToken } from "../../services/auth";
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {

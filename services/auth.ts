@@ -65,16 +65,5 @@ export const loginUser = async (name: string, password: string): Promise<string>
   return token;
 };
 
-/**
- * Verifica a autenticidade de um token JWT.
- * @param token Token JWT fornecido
- * @returns Retorna `true` se o token for válido, caso contrário, `false`
- */
-export const verifyToken = async (token: string): Promise<boolean> => {
-  try {
-    const decoded = jwt.verify(token, SECRET_KEY);
-    return !!decoded;
-  } catch (error) {
-    return false; // Token inválido ou expirado
-  }
-};
+
+
