@@ -1,3 +1,4 @@
+import { FooterComponent } from "@/components/footer";
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import { Toaster } from "react-hot-toast";
@@ -18,6 +19,8 @@ export default function App({ Component, pageProps }: AppProps) {
         }}
       />
       <Component {...pageProps} />
+      <FooterComponent/>
+      <div className="h-10"></div>
     </>
   );
 }

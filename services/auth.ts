@@ -19,17 +19,13 @@ export const registerUser = async (name: string, password: string): Promise<stri
     throw new Error("Registration is closed");
   }
 
-  // Criptografa a senha antes de armazená-la
   const _hashedPassword = await bcrypt.hash(password, _SALT_ROUNDS);
 
-  // Salva o usuário com a senha criptografada
   await saveData({ name, password: _hashedPassword });
 
   try {
-    // Gera um token JWT com o nome do usuário e tempo de expiração de 1 dia
     const token = jwt.sign({ name }, _SECRET_KEY, { expiresIn: "1d" });
 
-    // Salva o token nos cookies por 1 dia
     Cookies.set("token", token, { expires: 1 });
 
     return token;
@@ -45,23 +41,20 @@ export const registerUser = async (name: string, password: string): Promise<stri
  * @returns Token JWT
  */
 export const loginUser = async (name: string, password: string): Promise<string> => {
-  const _SECRET_KEY = "lA0qUhYC0MnzpZ8abcdefghij12345678901234567890"; // Chave secreta
+  const _SECRET_KEY = "lA0qUhYC0MnzpZ8abcdefghij12345678901234567890";
   const _user: any = await getData();
 
   if (!_user) {
     throw new Error("Usuário não encontrado");
   }
 
-  // Verifica se a senha fornecida corresponde à senha criptografada
   const _isPasswordValid = await bcrypt.compare(password, _user.password);
   if (!_isPasswordValid) {
     throw new Error("Credenciais inválidas");
   }
 
-  // Gera um novo token JWT ao logar
   const token = jwt.sign({ name }, _SECRET_KEY, { expiresIn: "1d" });
 
-  // Salva o token nos cookies
   Cookies.set("token", token, { expires: 1 });
 
   return token;
