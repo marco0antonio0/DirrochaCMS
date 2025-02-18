@@ -1,5 +1,6 @@
 import Cookies from "js-cookie";
-export function logout(){
+import { useRouter } from "next/router";
+export function logout(router:any){
     Cookies.remove("token"); 
-    window.location.href = "/"; 
+    router.push("/")
   }

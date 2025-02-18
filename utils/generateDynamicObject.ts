@@ -1,18 +1,7 @@
+import { typeFormat } from "./typesFormat";
+
 export const generateDynamicObject = (fields: string[]) => {
-    const fieldProperties: { [key: string]: { mult: boolean; type?: string } } = {
-        titulo_identificador: { mult: false, type: "string" },
-        data: { mult: false, type: "date" },
-        titulo: { mult: false, type: "string" },
-        link: { mult: false, type: "string" },
-        preco: { mult: false, type: "string" },
-        descricao: { mult: true, type: "string" },
-        breve_descricao: { mult: true, type: "string" },
-        artigo: { mult: true, type: "string" },
-        image: { mult: false, type: "img" },
-        nome: { mult: false, type: "string" },
-        senha: { mult: false, type: "string" },
-        texto: { mult: true, type: "string" },
-    };
+    const fieldProperties: { [key: string]: { mult: boolean; type?: string } } = typeFormat
 
     return {
         id_endpoint: null,

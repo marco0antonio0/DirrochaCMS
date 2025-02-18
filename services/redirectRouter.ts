@@ -20,6 +20,6 @@ export const redirectRouter = async (r:any) => {
   };
   
   const redirectTo404 = () => {
-    window.location.href = "/home"; // ou use o roteador do seu framework, ex: next/router
+    window.location.href = "/home";
   };
   

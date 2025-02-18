@@ -13,7 +13,7 @@ export const User = {
         return await userRepository.findUserByEmail(email)
       },
       async getAuthVisibility() {
-        const _AUTH_SETTINGS_DOC = "auth_settings"; // Nome do documento no Firestore
+        const _AUTH_SETTINGS_DOC = "auth_settings"; 
         try {
             const settingsRef = doc(db, "configurations", _AUTH_SETTINGS_DOC);
             const settingsDoc = await getDoc(settingsRef);
@@ -31,7 +31,7 @@ export const User = {
     },
 
     async setAuthVisibility(status: { login: boolean; register: boolean }) {
-        const _AUTH_SETTINGS_DOC = "auth_settings"; // Nome do documento no Firestore
+        const _AUTH_SETTINGS_DOC = "auth_settings";
         try {
             const settingsRef = doc(db, "configurations", _AUTH_SETTINGS_DOC);
             await setDoc(settingsRef, {

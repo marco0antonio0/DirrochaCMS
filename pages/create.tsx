@@ -10,6 +10,7 @@ import toast from "react-hot-toast";
 import { User } from "@/services/user/user";
 import { Button, Chip, cn, Code, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Switch, Tab, Tabs, useDisclosure } from "@heroui/react";
 import { endpointService } from "@/services/endpointService";
+import Navbar from "@/components/navbar";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -65,7 +66,7 @@ export default function Home() {
     }
     checkAuth().then((isAuthenticated) => {
       if (!isAuthenticated) {
-        logout()
+        logout(r)
       }
     });
   },[])
@@ -148,21 +149,15 @@ export default function Home() {
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start w-[100%] h-auto">
         {
         <div className="flex flex-col m-auto w-[100%] max-w-[700px] h-auto bg-[#F9FAFC] shadow-lg rounded-2xl md:max-w-[100%]">
-          <div className="relative m-auto mt-0 bg-[#FFFFFF] w-[100%] h-[40%] rounded-t-2xl shadow-sm flex flex-col sm:h-[30%] py-8">
-            {/* Botão de voltar no canto superior esquerdo */}
-            <button className="absolute left-6 top-10 md:top-6 p-2 rounded-full hover:bg-gray-200 transition" onClick={() => {
-              r.push("/home")
-              // setItemSelected(null)
-              // setImage(null)
-              }}>
-              <svg xmlns="http://www.w3.org/2000/svg" height="50px" viewBox="0 -960 960 960" width="30px" fill="black">
+          <Navbar 
+          Component={null}
+          onClick={()=>r.push("/home")} 
+          Icon={()=> {return <>
+            <svg xmlns="http://www.w3.org/2000/svg" height="50px" viewBox="0 -960 960 960" width="30px" fill="black">
                 <path d="M400-240 160-480l240-240 56 58-142 142h486v80H314l142 142-56 58Z"/>
-              </svg>
-            </button>
-            {/* Título e descrição */}
-            <h1 className="m-auto mb-0 text-3xl font-semibold sm:text-2xl">DIRROCHA CMS</h1>
-            <span className="m-auto mt-3 text-lg opacity-65 sm:text-sm sm:mt-0 text-center px-16">Configure o nome e os campos necessários para estruturar seu endpoint de forma rápida e eficiente.</span>
-          </div>
+            </svg>
+          </>}} 
+          text="Configure o nome e os campos necessários para estruturar seu endpoint de forma rápida e eficiente."/>
           <div className="flex flex-col h-[100%] w-[100%] mt-5 px-20 lg:px-10">
           <Tabs key={'lg'} aria-label="Tabs sizes" size={'lg'} className="m-auto" selectedKey={selected} onSelectionChange={(key) => setSelected(String(key))}>
             <Tab key="Endpoint" title="Endpoint" />
@@ -215,24 +210,6 @@ export default function Home() {
         </div>
         }
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://github.com/marco0antonio0/loginPageExample"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Desenvolvido por @marco0antonio0
-        </a>
-        
-      </footer>
     </div>
   );
 }

@@ -2,10 +2,6 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 import { db, firebaseConfig, IsStartedfirebaseConfig } from "@/config/config";
 
-// 🔹 Inicializa o Firebase e o Firestore
-
-
-// 🔹 Função para obter dados do Firestore
 export const getData = async () => {
   if(!IsStartedfirebaseConfig) return null
   try {
@@ -23,13 +19,12 @@ export const getData = async () => {
   }
 };
 
-// 🔹 Função para salvar dados no Firestore
 export const saveData = async (data: { name: string; password: string }) => {
   if(!IsStartedfirebaseConfig) return null
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app); 
   try {
-    const docRef = doc(db, "users", "default"); // Salvando sempre no mesmo documento "default"
+    const docRef = doc(db, "users", "default"); 
     await setDoc(docRef, data);
     return { success: true };
   } catch (error) {
