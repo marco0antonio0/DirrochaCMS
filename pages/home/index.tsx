@@ -199,9 +199,9 @@ export default function Home() {
               <h1 className="m-auto my-10 text-center text-lg">Nenhum dado encontrado</h1>
             ) :null}
             <div className="w-[100%] flex flex-col h-auto gap-3">
-            {Array.isArray(filteredData) && filteredData.map((e:any,i:number) => (
+            {!loading?(Array.isArray(filteredData) && filteredData.map((e:any,i:number) => (
               <div key={i}><ItemUser name={e.name} email={e.email} onDelete={handleUserDelete}/></div>
-            ))}
+            ))):null}
             </div>
               
             </>)}
