@@ -113,7 +113,7 @@ export default function Home() {
       }
       
       const filtered = data.filter((item: any) =>
-        item.title.toLowerCase().includes(value.toLowerCase())
+        (selected==="Endpoint"?item.title:item.email).toLowerCase().includes(value.toLowerCase())
       );
       setFilteredData(filtered);
     }, 300), // 300ms de debounce para evitar execuções excessivas
@@ -178,7 +178,7 @@ export default function Home() {
           </Tabs>
             <div className="h-5"></div>
             <h1 className="m-auto mt-0 mb-1 ml-0 opacity-65 sm:text-sm">Pesquisa</h1>
-            <input name="search" type="text" className={`m-auto mt-1 mb-0 w-[100%] h-14 rounded-lg border-gray-200 border-2 px-5 sm:h-12`} placeholder="digite" 
+            <input name="search" type="text" className={`m-auto mt-1 mb-0 w-[100%] h-14 rounded-lg border-gray-200 border-2 px-5 sm:h-12`} placeholder={selected==="Endpoint"?"digite o nome":"digite o email"} 
              onChange={(e) => handleSearch(e.target.value)}/>
             <div className="h-5"></div>
             {selected==="Endpoint"?(<>
