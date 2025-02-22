@@ -114,7 +114,7 @@ export default function Home() {
     setLoading(true);
   
     try {
-      const result = await endpointService.addEndpoint(nomeEndpoint, nomeEndpoint, getSelectedFields());
+      const result = await endpointService.addEndpoint({title: nomeEndpoint,router: nomeEndpoint,campos: getSelectedFields()});
   
       if (result && result.success) {
         setTimeout(() => {

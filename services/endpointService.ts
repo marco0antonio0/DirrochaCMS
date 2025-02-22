@@ -3,9 +3,9 @@ import { endpointRepository } from '../repositories/endpointRepository';
 import toast from 'react-hot-toast';
 
 export const endpointService = {
-  async addEndpoint(title: string, router: string, campos: string[]) {
+  async addEndpoint({title, router, campos}:{title: string, router: string, campos: string[]}) {
     if (!IsStartedfirebaseConfig) return { success: false, error: 'Firebase não inicializado' };
-    return await endpointRepository.createEndpoint(title, router, campos);
+    return await endpointRepository.createEndpoint({title, router, campos});
   },
   async listEndpoints() {
     if (!IsStartedfirebaseConfig) return { success: false, error: 'Firebase não inicializado' };

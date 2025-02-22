@@ -14,9 +14,8 @@ export const itemRepository = {
   },
   async createItemForEndpoint(endpointId: string, items: any[]) {
     try {
-      const endpointRef = doc(db, 'endpoints', endpointId);
+      const endpointRef = doc(db, 'endpoints/', endpointId);
       const endpointSnap = await getDoc(endpointRef);
-
       if (!endpointSnap.exists()) {
         return { success: false, error: 'O endpoint não foi encontrado.' };
       }
@@ -25,8 +24,8 @@ export const itemRepository = {
         acc[item.title] = item.value;
         return acc;
       }, {});
-      
-      await addDoc(collection(db, 'itens'), {
+      const itemRef = collection(db, 'endpoints/'+endpointId+'/itens')
+      await addDoc(itemRef, {
         endpointId,
         formattedData,
         createdAt: new Date(),
@@ -39,10 +38,9 @@ export const itemRepository = {
   },
   async getItemsByEndpoint(endpointId: string) {
     try {
-      const itemsRef = collection(db, 'itens');
+      const itemsRef = collection(db, 'endpoints/'+endpointId+'/itens');
       const q = query(itemsRef, where('endpointId', '==', endpointId));
       const querySnapshot = await getDocs(q);
-
       const items = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -54,9 +52,9 @@ export const itemRepository = {
       return { success: false, error };
     }
   },
-  async updateItemForEndpoint(itemId: string, items: any[]) {
+  async updateItemForEndpoint({itemId,endpointId, items}:{itemId: string,endpointId: string, items: any[]}) {
     try {
-      const itemRef = doc(db, 'itens', itemId);
+      const itemRef = doc(db, 'endpoints/'+endpointId+'/itens', itemId);
       const itemSnap = await getDoc(itemRef);
 
       if (!itemSnap.exists()) {
