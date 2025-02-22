@@ -21,7 +21,7 @@ export const itemService = {
       return { success: false, error };
     }
   },
-  async createItem(endpointId: string, items: any[]) {
+  async createItem({endpointId, items}:{endpointId: string, items: any[]}) {
     if (!IsStartedfirebaseConfig) return { success: false, error: 'Firebase não inicializado' };
     return await itemRepository.createItemForEndpoint(endpointId, items);
   },
@@ -29,8 +29,8 @@ export const itemService = {
     if (!IsStartedfirebaseConfig) return { success: false, error: 'Firebase não inicializado' };
     return await itemRepository.getItemsByEndpoint(endpointId);
   },
-  async updateItem(itemId: string, items: any[]) {
+  async updateItem({itemId ,endpointId, items}:{itemId: string ,endpointId: string, items: any[]}) {
     if (!IsStartedfirebaseConfig) return { success: false, error: 'Firebase não inicializado' };
-    return await itemRepository.updateItemForEndpoint(itemId, items);
+    return await itemRepository.updateItemForEndpoint({itemId,endpointId, items});
   },
 };

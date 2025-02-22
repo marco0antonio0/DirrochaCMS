@@ -162,16 +162,18 @@ export default function Home() {
     setLoading(true);
     var dataValue = itemSelected[0]
     var dataLocal = data.filter((e:any)=>e.title == r.query.id) 
+    console.log('dataValue ',dataValue)
+    console.log('dataLocal ',dataLocal)
     if(!dataValue["id"]){
     const toastId = toast.loading("Criando item ...",{duration:4000});
-    const result = await itemService.createItem(dataLocal[0]['id'],dataValue["data"])
+    const result = await itemService.createItem({endpointId: dataLocal[0]['id'],items: dataValue["data"]})
       await refreshData(result)
       toast.success("Item criado com sucesso",{duration:4000});
       toast.dismiss(toastId)
     }else{
     const toastId = toast.loading("Atualizando item ...",{duration:4000});
     toast.success("Item atualizado com sucesso",{duration:4000});
-      const result = await itemService.updateItem(dataValue["id"],dataValue["data"])
+      const result = await itemService.updateItem({itemId: dataValue["id"],endpointId: dataValue["id_endpoint"],items: dataValue["data"]})
       await refreshData(result)
       toast.dismiss(toastId)
     

@@ -2,7 +2,7 @@ import { db } from '@/config/config';
 import { collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
 
 export const endpointRepository = {
-  async createEndpoint(title: string, router: string, campos: string[]) {
+  async createEndpoint({title, router, campos}:{title: string, router: string, campos: string[]}) {
     try {
       const docRef = await addDoc(collection(db, 'endpoints'), {
         title,
@@ -18,7 +18,8 @@ export const endpointRepository = {
   },
   async getEndpoints() {
     try {
-      const querySnapshot = await getDocs(collection(db, 'endpoints'));
+      const endppointRef =  collection(db, 'endpoints')
+      const querySnapshot = await getDocs(endppointRef);
       const endpoints = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
