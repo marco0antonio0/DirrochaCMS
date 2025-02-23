@@ -12,7 +12,6 @@ export function ItemUser({ name = "", email = "", onDelete }: { name: string; em
       toast("Deletando conta ...", { duration: 4000 });
   
       let response = await User.deleteUser(email);
-      console.log(response);
       if (response.success) {
         setTimeout(() => {
           toast.success("Conta deletada com sucesso", { duration: 4000 });

@@ -1,7 +1,9 @@
+import { SessaoRepository } from "@/repositories/sessaoRepository";
 import verifyToken from "@/services/verifyToken";
+import jwt from "jsonwebtoken";
 import { NextApiRequest, NextApiResponse } from "next";
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
     return res.status(405).json({ message: "Method not allowed" });
   }
@@ -21,6 +23,17 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   if (!decoded) {
     return res.status(401).json({ message: "Unauthorized: Invalid token" });
   }
+
+  const sessaoRepository = new SessaoRepository()
+  const tokenDecoded:any = jwt.decode(token)
+    
+  const email = tokenDecoded?.name;
+  const existingSessao:any = await sessaoRepository.getSessaoByEmail(email);
+  if(existingSessao.success == true){ 
+   const token_db = existingSessao.data.token 
+   if(token_db != token){ return res.status(401).json({ message: "Unauthorized: Invalid token" });}
+  }
+  else{ return res.status(401).json({ message: "Unauthorized: Invalid token" }); }
 
   return res.status(200).json({ valid: true, user: decoded });
 }

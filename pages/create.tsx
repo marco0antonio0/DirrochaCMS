@@ -62,7 +62,6 @@ export default function Home() {
       const token = Cookies.get("token");
     
       if (!token) {
-        // console.log("Nenhum token encontrado, redirecionando...");
         return false;
       }
     
