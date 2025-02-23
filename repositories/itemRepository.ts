@@ -2,9 +2,15 @@ import { db } from '@/config/config';
 import { doc, deleteDoc, getDoc, collection, addDoc, query, where, getDocs, updateDoc } from 'firebase/firestore';
 
 export const itemRepository = {
-  async deleteItemById(itemId: string) {
+  async deleteItemById({itemId, endpointId}:{itemId: string,endpointId: string}) {
     try {
-      const itemRef = doc(db, 'itens', itemId);
+      const itemRef = doc(db, 'endpoints/'+endpointId+'/itens', itemId);
+      const itemSnap = await getDoc(itemRef);
+
+      if (!itemSnap.exists()) {
+        return { success: false, error: 'O item não foi encontrado.' };
+      }
+
       await deleteDoc(itemRef);
       return { success: true };
     } catch (error) {
