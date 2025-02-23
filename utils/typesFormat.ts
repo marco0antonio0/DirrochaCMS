@@ -26,7 +26,7 @@ export const optionsData = [
     { key: "senha", title: "Senha", desc: "Campo de texto simples", mult: false, type: "string" },
     { key: "texto", title: "Texto", desc: "Campo de texto multi linha", mult: true, type: "string" },
     { key: "link", title: "Link", desc: "Campo de texto simples", mult: false, type: "string" },
-    { key: "preco", title: "Preço", desc: "Campo de texto simples", mult: false, type: "string" },
+    { key: "preco", title: "Preço", desc: "Campo de numero simples", mult: false, type: "number" },
   
     // 🔹 Exemplo de novo campo:
     // { key: "telefone", title: "Telefone", desc: "Campo para número de telefone", mult: false, type: "string" },
