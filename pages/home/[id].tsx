@@ -19,8 +19,8 @@ import { endpointService } from "@/services/endpointService";
 import { itemService } from "@/services/itemService";
 import Navbar from "@/components/navbar";
 import { Item } from "@/components/item";
-import { ImageUpload } from "@/components/imageUpload";
 import { checkAuth } from "@/utils/checkAuth";
+import { InputComponent, InputDateComponent, InputImageUpload, InputSingleNumberComponent } from "@/components/input";
 
 const geistSans = localFont({
   src: "./../fonts/GeistVF.woff",
@@ -449,76 +449,29 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
           text={null}/>
           <div className="flex flex-col h-[100%] w-[100%] mt-5 px-20 lg:px-10">
             <div className="h-5"></div>
-            {itemSelected?itemSelected[0]['data'].map((e:any,i:any)=>(<div key={i}>
-              <h1 className="m-auto mt-3 mb-1 ml-0 opacity-65 sm:text-sm">{e.title}</h1>
-              {e.type==="string"?(e.mult?
-              <textarea className={`m-auto mt-0 mb-0 w-[100%] h-36 rounded-lg border-gray-200 border-2 px-5 sm:h-36 py-5`} value={e.value??""} placeholder="digite"   onChange={(event) => {
-                const newValue = event.target.value;
-                const updatedData = [...itemSelected];
-            
-                if (e.title === "titulo_identificador" && newValue.trim() === "") {
-                    setErrors((prev) => ({
-                        ...prev,
-                        titulo_identificador: "O campo 'Título Identificador' não pode ser vazio.",
-                    }));
-                } else {
-                    setErrors((prev) => {
-                        const updatedErrors = { ...prev };
-                        delete updatedErrors.titulo_identificador;
-                        return updatedErrors;
-                    });
-                }
-            
-                updatedData[0].data[i].value = newValue;
-                setItemSelected(updatedData);
-              }}
-            />
-              :<input type="text" className={`m-auto mt-0 mb-0 w-[100%] h-14 rounded-lg border-gray-200 border-2 px-5 sm:h-12`} value={e.value||""}  placeholder="digite"   onChange={(event) => {
-                const newValue = event.target.value;
-                const updatedData = [...itemSelected];
-            
-                if (e.title === "titulo_identificador" && newValue.trim() === "") {
-                    setErrors((prev) => ({
-                        ...prev,
-                        titulo_identificador: "O campo 'Título Identificador' não pode ser vazio.",
-                    }));
-                } else {
-                    setErrors((prev) => {
-                        const updatedErrors = { ...prev };
-                        delete updatedErrors.titulo_identificador;
-                        return updatedErrors;
-                    });
-                }
-            
-                updatedData[0].data[i].value = newValue;
-                setItemSelected(updatedData);
-              }}
-            />):
-            e.type==="img"?
-              <>
-              <ImageUpload file={handleFileChange} handleDrop={handleDrop} image={image}/>
-              </>: 
-              <>
-              <div className="m-auto mt-0 mb-0 w-[100%]">
-              <input
-                type="date"
-                className="h-14 w-full rounded-lg border-2 border-gray-200 px-5 sm:h-12"
-                value={e.value??""}
-                onChange={(e) => {
-                  const newValue = e.target.value;
-                  const updatedData = [...itemSelected];
-                  handleDateChange
-                  setDate(e.target.value)
-                  updatedData[0].data[i].value = newValue;
-                  setItemSelected(updatedData);
-                }}
-                onBlur={() => validateDate(date)}
-              />
-              {errorDate && <p className="text-red-500 text-sm mt-1">{errorDate}</p>}
-            </div>
-              </>
-               }
-            </div>)):null}
+            {itemSelected?itemSelected[0]['data'].map((e:any,i:any)=>{
+
+            switch (e.type) {
+              case "string":
+                return <div key={i}>
+                  <InputComponent data={{"title" : e.title, "value" : e.value , "itemSelected" : itemSelected, "setItemSelected" : setItemSelected, "setErrors" : setErrors, "i":i}} multiline={e.mult}/> 
+                  </div>
+              case "number":
+                return <div key={i}>
+                  <InputSingleNumberComponent data={{"title" : e.title, "value" : e.value , "itemSelected" : itemSelected, "setItemSelected" : setItemSelected, "setErrors" : setErrors, "i":i}}/> 
+                  </div>
+              case "img":
+                return <div key={i}>
+                  <InputImageUpload file={handleFileChange} handleDrop={handleDrop} image={image} title={e.title}/>
+                  </div>
+              case "date":
+                return <div key={i}>
+                <InputDateComponent title={e.title} value={e.value} itemSelected={itemSelected} setItemSelected={setItemSelected} errorDate={errorDate} validateDate={validateDate} handleDateChange={handleDateChange} setDate={setDate} date={date} i={i}/>
+                </div>
+              default:
+                return null;
+            }
+            }):null}
             
             <div className="h-5"></div>
             {errors.titulo_identificador && <span className="text-red-500 text-sm m-auto mt-1">Campo titulo identificador não pode ser vazio</span>}
@@ -532,8 +485,6 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
     </div>
   );
 }
-
-
 
 
 
