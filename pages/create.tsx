@@ -11,6 +11,8 @@ import { User } from "@/services/user/user";
 import { Button, Chip, cn, Code, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Switch, Tab, Tabs, useDisclosure } from "@heroui/react";
 import { endpointService } from "@/services/endpointService";
 import Navbar from "@/components/navbar";
+import { SwitchToggle } from "@/components/switchToggle";
+import { optionsData } from "@/utils/typesFormat";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -41,6 +43,19 @@ export default function Home() {
   const [nomeEndpoint, setNomeEndpoint] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({ nomeEndpoint: false, campos: false });
+  const [selectedFields, setSelectedFields] = useState<Record<string, boolean>>({
+    titulo: false,
+    data: false,
+    descricao: false,
+    breve_descricao: false,
+    artigo: false,
+    image: false,
+    nome: false,
+    senha: false,
+    texto: false,
+    link: false,
+    preco: false,
+  });
   const r = useRouter()
   useEffect(()=>{
     async function checkAuth() {
@@ -76,22 +91,9 @@ export default function Home() {
   };
 
   const getSelectedFields = () => {
-    const selectedFields = {
-      titulo: selected_titulo,
-      data: selected_data,
-      nome: selected_nome,
-      breve_descricao: selected_breve_descricao,
-      descricao: selected_descricao,
-      texto: selected_texto,
-      artigo: selected_artigo,
-      senha: selected_senha,
-      image: selected_image,
-      link: selected_link,
-      preco: selected_preco,
-    };
-
-    return Object.keys(selectedFields).filter((key) => selectedFields[key as keyof typeof selectedFields]);
+    return Object.keys(selectedFields).filter((key) => selectedFields[key]);
   };
+  
 
   const validateFields = () => {
     const isNomeVazio = nomeEndpoint.trim() === "";
@@ -102,15 +104,12 @@ export default function Home() {
     return !isNomeVazio && !isCamposVazio;
   };
 
-  const validarNomeEndpoint = (nome: string): boolean => {
-    return /^[a-zA-Z0-9_]+$/.test(nome);
-  };
+  const validarNomeEndpoint = (nome: string): boolean => {  return /^[a-zA-Z0-9_]+$/.test(nome); };
 
   const saveData = async () => {
     const toastId = toast.loading("Criando endpoint ...",{duration:4000});
-    if (!validateFields()) {
-      return;
-    }
+    if (!validateFields()) return;
+
     setLoading(true);
   
     try {
@@ -135,6 +134,16 @@ export default function Home() {
       setLoading(false);
     }
   };
+
+  const toggleField = (field: string) => {
+    setSelectedFields((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
+    validateFields();
+  };
+
+
 
   return (
     
@@ -184,19 +193,19 @@ export default function Home() {
             <div className="h-5"></div>
             <h1 className="m-auto mt-3 mb-3 ml-0 opacity-65 sm:text-sm">Quais campos voce quer no endpoint?</h1>
             <div className="flex flex-col gap-3">
-              <SwitchToggle title="Titulo" desc="Campo de texto simples" value={selected_titulo} setValue={setSelected_titulo} onChange={()=>validateFields()}/>
-              <SwitchToggle title="Data" desc="Campo de data dd-mm-yyyy" value={selected_data} setValue={setSelected_data} onChange={()=>validateFields()}/>
-              <SwitchToggle title="Descrição" desc="Campo de texto multi linha" value={selected_descricao} setValue={setSelected_descricao} onChange={()=>validateFields()}/>
-              <SwitchToggle title="Breve Descrição" desc="Campo de texto multi linha" value={selected_breve_descricao} setValue={setSelected_breve_descricao} onChange={()=>validateFields()}/>
-              <SwitchToggle title="Artigo" desc="Campo de texto multi linha" value={selected_artigo} setValue={setSelected_artigo} onChange={()=>validateFields()}/>
-              <SwitchToggle title="Imagem" desc="Campo de imagem" value={selected_image} setValue={setSelected_image} onChange={()=>validateFields()}/>
-              <SwitchToggle title="Nome" desc="Campo de texto simples" value={selected_nome} setValue={setSelected_nome} onChange={()=>validateFields()}/>
-              <SwitchToggle title="Senha" desc="Campo de texto simples" value={selected_senha} setValue={setSelected_senha} onChange={()=>validateFields()}/>
-              <SwitchToggle title="Texto" desc="Campo de texto multi linha" value={selected_texto} setValue={setSelected_texto} onChange={()=>validateFields()}/>
-              <SwitchToggle title="Link" desc="Campo de texto simples" value={selected_link} setValue={setSelected_link} onChange={()=>validateFields()}/>
-              <SwitchToggle title="Preço" desc="Campo de texto simples" value={selected_preco} setValue={setSelected_preco} onChange={()=>validateFields()}/>
+              {optionsData.map(({ title, desc, key }) => (
+                <SwitchToggle
+                  key={key}
+                  title={title}
+                  desc={desc}
+                  value={selectedFields[key]}
+                  setValue={() => toggleField(key)}
+                  onChange={validateFields}
+                />
+              ))}
               {errors.campos && <p className="text-red-500 text-sm mt-1">Selecione pelo menos um campo.</p>}
             </div>
+
 
             <div className="h-5"></div>
             <Button color="primary" variant="solid" className="h-14" isLoading={loading} onClick={()=>{saveData()}}>
@@ -215,38 +224,6 @@ export default function Home() {
 }
 
 
-export function SwitchToggle({title,desc,value,setValue,onChange}:{title:string,desc:string,value:any,setValue:any,onChange:any}) {
-  return (
-    <Switch  isSelected={value} onValueChange={setValue} onChange={onChange}
-      className="touch-manipulation"
-      classNames={{
-        base: cn(
-          "inline-flex flex-row-reverse w-full max-w-md bg-content1 hover:bg-content2 items-center",
-          "justify-between cursor-pointer rounded-lg gap-2 p-4 border-2 border-transparent",
-          "data-[selected=true]:border-primary",
-          "touch-manipulation"
-        ),
-        wrapper: "p-0 h-4 overflow-visible",
-        thumb: cn(
-          "w-6 h-6 border-2 shadow-lg",
-          "group-data-[hover=true]:border-primary",
-          //selected
-          "group-data-[selected=true]:ms-6",
-          // pressed
-          "group-data-[pressed=true]:w-7",
-          "group-data-[selected]:group-data-[pressed]:ms-4",
-        ),
-      }}
-    >
-      <div className="flex flex-col gap-1">
-        <p className="text-medium">{title}</p>
-        <p className="text-tiny text-default-400">
-          {desc}
-        </p>
-      </div>
-    </Switch>
-  );
-}
 
 
 
