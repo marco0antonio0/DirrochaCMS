@@ -3,11 +3,12 @@ import { itemRepository } from '../repositories/itemRepository';
 import toast from 'react-hot-toast';
 
 export const itemService = {
-  async deleteItem(itemId: string) {
+  async deleteItem({itemId, endpointId}:{itemId: string,endpointId: string}) {
     const toastId = toast.loading('Deletando item do endpoint...', { duration: 4000 });
     if (!IsStartedfirebaseConfig) return { success: false, error: 'Firebase não inicializado' };
     try {
-      const response = await itemRepository.deleteItemById(itemId);
+      console.log("nessa camaadaa")
+      const response = await itemRepository.deleteItemById({itemId, endpointId});
       toast.dismiss(toastId);
       if (response.success) {
         toast.success('Item do endpoint deletado com sucesso', { duration: 4000 });

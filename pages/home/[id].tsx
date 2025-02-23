@@ -21,6 +21,7 @@ import Navbar from "@/components/navbar";
 import { Item } from "@/components/item";
 import { checkAuth } from "@/utils/checkAuth";
 import { InputComponent, InputDateComponent, InputImageUpload, InputSingleNumberComponent } from "@/components/input";
+import ButtonDropdown from "@/components/dropButtonMenu";
 
 const geistSans = localFont({
   src: "./../fonts/GeistVF.woff",
@@ -231,9 +232,13 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
     setItemSelected([objFormated])
   }
 
- async function deleteItemBy_Id(id:any) {
+ async function deleteItemBy_Id() {
     setLoading(true)
-    const result = await itemService.deleteItem(id)
+    console.log("to aquiiii")
+    console.log("itemmm ", itemSelected)
+    const itemId = itemSelected[0]['id']
+    const endpointId = itemSelected[0]['id_endpoint']
+    const result = await itemService.deleteItem({itemId, endpointId})
     if(dataItem.length == 1 || dataItem.length == 0){
       setdataItem([])
      }
@@ -329,50 +334,8 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
         // ====================================================================================================================================
         //                                              ModalConfirm
         // ====================================================================================================================================
-        <div className="flex flex-col m-auto w-[100%] max-w-[700px] h-auto bg-[#F9FAFC] shadow-lg rounded-2xl md:max-w-[100%]">
-          <Navbar 
-          Component={null}
-          onClick={()=>{setOpenModal(false)}} 
-          Icon={()=> {return <>
-                <svg xmlns="http://www.w3.org/2000/svg" height="50px" viewBox="0 -960 960 960" width="30px" fill="black">
-                <path d="M400-240 160-480l240-240 56 58-142 142h486v80H314l142 142-56 58Z"/>
-                </svg>
-          </>}} 
-          text="Você está prestes a excluir este(s) dado(s). Essa ação é irreversível e não poderá ser desfeita. Tem certeza de que deseja continuar?"/>
-
-        <div className="flex flex-col h-[100%] w-[100%] mt-5 px-20 lg:px-10">
-        {loadingData?<>  
-          <div className="h-5"></div>
-          
-          <h1 className="m-auto mt-0 mb-1 ml-0 opacity-65 sm:text-sm">Confirme sua ação <br /> Voce deseja deletar o {itemSelected?"dados da api de titulo "+itemSelected[0]['data'][0]["value"]:"endpoint"}?</h1>
-          <div className="w-[100%] flex flex-col h-auto gap-3" key={forceUpdate}>
-            
-          </div>
-          <div className="h-5"></div>
-          <div className="w-[100%] flex flex-row gap-3">
-
-          <Button color="danger" className="align-middle w-[100%] h-14 mt-0 flex justify-center items-center" onClick={async()=> {
-              checkAuth().then((isAuthenticated) => {
-                if (!isAuthenticated) {
-                  logout(r)
-                }else{
-                  itemSelected?deleteItemBy_Id(itemSelected[0]["id"]):  deleteEndpoint()
-                }
-              });
-          }}>
-              {loading ? <span className="loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin"></span> : "Sim"}
-          </Button>
-          <Button color="success" className="align-middle w-[100%] h-14 mt-0 flex justify-center items-center text-white" onClick={()=>{ setOpenModal(false)}}>
-              {loading ? <span className="loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin"></span> : "Não"}
-          </Button>
-          </div>
-          </>:<span className="loader border-8 border-black border-t-transparent rounded-full w-12 h-12 animate-spin m-auto my-20"></span>}
-          <div className="h-6 m-auto"></div>
-          </div>
-      </div>   
-        // ====================================================================================================================================
-        // ====================================================================================================================================
-        :!itemSelected?
+        <ModalConfirmActionDelete setOpenModal={setOpenModal} loadingData={loadingData} itemSelected={itemSelected} deleteItemBy_Id={deleteItemBy_Id} loading={loading} deleteEndpoint={deleteEndpoint} r={r} /> :null}
+        { openModal?null: !itemSelected?
         // ====================================================================================================================================
         //                                                  Lista de itens
         // ====================================================================================================================================
@@ -389,12 +352,7 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
                 Gerencie suas informações de forma simples. Consulte os dados existentes ou adicione novos rapidamente. 🚀 <br />
                 <a href={url} target="_blank" rel="noopener noreferrer">{url}</a> </span>
               {!loadingData || loading? <span className={`absolute right-8 top-[60px] md:top-12 p-2 rounded-full hover:bg-gray-200 transition ${true?"":"hidden"} loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin`}></span> :
-              <button className={`right-6 top-10 md:top-6 p-2 rounded-full hover:bg-gray-200 transition ${true?"absolute":"hidden"}`} onClick={async () => {
-                setOpenModal(true)
-                }}>
-                <svg xmlns="http://www.w3.org/2000/svg" height="50px" viewBox="0 -960 960 960" width="30px" fill="#FF6060">
-                <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>
-              </button>}
+              <ButtonDropdown actiondelet={()=>{setOpenModal(true)}} addItem={()=>{createDados()}} isItem={false}/>}
           </>}}
           text={null}/>
           <div className="flex flex-col h-[100%] w-[100%] mt-5 px-20 lg:px-10">
@@ -439,12 +397,8 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
             </>:null}
             </span>
             {loading && itemSelected[0]['id'] ? <span className={`absolute right-8 top-[60px] md:top-12 p-2 rounded-full hover:bg-gray-200 transition ${itemSelected || !itemSelected[0]['id']?"":"hidden"} loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin`}></span> :
-            <button className={`right-6 top-10 md:top-6 p-2 rounded-full hover:bg-gray-200 transition ${itemSelected[0]['id']!=null?"absolute":"hidden"}`} onClick={async () => {
-              setOpenModal(true)
-              }}>
-              <svg xmlns="http://www.w3.org/2000/svg" height="50px" viewBox="0 -960 960 960" width="30px" fill="#FF6060">
-              <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>
-            </button>}
+            itemSelected[0]['id']!=null?<ButtonDropdown actiondelet={()=>{setOpenModal(true)}} addItem={()=>{createDados()}} isItem={true}/>:null
+            }
           </>}}
           text={null}/>
           <div className="flex flex-col h-[100%] w-[100%] mt-5 px-20 lg:px-10">
@@ -487,7 +441,48 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
 }
 
 
+function ModalConfirmActionDelete({setOpenModal,loadingData,itemSelected,deleteItemBy_Id,loading,deleteEndpoint,r}:any){
+  return (<>
+  <div className="flex flex-col m-auto w-[100%] max-w-[700px] h-auto bg-[#F9FAFC] shadow-lg rounded-2xl md:max-w-[100%]">
+          <Navbar 
+          Component={null}
+          onClick={()=>{setOpenModal(false)}} 
+          Icon={()=> {return <>
+                <svg xmlns="http://www.w3.org/2000/svg" height="50px" viewBox="0 -960 960 960" width="30px" fill="black">
+                <path d="M400-240 160-480l240-240 56 58-142 142h486v80H314l142 142-56 58Z"/>
+                </svg>
+          </>}} 
+          text="Você está prestes a excluir este(s) dado(s). Essa ação é irreversível e não poderá ser desfeita. Tem certeza de que deseja continuar?"/>
 
+        <div className="flex flex-col h-[100%] w-[100%] mt-5 px-20 lg:px-10">
+        {loadingData?<>  
+          <div className="h-5"></div>
+          
+          <h1 className="m-auto mt-0 mb-1 ml-0 opacity-65 sm:text-sm">Confirme sua ação <br /> Voce deseja deletar o {itemSelected?"dados da api de titulo "+itemSelected[0]['data'][0]["value"]:"endpoint"}?</h1>
+          <div className="w-[100%] flex flex-col h-auto gap-3">
+            
+          </div>
+          <div className="h-5"></div>
+          <div className="w-[100%] flex flex-row gap-3">
 
-
-
+          <Button color="danger" className="align-middle w-[100%] h-14 mt-0 flex justify-center items-center" onClick={async()=> {
+              checkAuth().then((isAuthenticated) => {
+                if (!isAuthenticated) {
+                  logout(r)
+                }else{
+                  itemSelected?deleteItemBy_Id():  deleteEndpoint()
+                }
+              });
+          }}>
+              {loading ? <span className="loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin"></span> : "Sim"}
+          </Button>
+          <Button color="success" className="align-middle w-[100%] h-14 mt-0 flex justify-center items-center text-white" onClick={()=>{ setOpenModal(false)}}>
+              {loading ? <span className="loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin"></span> : "Não"}
+          </Button>
+          </div>
+          </>:<span className="loader border-8 border-black border-t-transparent rounded-full w-12 h-12 animate-spin m-auto my-20"></span>}
+          <div className="h-6 m-auto"></div>
+          </div>
+      </div>   
+    </>)
+}
