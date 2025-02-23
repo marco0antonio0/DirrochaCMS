@@ -106,7 +106,6 @@ export default function Home() {
   function goToItem(value:any){
     var result = dataItem.filter((e:any)=>e.id == value)
     setItemSelected(formatDataToDynamicObject(result[0]))
-    console.log(result)
     if(result[0]['formattedData']['date']){
       setDate(result[0]['formattedData']['date'])
     }
@@ -163,8 +162,6 @@ export default function Home() {
     setLoading(true);
     var dataValue = itemSelected[0]
     var dataLocal = data.filter((e:any)=>e.title == r.query.id) 
-    console.log('dataValue ',dataValue)
-    console.log('dataLocal ',dataLocal)
     if(!dataValue["id"]){
     const toastId = toast.loading("Criando item ...",{duration:4000});
     const result = await itemService.createItem({endpointId: dataLocal[0]['id'],items: dataValue["data"]})
@@ -234,8 +231,6 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
 
  async function deleteItemBy_Id() {
     setLoading(true)
-    console.log("to aquiiii")
-    console.log("itemmm ", itemSelected)
     const itemId = itemSelected[0]['id']
     const endpointId = itemSelected[0]['id_endpoint']
     const result = await itemService.deleteItem({itemId, endpointId})

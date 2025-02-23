@@ -7,7 +7,6 @@ export const itemService = {
     const toastId = toast.loading('Deletando item do endpoint...', { duration: 4000 });
     if (!IsStartedfirebaseConfig) return { success: false, error: 'Firebase não inicializado' };
     try {
-      console.log("nessa camaadaa")
       const response = await itemRepository.deleteItemById({itemId, endpointId});
       toast.dismiss(toastId);
       if (response.success) {

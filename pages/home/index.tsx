@@ -44,7 +44,6 @@ export default function Home() {
       const token = Cookies.get("token");
     
       if (!token) {
-        // console.log("Nenhum token encontrado, redirecionando...");
         return false;
       }
     
@@ -54,7 +53,6 @@ export default function Home() {
             Authorization: `Bearer ${token}`, // Enviando o token como Bearer
           },
         });
-        // console.log("Token válido:", response.data);
         return true;
       } catch (error) {
         // console.error("Erro na autenticação:", error.response?.data);

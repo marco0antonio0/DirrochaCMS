@@ -9,6 +9,7 @@ import { useRouter } from "next/router";
 import { loginUser, registerUser } from "@/services/auth";
 import toast from "react-hot-toast";
 import { Button } from "@heroui/react";
+import { SessaoService } from "@/services/sessaoService";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -22,7 +23,6 @@ const geistMono = localFont({
 });
 
 export default function Home() {
-  const _SECRET_KEY_ = 'lA0qUhYC0MnzpZ8abcdefghij12345678901234567890';
   const [isFirstAccess, setIsFirstAccess] = useState(false);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const [copied, setCopied] = useState(false);
@@ -50,7 +50,6 @@ export default function Home() {
   async function checkAuth() {
     const token = Cookies.get("token");
     if (!token) {
-      // console.log("Nenhum token encontrado, redirecionando...");
       return false;
     }
   
@@ -61,7 +60,6 @@ export default function Home() {
         },
       });
   
-      // console.log("Token válido:", response.data);
       return response;
     } catch (error) {
       // console.error("Erro na autenticação:", error.response?.data);
@@ -78,7 +76,6 @@ export default function Home() {
   },[])
   useEffect(() => {
     getData().then((data) => {
-      // console.log("🛠️ Dados retornados de getData():", data);
       setIsFirstAccess(!(data != null) ? true : false);
     });
   }, []);
@@ -143,7 +140,8 @@ export default function Home() {
           return;
         }}
         const token = await registerUser(credentials.name, credentials.password);
-        
+        const sessaoService = new SessaoService()
+        await sessaoService.validateToken({token:token})
         if (token) {
           setLoading(false);
           toast.success("Conta criada com sucesso",{duration:4000});

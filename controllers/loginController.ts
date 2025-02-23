@@ -1,3 +1,4 @@
+import { SessaoService } from "@/services/sessaoService";
 import { loginService } from "@/services/user/loginService";
 
 export const loginController = {

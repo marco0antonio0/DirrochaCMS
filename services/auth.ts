@@ -2,6 +2,7 @@ import { getData, saveData } from "./storage";
 import Cookies from "js-cookie";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import { SessaoService } from "./sessaoService";
 
 
 
@@ -12,7 +13,6 @@ import bcrypt from "bcryptjs";
  * @returns Token JWT
  */
 export const registerUser = async (name: string, password: string): Promise<string> => {
-  const _SECRET_KEY = "lA0qUhYC0MnzpZ8abcdefghij12345678901234567890"; // Chave secreta
   const _SALT_ROUNDS = 10; // Número de rounds para a criptografia
   const _existingUser = await getData();
   if (_existingUser) {
@@ -24,7 +24,7 @@ export const registerUser = async (name: string, password: string): Promise<stri
   await saveData({ name, password: _hashedPassword });
 
   try {
-    const token = jwt.sign({ name }, _SECRET_KEY, { expiresIn: "1d" });
+    const token = jwt.sign({ name }, process.env.SECRET_KEY!, { expiresIn: "1d" });
 
     Cookies.set("token", token, { expires: 1 });
 
@@ -41,23 +41,27 @@ export const registerUser = async (name: string, password: string): Promise<stri
  * @returns Token JWT
  */
 export const loginUser = async (name: string, password: string): Promise<string> => {
-  const _SECRET_KEY = "lA0qUhYC0MnzpZ8abcdefghij12345678901234567890";
-  const _user: any = await getData();
+  try {
+    const _user: any = await getData();
 
-  if (!_user) {
-    throw new Error("Usuário não encontrado");
+    if (!_user) {
+      throw new Error("Usuário não encontrado");
+    }
+  
+    const _isPasswordValid = await bcrypt.compare(password, _user.password);
+    if (!_isPasswordValid) {
+      throw new Error("Credenciais inválidas");
+    }
+    const token = jwt.sign({ name }, process.env.SECRET_KEY!, { expiresIn: "1d" });
+    const sessaoService = new SessaoService()
+    await sessaoService.validateToken({token:token})
+  
+    Cookies.set("token", token, { expires: 1 });
+  
+    return token;
+  } catch (error) {
+    return ""
   }
-
-  const _isPasswordValid = await bcrypt.compare(password, _user.password);
-  if (!_isPasswordValid) {
-    throw new Error("Credenciais inválidas");
-  }
-
-  const token = jwt.sign({ name }, _SECRET_KEY, { expiresIn: "1d" });
-
-  Cookies.set("token", token, { expires: 1 });
-
-  return token;
 };
 
 
