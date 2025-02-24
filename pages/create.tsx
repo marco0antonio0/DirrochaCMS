@@ -8,7 +8,7 @@ import axios from "axios";
 import { logout } from "@/services/logout";
 import toast from "react-hot-toast";
 import { User } from "@/services/user/user";
-import { Button, Chip, cn, Code, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Switch, Tab, Tabs, useDisclosure } from "@heroui/react";
+import { Button, Chip, cn, Code, Divider, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Switch, Tab, Tabs, useDisclosure } from "@heroui/react";
 import { endpointService } from "@/services/endpointService";
 import Navbar from "@/components/navbar";
 import { SwitchToggle } from "@/components/switchToggle";
@@ -27,19 +27,6 @@ const geistMono = localFont({
 
 export default function Home() {
   const [selected, setSelected] = React.useState<string>("Endpoint");
-  const [login, setlogin] = useState(false);
-  const [register, setregister] = useState(false);
-  const [selected_titulo, setSelected_titulo] = useState(false);
-  const [selected_data, setSelected_data] = useState(false);
-  const [selected_link, setSelected_link] = useState(false);
-  const [selected_preco, setSelected_preco] = useState(false);
-  const [selected_nome, setSelected_nome] = useState(false);
-  const [selected_descricao, setSelected_descricao] = useState(false);
-  const [selected_breve_descricao, setSelected_breve_descricao] = useState(false);
-  const [selected_texto, setSelected_texto] = useState(false);
-  const [selected_artigo, setSelected_artigo] = useState(false);
-  const [selected_senha, setSelected_senha] = useState(false);
-  const [selected_image, setSelected_image] = useState(false);
   const [nomeEndpoint, setNomeEndpoint] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({ nomeEndpoint: false, campos: false });
@@ -229,6 +216,7 @@ export default function Home() {
 const UserSettings: React.FC = () => {
   const [login, setLogin] = useState<boolean>(false);
   const [register, setRegister] = useState<boolean>(false);
+  const [logout, setlogout] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const {isOpen, onOpen, onOpenChange} = useDisclosure();
   const r = useRouter()
@@ -237,6 +225,7 @@ const UserSettings: React.FC = () => {
           const settings = await User.getAuthVisibility();
           setLogin(settings.loginEnabled);
           setRegister(settings.registerEnabled);
+          setlogout(settings.logoutEnabled);
       }
       fetchSettings();
   }, []);
@@ -244,7 +233,7 @@ const UserSettings: React.FC = () => {
   const saveData = async () => {
       const toastId = toast.loading("Salvando alterações ...",{duration:4000});
       setLoading(true);
-      const success = await User.setAuthVisibility({ login, register });
+      const success = await User.setAuthVisibility({ login, register, logout });
       setLoading(false);
 
       if (success) {
@@ -284,6 +273,13 @@ const UserSettings: React.FC = () => {
                   setValue={setRegister}
                   onChange={()=>{}}
                   />
+              <SwitchToggle
+                  title="Logout de usuário"
+                  desc="Esta função habilita o sistema de logout de usuários no endpoint /api/user/logout"
+                  value={logout}
+                  setValue={setlogout}
+                  onChange={()=>{}}
+                  />
           </div>
           <div className="h-5"></div>
           <Button color="primary" variant="solid" className="h-14" isLoading={loading} onClick={saveData}>
@@ -300,7 +296,7 @@ const UserSettings: React.FC = () => {
                       <p>
                         Para acessar as funcionalidades do sistema, utilize os endpoints <strong>login</strong> e <strong>register</strong> para autenticação e criação de conta.
                       </p>
-
+                      <Divider className="my-4" />
                       {/* Seção de Login */}
                       <h1>🔑 <strong>Autenticação - Login</strong></h1>
                       <p>Realize o login enviando uma requisição <strong>POST</strong> para o seguinte endpoint:</p>
@@ -332,7 +328,7 @@ const UserSettings: React.FC = () => {
                       {/* Seção de Registro */}
                       <h1>📝 <strong>Cadastro - Criar Conta</strong></h1>
                       <p>Para criar um novo usuário, envie uma requisição <strong>POST</strong> para o seguinte endpoint:</p>
-                      
+                      <Divider className="my-4" />
                       <div className="flex flex-row items-center gap-2"> 
                         <h2>Endpoint:</h2>
                         <Chip color="primary">/api/user/register</Chip>
@@ -357,6 +353,19 @@ const UserSettings: React.FC = () => {
                         "token": "..."<br />
                          {`}`}
                       </Code>
+                      <Divider className="my-4" />
+                      <div className="flex flex-row items-center gap-2"> 
+                        <h2>Endpoint:</h2>
+                        <Chip color="primary">/api/user/logout</Chip>
+                      </div>
+
+                      <p><strong>Método:</strong> POST</p>
+                      <p><strong>Authentication Bearer:</strong> Bearer eyJhbGciO...</p>
+
+                      <p>
+                        Se as credenciais token estiverem corretas e validas, o servidor retornará um <strong>token JWT (JSON Web Token)</strong>, 
+                        que indicara que o token foi invalidado com sucesso no sistema.
+                      </p>
 
                   </ModalBody>
 

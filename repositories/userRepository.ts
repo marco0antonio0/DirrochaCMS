@@ -23,11 +23,12 @@ export const userRepository = {
       return docRef.id;
     },
 
-    async setAuthVisibility(status: { login: boolean; register: boolean }) {
+    async setAuthVisibility(status: { login: boolean; register: boolean, logout:boolean }) {
       const settingsRef = doc(db, 'configurations', 'auth_settings');
       await setDoc(settingsRef, { 
           loginEnabled: status.login, 
-          registerEnabled: status.register 
+          registerEnabled: status.register,
+          logoutEnabled: status.logout
       });
   },
 
