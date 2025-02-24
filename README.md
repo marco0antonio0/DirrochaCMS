@@ -79,8 +79,6 @@ Antes de começar, você precisará ter as seguintes ferramentas instaladas:
     *   Crie um arquivo `.env` na raiz do projeto e adicione as suas credenciais:
 
     ```env
-    # Caso use a netlify ou vercel
-    # Sett aqui suas credenciais do firebase
     NEXT_PUBLIC_FIREBASE_API_KEY=
     NEXT_PUBLIC_FIREBASE_APP_ID=
     NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
@@ -88,6 +86,7 @@ Antes de começar, você precisará ter as seguintes ferramentas instaladas:
     NEXT_PUBLIC_FIREBASE_PROJECT_ID=
     NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
     NEXT_PUBLIC_ENV=
+    SECRET_KEY=
     ```
 1.  **Apenas forneça o arquivo do projeto e pronto:**
 
