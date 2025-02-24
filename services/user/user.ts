@@ -20,23 +20,25 @@ export const User = {
             if (settingsDoc.exists()) {
                 return {
                     loginEnabled: settingsDoc.data().loginEnabled ?? false,
-                    registerEnabled: settingsDoc.data().registerEnabled ?? false
+                    registerEnabled: settingsDoc.data().registerEnabled ?? false,
+                    logoutEnabled: settingsDoc.data().logoutEnabled ?? false
                 };
             }
-            return { loginEnabled: false, registerEnabled: false };
+            return { loginEnabled: false, registerEnabled: false, logoutEnabled: false };
         } catch (error) {
             console.error("Erro ao obter configurações:", error);
-            return { loginEnabled: false, registerEnabled: false };
+            return { loginEnabled: false, registerEnabled: false, logoutEnabled: false };
         }
     },
 
-    async setAuthVisibility(status: { login: boolean; register: boolean }) {
+    async setAuthVisibility(status: { login: boolean; register: boolean, logout: boolean }) {
         const _AUTH_SETTINGS_DOC = "auth_settings";
         try {
             const settingsRef = doc(db, "configurations", _AUTH_SETTINGS_DOC);
             await setDoc(settingsRef, {
                 loginEnabled: status.login,
-                registerEnabled: status.register
+                registerEnabled: status.register,
+                logoutEnabled: status.logout
             });
             return true;
         } catch (error) {
