@@ -12,7 +12,6 @@ export const logoutService = {
       const isValidToken = verifyToken(token)
       if(!isValidToken){ return null}
       const tokenDecoded:any = jwt.decode(token)
-      console.log(tokenDecoded)
       const sessaoRepository = new SessaoRepository()
       const sessao:any = await sessaoRepository.getSessaoByEmail(tokenDecoded.name)
       const token_db = sessao.data.token
@@ -21,8 +20,7 @@ export const logoutService = {
       }
       return { status:200, message: 'Logout successful', token };
     } catch (error) {
-      console.log("Tokennnn aquii >> ",token)
-      console.log("error >> ",error)
+      return null;
       // throw new createHttpError.Unauthorized('Token inválido ou revogadosssssss');
     }
   },
