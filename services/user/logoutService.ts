@@ -20,6 +20,7 @@ export const logoutService = {
       }
       return { status:200, message: 'Logout successful', token };
     } catch (error) {
+      console.log("error ",error)
       return null;
       // throw new createHttpError.Unauthorized('Token inválido ou revogadosssssss');
     }
