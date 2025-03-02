@@ -9,14 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@heroui/react": "^2.6.14",
+    "@heroui/react": "^2.7.4",
     "@internationalized/date": "^3.7.0",
     "@panva/jose": "^1.9.3",
     "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",
     "browser-image-compression": "^2.0.2",
     "firebase": "^11.2.0",
-    "framer-motion": "^12.4.3",
+    "framer-motion": "^12.4.7",
     "http-errors": "^2.0.0",
     "jose": "^5.9.6",
     "js-cookie": "^3.0.5",
