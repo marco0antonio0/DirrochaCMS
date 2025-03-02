@@ -245,9 +245,6 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
     const fetch: any = await endpointService.listEndpoints();
     const objFormated = fetch.data.filter((e: any) => e.title === r.query.id);
     const result = await endpointService.deleteEndpoint(objFormated[0]['id'])
-    dataItem.map((e)=>{
-      itemService.deleteItem(e.endpointId)
-    })
     await refreshData(result)
     r.push("/home")
 
