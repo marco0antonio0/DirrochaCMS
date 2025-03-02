@@ -56,13 +56,12 @@ export default function Home() {
     try {
       const response = await axios.get("/api/verifyToken", {
         headers: {
-          Authorization: `Bearer ${token}`, // Enviando o token como Bearer
+          Authorization: `Bearer ${token}`, 
         },
       });
   
       return response;
     } catch (error) {
-      // console.error("Erro na autenticação:", error.response?.data);
       return false;
     }
   }
@@ -188,6 +187,12 @@ NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
 NEXT_PUBLIC_ENV=`;
+
+function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+  if (event.key === "Enter") {
+    onClickButton();
+  }
+}
   return (
     <div
       className={`${geistSans.variable} ${geistMono.variable} grid grid-rows-[20px_1fr_20px] items-center w-[100%] justify-items-center min-h-screen p-8 pb-20 gap-16 sm:py-10 sm:px-3 font-[family-name:var(--font-geist-sans)]`}
@@ -214,19 +219,19 @@ NEXT_PUBLIC_ENV=`;
           <>
            <div className={`${isFirstAccess?"h-5":""}`}></div>
             <h1 className="m-auto mb-1 ml-0 opacity-65 sm:text-sm">EMAIL ADRESS</h1>
-            <input type="email" className={`m-auto mt-0 mb-0 w-[100%] h-14 rounded-lg ${errors.name?"border-red-500":"border-gray-200"} border-2 px-5 sm:h-12`} placeholder="user@email.com" onChange={(e)=>changeCredentials('name',e)}/>
+            <input onKeyDown={handleKeyDown}  type="email" className={`m-auto mt-0 mb-0 w-[100%] h-14 rounded-lg ${errors.name?"border-red-500":"border-gray-200"} border-2 px-5 sm:h-12`} placeholder="user@email.com" onChange={(e)=>changeCredentials('name',e)}/>
             {errors.name && <span className="text-red-500 text-sm mt-1">Campo Email vazio</span>}
             {errors.Unauthorized && <span className="text-red-500 text-sm mt-1">Campo Email ou Senha incorretos</span>}
             <div className={`${isFirstAccess?"h-5":""}`}></div>
             <div className={`${isFirstAccess?"h-0":"h-5"}`}></div>
             <h1 className="m-auto mt-0 mb-1 ml-0 opacity-65 sm:text-sm">PASSWORD</h1>
-            <input type="password" className={`m-auto mt-0 mb-0 w-[100%] h-14 rounded-lg ${errors.password?"border-red-500":"border-gray-200"}  border-2 px-5 sm:h-12`} placeholder="Passwords" onChange={(e)=>changeCredentials('password',e)}/>
+            <input onKeyDown={handleKeyDown}  type="password" className={`m-auto mt-0 mb-0 w-[100%] h-14 rounded-lg ${errors.password?"border-red-500":"border-gray-200"}  border-2 px-5 sm:h-12`} placeholder="Passwords" onChange={(e)=>changeCredentials('password',e)}/>
             {errors.password && <span className="text-red-500 text-sm mt-1">Campo senha vazio</span>}
             {errors.Unauthorized && <span className="text-red-500 text-sm mt-1">Campo Email ou Senha incorretos</span>}
             {isFirstAccess && (
               <>
               <h1 className="m-auto mt-5 mb-0 ml-0 opacity-65 sm:text-sm">CONFIRM PASSWORD</h1>
-              <input type="password" className={`m-auto mt-1 mb-0 w-[100%] h-14 rounded-lg ${errors.password?"border-red-500":"border-gray-200"}  border-2 px-5 sm:h-12`} placeholder="Confirm Password" onChange={(e) => changeCredentials("confirmPassword", e)}/>
+              <input onKeyDown={handleKeyDown}  type="password" className={`m-auto mt-1 mb-0 w-[100%] h-14 rounded-lg ${errors.password?"border-red-500":"border-gray-200"}  border-2 px-5 sm:h-12`} placeholder="Confirm Password" onChange={(e) => changeCredentials("confirmPassword", e)}/>
                 {errors.confirmPassword && <span className="text-red-500 text-sm">Passwords must match</span>}
               </>
             )}
@@ -253,7 +258,7 @@ NEXT_PUBLIC_ENV=`;
                 navigator.clipboard.writeText(envText).then(() => {
                   setCopied(true);
                   toast.success("Env copiado com sucesso",{duration:4000});
-                  setTimeout(() => setCopied(false), 2000); // Reseta o estado após 2 segundos
+                  setTimeout(() => setCopied(false), 2000);
                 });
               }}}>
                 {loading ? <span className="loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin"></span> : "Copiar"}
