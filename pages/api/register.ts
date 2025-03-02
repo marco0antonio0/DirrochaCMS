@@ -7,12 +7,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   // 🔒 Verifica se a chamada vem do próprio servidor Next.js
-  // const host = req.headers.host || "";
-  // const referer = req.headers.referer || "";
+  const host = req.headers.host || "";
+  const referer = req.headers.referer || "";
 
-  // if (!referer.includes(host)) {
-  //   return res.status(403).json({ error: "Acesso negado" });
-  // }
+  if (!referer.includes(host)) {
+    return res.status(403).json({ error: "Acesso negado" });
+  }
   try {
     const { name, password } = req.body;
     const token = await registerUser(name, password);
