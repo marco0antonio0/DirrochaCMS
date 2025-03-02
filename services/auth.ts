@@ -25,9 +25,8 @@ export const registerUser = async (name: string, password: string): Promise<stri
 
   try {
     const token = jwt.sign({ name }, process.env.SECRET_KEY!, { expiresIn: "1d" });
-
-    Cookies.set("token", token, { expires: 1 });
-
+    const sessaoService = new SessaoService()
+    await sessaoService.validateToken({token:token})
     return token;
   } catch (error) {
     throw new Error("Erro ao gerar token");
@@ -55,8 +54,6 @@ export const loginUser = async (name: string, password: string): Promise<string>
     const token = jwt.sign({ name }, process.env.SECRET_KEY!, { expiresIn: "1d" });
     const sessaoService = new SessaoService()
     await sessaoService.validateToken({token:token})
-  
-    Cookies.set("token", token, { expires: 1 });
   
     return token;
   } catch (error) {

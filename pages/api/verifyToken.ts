@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Extrai o token após "Bearer "
   const token:any = authHeader.split(" ")[1];
   // Verifica se o token é válido
-  const decoded = verifyToken(token);
+  const decoded = await verifyToken(token);
 
   if (!decoded) {
     return res.status(401).json({ message: "Unauthorized: Invalid token" });

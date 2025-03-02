@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { loginUser } from '../../services/auth';
+import { registerUser } from '../../services/auth';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -15,9 +15,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
   try {
     const { name, password } = req.body;
-    const token = await loginUser(name, password);
+    const token = await registerUser(name, password);
     res.status(200).json({ token });
   } catch (error: any) {
-    res.status(401).json({ message: error.message });
+    res.status(405).json({ message: error.message });
   }
 }
