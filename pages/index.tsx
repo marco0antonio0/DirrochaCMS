@@ -10,6 +10,7 @@ import { loginUser, registerUser } from "@/services/auth";
 import toast from "react-hot-toast";
 import { Button } from "@heroui/react";
 import { SessaoService } from "@/services/sessaoService";
+import { envText } from "@/utils/textExample";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -138,16 +139,18 @@ export default function Home() {
           toast.error("Falha ao criar a conta ...",{duration:4000})
           return;
         }}
-        const token = await registerUser(credentials.name, credentials.password);
-        const sessaoService = new SessaoService()
-        await sessaoService.validateToken({token:token})
-        if (token) {
+        const responseRegister = await axios.post("/api/register", {
+          name: credentials.name,
+          password: credentials.password,
+        });
+        Cookies.set("token", responseRegister.data.token, { expires: 1 });
+        if (responseRegister.data.token) {
           setLoading(false);
           toast.success("Conta criada com sucesso",{duration:4000});
           toast.success("Seja bem vindo(a)",{duration:4000});
             setTimeout(() => {
               window.location.href = "/home";
-            }, 100);
+            }, 0);
           }
         }else{
         const response = await axios.post("/api/login", {
@@ -180,13 +183,7 @@ export default function Home() {
           setLoading(false);
     }
   }
-  const envText = `NEXT_PUBLIC_FIREBASE_API_KEY=
-NEXT_PUBLIC_FIREBASE_APP_ID=
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
-NEXT_PUBLIC_ENV=`;
+
 
 function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
   if (event.key === "Enter") {
