@@ -153,7 +153,6 @@ export default function Home() {
         });
         Cookies.set("token", response.data.token, { expires: 1 }); 
         window.location.href = "/home"; 
-        setLoading(false);
       }
       
 

@@ -3,6 +3,7 @@ import Cookies from "js-cookie";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { SessaoService } from "./sessaoService";
+import createHttpError from "http-errors";
 
 
 
@@ -44,12 +45,12 @@ export const loginUser = async (name: string, password: string): Promise<string>
     const _user: any = await getData();
 
     if (!_user) {
-      throw new Error("Usuário não encontrado");
+      throw new createHttpError.Unauthorized('Usuario ou senha Incorretos'); 
     }
   
     const _isPasswordValid = await bcrypt.compare(password, _user.password);
     if (!_isPasswordValid) {
-      throw new Error("Credenciais inválidas");
+      throw new createHttpError.Unauthorized('Usuario ou senha Incorretos'); 
     }
     const token = jwt.sign({ name }, process.env.SECRET_KEY!, { expiresIn: "1d" });
     const sessaoService = new SessaoService()
