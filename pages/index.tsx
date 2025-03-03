@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 import { Button } from "@heroui/react";
 import { SessaoService } from "@/services/sessaoService";
 import { envText } from "@/utils/textExample";
+import { Eye, EyeOff } from "lucide-react";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -27,14 +28,7 @@ export default function Home() {
   const [isFirstAccess, setIsFirstAccess] = useState(false);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const [copied, setCopied] = useState(false);
-  const [firebaseCredentials, setFirebaseCredentials] = useState({
-    apiKey: "",
-    authDomain: "",
-    projectId: "",
-    storageBucket: "",
-    messagingSenderId: "",
-    appId: "",
-  });
+  const [showPassword, setShowPassword] = useState(false);
   const [credentials, setCredentials] = useState({
     name: "",
     password: "",
@@ -222,7 +216,16 @@ function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
             <div className={`${isFirstAccess?"h-5":""}`}></div>
             <div className={`${isFirstAccess?"h-0":"h-5"}`}></div>
             <h1 className="m-auto mt-0 mb-1 ml-0 opacity-65 sm:text-sm">PASSWORD</h1>
-            <input onKeyDown={handleKeyDown}  type="password" className={`m-auto mt-0 mb-0 w-[100%] h-14 rounded-lg ${errors.password?"border-red-500":"border-gray-200"}  border-2 px-5 sm:h-12`} placeholder="Passwords" onChange={(e)=>changeCredentials('password',e)}/>
+            <div className="relative w-[100%]">
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-2 flex items-center justify-center h-full w-10"
+            >
+              {showPassword ? <Eye size={20} className="text-gray-500" /> : <EyeOff size={20} className="text-gray-500" />}
+            </button>
+            <input onKeyDown={handleKeyDown}  type={!showPassword?"password":"text"} className={`m-auto mt-0 mb-0 w-[100%] h-14 rounded-lg ${errors.password?"border-red-500":"border-gray-200"}  border-2 px-5 sm:h-12`} placeholder="Passwords" onChange={(e)=>changeCredentials('password',e)}/>
+            </div>
             {errors.password && <span className="text-red-500 text-sm mt-1">Campo senha vazio</span>}
             {errors.Unauthorized && <span className="text-red-500 text-sm mt-1">Campo Email ou Senha incorretos</span>}
             {isFirstAccess && (
