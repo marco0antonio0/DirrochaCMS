@@ -231,7 +231,7 @@ function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
             {isFirstAccess && (
               <>
               <h1 className="m-auto mt-5 mb-0 ml-0 opacity-65 sm:text-sm">CONFIRM PASSWORD</h1>
-              <input onKeyDown={handleKeyDown}  type="password" className={`m-auto mt-1 mb-0 w-[100%] h-14 rounded-lg ${errors.password?"border-red-500":"border-gray-200"}  border-2 px-5 sm:h-12`} placeholder="Confirm Password" onChange={(e) => changeCredentials("confirmPassword", e)}/>
+              <input onKeyDown={handleKeyDown}  type={!showPassword?"password":"text"} className={`m-auto mt-1 mb-0 w-[100%] h-14 rounded-lg ${errors.password?"border-red-500":"border-gray-200"}  border-2 px-5 sm:h-12`} placeholder="Confirm Password" onChange={(e) => changeCredentials("confirmPassword", e)}/>
                 {errors.confirmPassword && <span className="text-red-500 text-sm">Passwords must match</span>}
               </>
             )}
