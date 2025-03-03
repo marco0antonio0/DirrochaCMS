@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { loginUser } from '../../services/auth';
+import createHttpError from 'http-errors';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -16,6 +17,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const { name, password } = req.body;
     const token = await loginUser(name, password);
+    if(!token){
+      throw new createHttpError.Unauthorized('Usuario ou senha Incorretos'); 
+    }
     res.status(200).json({ token });
   } catch (error: any) {
     res.status(401).json({ message: error.message });
