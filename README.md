@@ -155,7 +155,8 @@ Antes de começar, certifique-se de ter o seguinte instalado:
 4.  **Execute com Docker:**
 
     ```bash
-    docker-compose up -d --build
+    docker build -t dirrocha-cms .
+    docker run -p 3000:3000 dirrocha-cms .
     ```
 
     A aplicação estará acessível em `http://localhost:3000`.
