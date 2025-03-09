@@ -1,169 +1,356 @@
-# 🚀 DirrochaCMS
-![img](/images/login-demo.dirrocha.com%20(1).png)
-## 📌 Introdução
+# 🚀 DirrochaCMS: Sua Solução Leve para Gerenciamento de Conteúdo
 
-O DirrochaCMS é um sistema de gerenciamento de conteúdo (CMS) leve e eficiente, projetado para facilitar a criação de endpoints e o gerenciamento de dados para sites e diversos segmentos. Ele é ideal para desenvolvedores e equipes que buscam uma solução rápida e personalizável para seus projetos web. Nosso objetivo é fornecer uma ferramenta intuitiva que permita gerenciar conteúdo de forma simples e direta, economizando tempo e recursos.
+<img src="https://img.shields.io/badge/Next.js-black?style=for-the-badge&logo=next.js&logoColor=white">
+<img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB">
+<img src="https://img.shields.io/badge/Firebase-039BE5?style=for-the-badge&logo=Firebase&logoColor=white">
+<img src="https://img.shields.io/badge/Docker-0db7ed?style=for-the-badge&logo=docker&logoColor=ffffff">
+<img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white">
+<img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black">
+<img src="https://img.shields.io/badge/TypeScript-F7DF1E?style=for-the-badge&logo=typescript&logoColor=black">
 
-## ✅ Recursos e Funcionalidades
 
-O DirrochaCMS oferece uma variedade de funcionalidades que o tornam uma ferramenta poderosa:
+DirrochaCMS é um Sistema de Gerenciamento de Conteúdo (CMS) leve e eficiente, projetado para simplificar a criação de endpoints de API e o gerenciamento de dados para sites e diversas aplicações. Construído pensando em desenvolvedores e equipes, o DirrochaCMS oferece uma solução rápida, personalizável e amigável para gerenciar o conteúdo de seus projetos web. Nosso objetivo é fornecer uma ferramenta intuitiva que torne o gerenciamento de conteúdo direto e descomplicado, economizando seu tempo e recursos.
 
-*   **Criação de Endpoints Personalizados:** Permite definir e criar seus próprios endpoints de API para acessar e gerenciar dados.
-*   **Gerenciamento de Dados:** Oferece uma interface intuitiva para criar, ler, atualizar e excluir dados (CRUD).
-*   **Flexibilidade:** Adapta-se a diferentes tipos de projetos, sejam eles sites simples ou aplicações mais complexas.
-*   **Leveza:** Construído com tecnologias de ponta para garantir performance e eficiência.
-*   **Fácil Integração:** Integra-se facilmente com outras ferramentas e serviços.
+<!-- [Ir para a documentação](#documentação-do-sistema-dirrochacms) -->
 
-**Exemplo Prático:** Imagine que você precisa de um CMS para um blog. Com o DirrochaCMS, você pode criar endpoints para posts, categorias e autores, gerenciando tudo através de uma interface amigável.
+## ⬇️ Instruções de Instalação Rápida
 
-## 🛠️ Tecnologias Utilizadas
+Antes de mergulhar nas funcionalidades do DirrochaCMS, siga estas instruções para configurar o projeto localmente:
 
-*   ✅ **Firebase API:** Utilizado como backend para persistência dos dados e autenticação. Permite escalabilidade e fácil integração.
-*   ✅ **Next.js API:** Responsável pela criação dos endpoints de API. Traz performance e um ótimo ambiente de desenvolvimento.
-*   ✅ **Next.js:** Framework para a criação da interface da aplicação. Oferece server-side rendering e excelente performance.
-*   ✅ **Docker:** Utilizado para containerização, garantindo a portabilidade e consistência da aplicação em diferentes ambientes.
-*   ✅ **Docker Compose:** Permite a orquestração de múltiplos containers, simplificando o processo de desenvolvimento e deployment.
+1.  **Clone o projeto com `degit`:**
 
-## ⚙️ Pré-requisitos e Instalação
-
-Antes de começar, você precisará ter as seguintes ferramentas instaladas:
-
-1.  **Node.js (v16 ou superior):** Necessário para executar o Next.js.
-
-    *   [Download Node.js](https://nodejs.org/)
-
-2.  **npm ou yarn:** Gerenciador de pacotes para instalar as dependências do projeto.
-3.  **Docker e Docker Compose:** Para containerizar e orquestrar os serviços da aplicação.
-
-    *   [Instalação Docker](https://docs.docker.com/get-docker/)
-
-### Instalação
-
-1.  **Clone o Repositório:**
     ```bash
-    git clone https://github.com/marco0antonio0/DirrochaCMS
-    cd DirrochaCMS
+    npx degit marco0antonio0/DirrochaCMS meu-projeto
+    cd meu-projeto
     ```
 
-### **Opções de Deployer:**
-#### **Deploy em VPS:**
-1.  **Instale as Dependências:**
+    *   Este comando copia o projeto para uma nova pasta chamada `meu-projeto`. Você pode substituir `meu-projeto` pelo nome que preferir.
+    * Certifique-se de ter o Node.js instalado na sua maquina.
+
+2.  **Instale as dependências:**
+
     ```bash
     npm install
     # ou
     yarn install
     ```
-2.  **Inicialize a Aplicação:**
+
+    *   Este comando instala todas as bibliotecas e pacotes necessários para o funcionamento do DirrochaCMS.
+
+3.  **Configure as Variáveis de Ambiente:**
+
+    *   **Crie o arquivo `.env`:** Copie o arquivo `.env.example` para `.env`.
+        ```bash
+        cp .env.example .env
+        ```
+    * **Acesse o Firebase:** No [Console do Firebase](https://console.firebase.google.com/), crie um novo projeto ou acesse um projeto existente.
+    * **Credenciais:** Obtenha as credenciais do seu projeto Firebase (chave de API, ID do projeto, domínio de autenticação, etc.) em:
+        *  Vá para as configurações do projeto e na aba **Geral** você encontra as credenciais e na aba **Contas de serviço** você pode gerar uma nova chave.
+    *   **Preencha o arquivo `.env`:** Substitua os valores de exemplo pelas suas credenciais do Firebase no arquivo `.env`:
+
+        ```env
+        NEXT_PUBLIC_FIREBASE_API_KEY=SUA_CHAVE_DE_API_DO_FIREBASE
+        NEXT_PUBLIC_FIREBASE_APP_ID=SEU_ID_DE_APP_DO_FIREBASE
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=SEU_DOMÍNIO_DE_AUTENTICAÇÃO_DO_FIREBASE
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=SEU_ID_DE_REMETENTE_DE_MENSAGENS_DO_FIREBASE
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID=SEU_ID_DE_PROJETO_DO_FIREBASE
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=SEU_BUCKET_DE_STORAGE_DO_FIREBASE
+        NEXT_PUBLIC_ENV=SEU_AMBIENTE (ex: development)
+        SECRET_KEY=SUA_CHAVE_SECRETA
+        ```
+
+4. **Pronto!** Agora você pode iniciar o projeto.
+
     ```bash
-    npm run dev
-    # ou
-    yarn dev
+        npm run dev
     ```
-2.  **Build a Aplicação:**
+    * Execute o comando para startar o ambiente de desenvolvimento do projeto
+
+---
+
+![DirrochaCMS Login Demo](/images/login-demo.dirrocha.com%20(1).png)
+
+## ✨ Principais Funcionalidades
+
+O DirrochaCMS oferece uma variedade de funcionalidades poderosas:
+
+*   **Criação de Endpoints Personalizados:** Defina e crie seus próprios endpoints de API para acessar e gerenciar seus dados.
+*   **Gerenciamento Intuitivo de Dados:** Use uma interface limpa e intuitiva para executar operações de Criar, Ler, Atualizar e Excluir (CRUD) em seus dados.
+*   **Estruturas de Dados Flexíveis:** Projete esquemas de dados personalizados com vários tipos de campos, como texto, números, booleanos e muito mais, para atender às necessidades do seu projeto.
+*   **Leve e de Alto Desempenho:** Construído com tecnologias de ponta para garantir alto desempenho e eficiência.
+*   **Integração Descomplicada:** Integre facilmente o DirrochaCMS com suas ferramentas e serviços existentes.
+*   **Gerenciamento de Usuários:** Crie e gerencie contas de usuário, controle o acesso e configure as definições diretamente dentro do CMS.
+*   **Autenticação:** Proteja seus endpoints com recursos de autenticação integrados, permitindo que você gerencie logins de usuário e proteja dados sensíveis.
+*   **Configurações de Usuário:** Defina se deseja usar usuários no sistema, permitindo que os usuários se registrem e façam login.
+*   **Pesquisa:** Pesquise por nome ou e-mail de forma rápida e simples.
+*   **Endpoints Dinâmicos:** Crie endpoints dinamicamente com os campos desejados, facilitando a personalização para suas necessidades.
+*   **Interface Amigável:** Interface fácil de usar e entender.
+
+**Exemplo Prático:** Imagine construir um blog. Com o DirrochaCMS, você pode facilmente criar endpoints para posts, categorias, autores e comentários, gerenciando todo esse conteúdo por meio de uma interface amigável. Você também pode implementar recursos de gerenciamento de usuários e autenticação para uma experiência de blog mais robusta.
+
+## 🛠️ Stack de Tecnologias
+
+Utilizamos uma poderosa combinação de tecnologias:
+
+*   ✅ **Firebase API:** Serve como backend para persistência de dados e autenticação. Garante escalabilidade e facilidade de integração.
+*   ✅ **Rotas de API Next.js:** Permite a criação de endpoints de API, oferecendo alto desempenho e uma ótima experiência para o desenvolvedor.
+*   ✅ **Next.js:** O framework para construir a interface de usuário do aplicativo. Ele oferece renderização do lado do servidor e desempenho excepcional.
+*   ✅ **Docker:** Possibilita a conteinerização, garantindo portabilidade e consistência entre diferentes ambientes.
+*   ✅ **Docker Compose:** Simplifica a orquestração de múltiplos contêineres, agilizando o desenvolvimento e a implantação.
+* ✅ **React:** Usado para construir a interface do usuário.
+* ✅ **Heroui:** Uma biblioteca de UI para React, facilita o desenvolvimento.
+* ✅ **Lodash.debounce:** Função para evitar execuções excessivas.
+* ✅ **React-hot-toast:** Sistema de notificações.
+
+## ⚙️ Pré-requisitos e Instalação (Detalhada)
+
+Antes de começar, certifique-se de ter o seguinte instalado:
+
+1.  **Node.js (v16+):** O ambiente de execução JavaScript.
+
+    *   [Baixar Node.js](https://nodejs.org/)
+
+2.  **npm ou yarn:** O gerenciador de pacotes para instalar as dependências do projeto.
+3.  **Docker e Docker Compose:** Para conteinerização e gerenciamento de serviços.
+
+    *   [Instalar Docker](https://docs.docker.com/get-docker/)
+
+### Instalação
+
+1.  **Clone o Repositório (Se já tiver feito usando npx degit, pule esse passo):**
+
+    ```bash
+    git clone https://github.com/marco0antonio0/DirrochaCMS
+    cd DirrochaCMS
+    ```
+
+### Opções de Implantação
+
+#### **Implantação em um VPS (Servidor Privado Virtual):**
+
+1.  **Instale as Dependências:**
+
+    ```bash
+    npm install
+    # ou
+    yarn install
+    ```
+
+2.  **Construa a Aplicação:**
+
     ```bash
     npm run build
     # ou
     yarn build
     ```
-3.  **Iniciando com Docker:**
+
+3.  **Inicie o ambiente de desenvolvimento:**
+
     ```bash
-    docker-compose up -d --build
+    npm run dev
+    # ou
+    yarn dev
     ```
-    A aplicação estará disponível em `http://localhost:3000`.
 
-#### **Deploy em Netlify ou Vercel:**
-0.  **Configure as variaves envs do seu firebase na .env:**
+4.  **Execute com Docker:**
 
-    *   Crie um projeto no [Firebase Console](https://console.firebase.google.com/).
-    *   Obtenha as credenciais do seu projeto (chave de API, ID do projeto, etc).
-    *   Crie um arquivo `.env` na raiz do projeto e adicione as suas credenciais:
-
-    ```env
-    NEXT_PUBLIC_FIREBASE_API_KEY=
-    NEXT_PUBLIC_FIREBASE_APP_ID=
-    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
-    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
-    NEXT_PUBLIC_FIREBASE_PROJECT_ID=
-    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
-    NEXT_PUBLIC_ENV=
-    SECRET_KEY=
+    ```bash
+    docker build -t dirrocha-cms .
+    docker run -p 3000:3000 dirrocha-cms .
     ```
-1.  **Apenas forneça o arquivo do projeto e pronto:**
 
-## 🚀 Como Usar
+    A aplicação estará acessível em `http://localhost:3000`.
+
+#### **Implantação no Netlify ou Vercel:**
+
+1.  **Configure as Variáveis de Ambiente do Firebase:**
+
+    *   Crie um projeto no [Console do Firebase](https://console.firebase.google.com/).
+    *   Obtenha as credenciais do seu projeto (chave de API, ID do projeto, etc.).
+    *   Verifique se o arquivo `.env` foi criado e se ele contem todas as credenciais.
+
+2.  **Implante:**
+    *   Simplesmente envie os arquivos do seu projeto para um repositório e conecte-o ao Netlify ou Vercel. Eles cuidarão do processo de implantação.
+
+## 🚀 Como Usar o DirrochaCMS
+
+### Página Inicial (index.tsx)
+
+![Página Inicial do DirrochaCMS](/images/4.png)
 
 1.  **Acesse a Aplicação:** Abra seu navegador e vá para `http://0.0.0.0:3000`.
-2.  **Navegação:** A aplicação tem uma interface simples e intuitiva para criação e gerenciamento de dados.
-3.  **Criação de Endpoints:** Use a interface para criar seus próprios endpoints, definindo nomes, tipos de dados e outros atributos.
-4.  **Gerenciamento de Dados:** Utilize a interface para adicionar, editar, excluir e visualizar seus dados de maneira facil.
+2.  **Navegação:** Você será direcionado à página inicial, onde poderá visualizar os endpoints existentes ou gerenciar usuários.
+3.  **Abas:** Na página inicial, você pode ver as abas "Endpoints" e "Usuários".
+4. **Pesquisa:** Na página inicial, você tem uma opção de pesquisa para encontrar seus endpoints ou usuários.
 
-**Exemplo de requisição para uma API criada:**
-```bash
-# Exemplo de requisição POST para criar um novo registro
-curl -X GET \
-  -H "Content-Type: application/json" \
-  http://0.0.0.0:3000/api/posts
-```
+#### **Gerenciando Endpoints:**
 
-**Resposta esperada(varia de acordo com campos que deseja incluir):**
-```json
-{
-  "id": "123456",
-  "title": "Novo Post",
-  "content": "Conteúdo do novo post",
-  "author": "Seu Nome"
-}
-```
+*   **Visualizar Endpoints:** A página inicial lista todos os endpoints criados.
+*   **Acessar Dados do Endpoint:** Clique em um endpoint para visualizar e gerenciar seus dados.
+*   **Criar Novos Endpoints:** Clique em "Configurações" para ir à página de criação.
+*   **Logout:** Clique no ícone de logout para sair.
+* **Documentação:** Clique no link azul para ir para documentação.
 
-<!-- ## 📁 Estrutura de Diretórios
+#### **Gerenciando Usuários:**
 
-```
-dirrochacms/
-├── components/         # Componentes reutilizáveis da interface
-├── pages/              # Páginas da aplicação Next.js
-│   ├── api/            # Endpoints da API
-│   │   └── posts.js    # Exemplo de endpoint para posts
-│   └── _app.js         # Arquivo de configuração da aplicação Next.js
-├── styles/             # Estilos da aplicação
-├── public/             # Arquivos públicos (imagens, etc.)
-├── .env.local          # Arquivo para variáveis de ambiente
-├── package.json        # Arquivo de dependências
-├── docker-compose.yml  # Configuração do Docker Compose
-└── Dockerfile          # Configuração do Docker
-``` -->
+*   **Visualizar Usuários:** A página inicial possui uma aba "Usuários" onde você pode ver todos os usuários registrados.
+*   **Excluir Usuários:** Na aba "Usuários", você pode excluir usuários.
 
-## 🤝 Contribuição
+### Página de Criação de Endpoint (create.tsx)
 
-Contribuições são sempre bem-vindas! Se você deseja contribuir para o DirrochaCMS, siga estas diretrizes:
+![Criar Endpoint no DirrochaCMS](/images/8.png)
 
-1.  **Abra uma Issue:** Antes de começar a trabalhar em uma funcionalidade ou correção, abra uma issue para discutir as mudanças propostas.
-2.  **Crie um Branch:** Crie um branch com o nome da issue para suas mudanças.
-3.  **Faça um Pull Request:** Após concluir suas mudanças, envie um pull request com uma descrição detalhada.
+1.  **Acessar a Página:** Clique em "Configurações" na página inicial para acessar a página de Criação de Endpoint.
+2.  **Criar Endpoints:**
+    *   **Nome do Endpoint:** Insira o nome desejado para seu novo endpoint.
+    *   **Selecionar Campos:** Escolha os campos (tipos de dados) que deseja incluir no endpoint.
+    *   **Salvar:** Clique em "Criar endpoint" para criar o novo endpoint.
+3.  **Configurações de Usuário:**
+    *   **Acessar Configurações de Usuário:** Clique na aba "Users" na página de Criação de Endpoint.
+    *   **Habilitar/Desabilitar Login:** Alterne "Login de usuários" para habilitar ou desabilitar o login de usuários.
+    *   **Habilitar/Desabilitar Registro:** Alterne "Registro de usuários" para habilitar ou desabilitar o registro de usuários.
+    * **Habilitar/Desabilitar logout:** Alterne "Logout de usuários" para habilitar ou desabilitar o logout de usuários.
+    *   **Salvar:** Clique em "Salvar configuração" para salvar suas configurações de usuário.
+4. **Validação:** A página possui um sistema de validação para verificar se você preencheu todos os campos corretamente.
+5. **Endpoint:** Na aba "Endpoint" você pode criar o seu endpoint customizado.
 
-## 📜 Licença
+### Gerenciar Dados
 
-Este projeto está licenciado sob a licença MIT.
+![Lista de Itens no DirrochaCMS](/images/6.png)
+![Criar Item no DirrochaCMS](/images/7.png)
 
-[Licença MIT](https://opensource.org/licenses/MIT)
+1.  **Acessar um Endpoint:** Vá para a página inicial e clique em um endpoint existente.
+2.  **Adicionar Novos Dados:** Clique no botão "Adicionar" para adicionar uma nova entrada de dados.
+3.  **Editar Dados:** Clique em uma entrada de dados existente para editá-la.
+4.  **Excluir Dados:** Ao editar uma entrada de dados, você encontrará uma opção para excluí-la.
 
+**Exemplos de Requisições de API:**
 
-## Imagem ilustrativa 1
-![img](/images/login-demo.dirrocha.com%20(1).png)
+Aqui estão alguns exemplos de como interagir com seus endpoints de API personalizados:
 
-## Imagem ilustrativa 2
-![img](/images/login-demo.dirrocha.com%20(2).png)
+*   **GET Todos os Posts:**
 
-## Imagem ilustrativa Home
-![img](/images/4.png)
+    ```bash
+    curl -X GET http://0.0.0.0:3000/api/posts
+    ```
 
-## Imagem ilustrativa Login
-![img](/images/5.png)
+    **Resposta Esperada:**
 
-## Imagem ilustrativa Listagem de Itens
-![img](/images/6.png)
+    ```json
+    [
+      {
+        "id": "123",
+        "title": "Primeiro Post",
+        "content": "Conteúdo do primeiro post",
+        "author": "John Doe"
+      },
+      {
+        "id": "456",
+        "title": "Segundo Post",
+        "content": "Conteúdo do segundo post",
+        "author": "Jane Smith"
+      }
+    ]
+    ```
 
-## Imagem ilustrativa Cria Item
-![img](/images/7.png)
+*   **POST Um Novo Post:**
 
-## Imagem ilustrativa Criar Endpoin
-![img](/images/8.png)
+    ```bash
+    curl -X POST \
+      -H "Content-Type: application/json" \
+      -d '{
+        "title": "Novo Post do Blog",
+        "content": "Este é o conteúdo do novo post do blog.",
+        "author": "Seu Nome"
+      }' \
+      http://0.0.0.0:3000/api/posts
+    ```
+
+    **Resposta Esperada:**
+
+    ```json
+    {
+      "id": "789",
+      "title": "Novo Post do Blog",
+      "content": "Este é o conteúdo do novo post do blog.",
+      "author": "Seu Nome"
+    }
+    ```
+
+*   **PUT (Atualizar) um Post Existente:**
+
+    ```bash
+    curl -X PUT \
+      -H "Content-Type: application/json" \
+      -d '{
+        "title": "Título Atualizado do Post do Blog",
+        "content": "Este é o conteúdo atualizado."
+      }' \
+      http://0.0.0.0:3000/api/posts/789
+    ```
+
+*   **DELETE um Post:**
+
+    ```bash
+    curl -X DELETE http://0.0.0.0:3000/api/posts/789
+    ```
+
+**Exemplos de Requisições de Autenticação**
+
+*   **Login de Usuário:**
+    ```bash
+    curl -X POST \
+    -H "Content-Type: application/json" \
+    -d '{
+    "email":"teste@teste.com" ,
+    "password":"senha123"
+    }' \
+    http://0.0.0.0:3000/api/user/login
+    ```
+
+    **Resposta Esperada:**
+
+    ```json
+    {
+      "token": "..."
+    }
+    ```
+
+*   **Registrar Usuário:**
+    ```bash
+    curl -X POST \
+    -H "Content-Type: application/json" \
+    -d '{
+    "name":"teste",
+    "email":"teste@teste.com" ,
+    "password":"senha123"
+    }' \
+    http://0.0.0.0:3000/api/user/register
+    ```
+
+    **Resposta Esperada:**
+
+    ```json
+    {
+      "token": "..."
+    }
+    ```
+
+*   **Logout de Usuário:**
+    ```bash
+    curl -X POST \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer eyJhbGciO..."\
+    http://0.0.0.0:3000/api/user/logout
+    ```
+
+    **Resposta Esperada:**
+
+    ```json
+    {
+      "message": "Token invalidado com sucesso."
+    }
+    ```
+
+## 📁 Estrutura de Diretórios
+
