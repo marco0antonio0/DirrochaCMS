@@ -1,5 +1,6 @@
 # 🚀 DirrochaCMS: Sua Solução Leve para Gerenciamento de Conteúdo
 
+<div style="display: flex; flex-direction: row; gap: 10px; align-items: center; margin-bottom: 20px;">
 <img src="https://img.shields.io/badge/Next.js-black?style=for-the-badge&logo=next.js&logoColor=white">
 <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB">
 <img src="https://img.shields.io/badge/Firebase-039BE5?style=for-the-badge&logo=Firebase&logoColor=white">
@@ -7,7 +8,7 @@
 <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white">
 <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black">
 <img src="https://img.shields.io/badge/TypeScript-F7DF1E?style=for-the-badge&logo=typescript&logoColor=black">
-
+</div> isso ta certto ?
 
 DirrochaCMS é um Sistema de Gerenciamento de Conteúdo (CMS) leve e eficiente, projetado para simplificar a criação de endpoints de API e o gerenciamento de dados para sites e diversas aplicações. Construído pensando em desenvolvedores e equipes, o DirrochaCMS oferece uma solução rápida, personalizável e amigável para gerenciar o conteúdo de seus projetos web. Nosso objetivo é fornecer uma ferramenta intuitiva que torne o gerenciamento de conteúdo direto e descomplicado, economizando seu tempo e recursos.
 
