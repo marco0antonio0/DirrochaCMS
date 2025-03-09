@@ -8,7 +8,7 @@
 <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white">
 <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black">
 <img src="https://img.shields.io/badge/TypeScript-F7DF1E?style=for-the-badge&logo=typescript&logoColor=black">
-</div> isso ta certto ?
+</div>
 
 DirrochaCMS é um Sistema de Gerenciamento de Conteúdo (CMS) leve e eficiente, projetado para simplificar a criação de endpoints de API e o gerenciamento de dados para sites e diversas aplicações. Construído pensando em desenvolvedores e equipes, o DirrochaCMS oferece uma solução rápida, personalizável e amigável para gerenciar o conteúdo de seus projetos web. Nosso objetivo é fornecer uma ferramenta intuitiva que torne o gerenciamento de conteúdo direto e descomplicado, economizando seu tempo e recursos.
 
