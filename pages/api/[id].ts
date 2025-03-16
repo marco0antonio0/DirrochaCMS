@@ -1,6 +1,10 @@
+import { SessaoRepository } from "@/repositories/sessaoRepository";
 import { endpointService } from "@/services/endpointService";
 import { itemService } from "@/services/itemService";
+import verifyToken from "@/services/verifyToken";
+import createHttpError from "http-errors";
 import type { NextApiRequest, NextApiResponse } from "next";
+import jwt from 'jsonwebtoken';
 
 const searchByTituloIdentificador = (data: any, searchTerm: string) => {
   if (!data || !data.data || data.data.length === 0) {
@@ -45,6 +49,7 @@ export default async function handler(
   }
 
   var listEndpoints = endpoints.data.map((e: any) => e.title);
+  console.log(id)
   if (!listEndpoints.includes(id)) {
     return res.status(404).json({ error: "Endpoint inexistente", statusCode: 404 });
   }
@@ -61,19 +66,44 @@ export default async function handler(
     return res.status(500).json({ error: "Erro interno", statusCode: 500 });
   }
 
-  // Ordena os itens pela data de criação (assumindo que há um campo `createdAt` no formato ISO)
+  var endpointInfo: any = item.filter((e: any) => e.id === idData[0]['id']);
+  if (endpointInfo) {
+    endpointInfo = endpointInfo[0]
+  } else {
+    return res.status(404).json({ error: "Enpoint nãoo encontrado", statusCode: 400 });
+  }
   data.data.sort((a: any, b: any) => {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(); // Ordem decrescente (mais recentes primeiro)
   });
 
-  if (t) {
-    const searchTerm = Array.isArray(t) ? t[0] : t;
-    if (!searchTerm) {
-      return res.status(400).json({ error: "Parâmetro 't' é obrigatório", statusCode: 400 });
+  if (!(endpointInfo.private ?? false)) {
+    // public router
+    if (t) {
+      const searchTerm = Array.isArray(t) ? t[0] : t;
+      if (!searchTerm) {
+        return res.status(400).json({ error: "Parâmetro 't' é obrigatório", statusCode: 400 });
+      }
+      const searchResults = searchByTituloIdentificador(data, searchTerm);
+      return res.status(searchResults.statusCode).json(searchResults);
     }
-    const searchResults = searchByTituloIdentificador(data, searchTerm);
-    return res.status(searchResults.statusCode).json(searchResults);
+    // const filterPrivateRouter =  data.data.map((e)=>)
+    return res.status(200).json({ data: data.data, statusCode: 200 });
+  } else {
+    // private router
+    const authHeader: any = req.headers.authorization;
+    console.log(authHeader)
+    if (!authHeader || !authHeader.startsWith('Bearer ')) { return res.status(401).json({ error: "Token invalidou ou não informado", statusCode: 401 }) }
+    const token = authHeader.split(' ')[1];
+    const isValidToken = verifyToken(token)
+    if (!isValidToken) { return null }
+    const tokenDecoded: any = jwt.decode(token)
+    const sessaoRepository = new SessaoRepository()
+    const sessao: any = await sessaoRepository.getSessaoByEmail(tokenDecoded.name)
+    const token_db = sessao.data.token
+    if (token != token_db) {
+      return res.status(401).json({ error: "Token invalidou ou não informado", statusCode: 401 })
+    }
+    const email = tokenDecoded.name
+    return res.status(404).json({ error: "Endpoint inexistentes - em manutencao", statusCode: 404 });
   }
-
-  return res.status(200).json({ data: data.data, statusCode: 200 });
 }

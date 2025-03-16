@@ -30,6 +30,7 @@ export default function Home() {
   const [nomeEndpoint, setNomeEndpoint] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({ nomeEndpoint: false, campos: false });
+  const [isPublic,setIsPublic] = useState<boolean>(false)
   const [selectedFields, setSelectedFields] = useState<Record<string, boolean>>({
     titulo: false,
     data: false,
@@ -99,7 +100,7 @@ export default function Home() {
     setLoading(true);
   
     try {
-      const result = await endpointService.addEndpoint({title: nomeEndpoint,router: nomeEndpoint,campos: getSelectedFields()});
+      const result = await endpointService.addEndpoint({title: nomeEndpoint,router: nomeEndpoint,campos: getSelectedFields(),privateRouter:isPublic});
   
       if (result && result.success) {
         setTimeout(() => {
@@ -128,7 +129,6 @@ export default function Home() {
     }));
     validateFields();
   };
-
 
 
   return (
@@ -174,7 +174,15 @@ export default function Home() {
                 }
               }}
             />
-
+            <div className="h-5"></div>
+            <h1 className="m-auto mt-3 mb-3 ml-0 opacity-65 sm:text-sm">Este endpoint sera?</h1>
+              <SwitchToggle
+                  title="Privado"
+                  desc="Esta função habilita o sistema que este endpoint seja publico ou privado"
+                  value={isPublic}
+                  setValue={setIsPublic}
+                  onChange={()=>{}}
+                  />
             {errors.nomeEndpoint && <p className="text-red-500 text-sm mt-1">O nome do endpoint é obrigatório.</p>}
             <div className="h-5"></div>
             <h1 className="m-auto mt-3 mb-3 ml-0 opacity-65 sm:text-sm">Quais campos voce quer no endpoint?</h1>
