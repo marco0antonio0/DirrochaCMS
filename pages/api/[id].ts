@@ -1,5 +1,6 @@
 import { endpointService } from "@/services/endpointService";
 import { itemService } from "@/services/itemService";
+import { normalizeString } from "@/utils/normalizeString";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 const searchByTituloIdentificador = (data: any, searchTerm: string) => {
@@ -7,9 +8,10 @@ const searchByTituloIdentificador = (data: any, searchTerm: string) => {
     return { error: "Nenhum dado encontrado", statusCode: 404 };
   }
 
-  // Filtra os itens que possuem o título correspondente
+  const normalizedSearchTerm = normalizeString(searchTerm);
   const results = data.data.filter((item: any) => {
-    return item.formattedData.titulo_identificador === searchTerm;
+    const itemTitle = normalizeString(item.formattedData.titulo_identificador);
+    return itemTitle === normalizedSearchTerm;
   });
 
   if (results.length === 0) {
