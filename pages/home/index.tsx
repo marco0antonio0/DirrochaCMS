@@ -1,336 +1,487 @@
-import Image from "next/image";
-import localFont from "next/font/local";
-import React, { MouseEventHandler, useCallback, useEffect, useState } from "react";
-import Head from "next/head";
-import { useRouter } from "next/router";
-import Cookies from "js-cookie";
-import axios from "axios";
-import { logout } from "@/services/logout";
-import debounce from "lodash.debounce";
-import { Button, Chip, Code, Divider, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Tab, Tabs, useDisclosure } from "@heroui/react";
-import { endpointService } from "@/services/endpointService";
-import { User } from "@/services/user/user";
-import toast from "react-hot-toast";
-import Navbar from "@/components/navbar";
-import { Item } from "@/components/item";
-import { ItemUser } from "@/components/itemUser";
-
-const geistSans = localFont({
-  src: "./../fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./../fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
+import { useState, useEffect, useCallback } from "react"
+import { useRouter } from "next/router"
+import { ArrowLeft, Plus, Search, ExternalLink, Trash2, Eye, Settings, Database, FileText, LogOut, Users } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Separator } from "@/components/ui/separator"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import debounce from "lodash.debounce"
+import toast from "react-hot-toast"
+import Cookies from "js-cookie"
+import axios from "axios"
+import { logout as handleLogout } from "@/services/logout"
+import { endpointService } from "@/services/endpointService"
+import { User } from "@/services/user/user"
+import Head from "next/head"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function Home() {
-  const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<any>([]);
-  const [filteredData, setFilteredData] = useState<any>([]);
-  const [isEmptyData, setIsEmptyData] = useState(false);
-  const [selected, setSelected] = React.useState<string>("Endpoint");
-  const {isOpen, onOpen, onOpenChange} = useDisclosure();
-  const [authSettings, setAuthSettings] = useState<{ loginEnabled: boolean; registerEnabled: boolean }>({
+  const [loading, setLoading] = useState(false)
+  const [data, setData] = useState<any>([])
+  const [filteredData, setFilteredData] = useState<any>([])
+  const [isEmptyData, setIsEmptyData] = useState(false)
+  const [selectedTab, setSelectedTab] = useState("endpoints")
+  const [authSettings, setAuthSettings] = useState({
     loginEnabled: false,
     registerEnabled: false,
-  });
+  })
+  const [showDocs, setShowDocs] = useState(false)
 
-  const r = useRouter();
+  const router = useRouter()
 
-  useEffect(()=>{
+  useEffect(() => {
     async function checkAuth() {
-      const token = Cookies.get("token");
+      const token = Cookies.get("token")
     
       if (!token) {
-        return false;
+        return false
       }
     
       try {
-        const response = await axios.get("/api/verifyToken", {
+        await axios.get("/api/verifyToken", {
           headers: {
-            Authorization: `Bearer ${token}`, // Enviando o token como Bearer
+            Authorization: `Bearer ${token}`,
           },
-        });
-        return true;
+        })
+        return true
       } catch (error) {
-        // console.error("Erro na autenticação:", error.response?.data);
-        return false;
+        return false
       }
     }
+
     checkAuth().then((isAuthenticated) => {
       if (!isAuthenticated) {
-        logout(r)
+        handleLogout(router)
       }
-    });
+    })
+
     async function fetchAuthSettings() {
-      const settings = await User.getAuthVisibility();
-      setAuthSettings(settings);
+      const settings = await User.getAuthVisibility()
+      setAuthSettings(settings)
     }
 
-    fetchAuthSettings();
-  },[])
+    fetchAuthSettings()
+  }, [])
 
   useEffect(() => {
-    setLoading(true);
-    if(selected==="Endpoint"){
-      endpointService.listEndpoints().then((response: any) => {
-        if (response.data.length === 0) {
-          setIsEmptyData(true);
-        } else {
-          setData(response.data);
-          setFilteredData(response.data);
-          setIsEmptyData(false);
-        }
-        setLoading(false);
-      }).catch(() => {
-        setIsEmptyData(true);
-        setLoading(false);
-      });
+    setLoading(true)
+    if (selectedTab === "endpoints") {
+      endpointService.listEndpoints()
+        .then((response: any) => {
+          if (response.data.length === 0) {
+            setIsEmptyData(true)
+          } else {
+            setData(response.data)
+            setFilteredData(response.data)
+            setIsEmptyData(false)
+          }
+          setLoading(false)
+        })
+        .catch(() => {
+          setIsEmptyData(true)
+          setLoading(false)
+        })
+    } else if (selectedTab === "users") {
+      User.listUsers()
+        .then((response: any) => {
+          if (response.data.length === 0) {
+            setIsEmptyData(true)
+          } else {
+            setData(response.data)
+            setFilteredData(response.data)
+            setIsEmptyData(false)
+          }
+          setLoading(false)
+        })
+        .catch(() => {
+          setIsEmptyData(true)
+          setLoading(false)
+        })
     }
-    if(selected==="Users"){
-      User.listUsers().then((response: any) => {
-        if (response.data.length === 0) {
-          setIsEmptyData(true);
-        } else {
-          setData(response.data);
-          setFilteredData(response.data);
-          setIsEmptyData(false);
-        }
-        setLoading(false);
-      }).catch(() => {
-        setIsEmptyData(true);
-        setLoading(false);
-      });
-    }
+  }, [selectedTab])
 
-  }, []);
   const handleSearch = useCallback(
     debounce((value: string) => {
       if (!value) {
-        setFilteredData(data);
-        return;
+        setFilteredData(data)
+        return
       }
       
       const filtered = data.filter((item: any) =>
-        (selected==="Endpoint"?item.title:item.email).toLowerCase().includes(value.toLowerCase())
-      );
-      setFilteredData(filtered);
-    }, 300), // 300ms de debounce para evitar execuções excessivas
-    [data]
-  );
+        (selectedTab === "endpoints" ? item.title : item.email)
+          .toLowerCase()
+          .includes(value.toLowerCase())
+      )
+      setFilteredData(filtered)
+    }, 300),
+    [data, selectedTab]
+  )
 
   function handleUserDelete(email: string) {
-    setData((prev:any) => prev.filter((user: any) => user.email !== email));
-    setFilteredData((prev:any) => prev.filter((user: any) => user.email !== email));
+    setData((prev: any) => prev.filter((user: any) => user.email !== email))
+    setFilteredData((prev: any) => prev.filter((user: any) => user.email !== email))
   }
 
   return (
-    <div
-      className={`${geistSans.variable} ${geistMono.variable} grid grid-rows-[20px_1fr_20px] items-center w-[100%] justify-items-center min-h-screen p-8 pb-20 gap-16 sm:py-10 sm:px-3 font-[family-name:var(--font-geist-sans)]`}
-    >
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <Head>
-      <title>Home - Listagem de EndPoint Page</title>
-      <meta name="description" content="Plataforma de gerenciamento de conteúdos e endpoints" />
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Home - Content Management System</title>
+        <meta name="description" content="Plataforma de gerenciamento de conteúdos e endpoints" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start w-[100%]">
-        <DocSection isOpen={isOpen} onOpen={onOpen} onOpenChange={onOpenChange}/>
-        <div className="flex flex-col m-auto w-[100%] max-w-[700px] h-auto bg-[#F9FAFC] shadow-lg rounded-2xl md:max-w-[100%] ">
-        <Navbar 
-        Component={()=><>
-        <span className="m-auto mt-3 text-lg opacity-65 sm:text-sm sm:mt-0 text-center px-20">
-          Visualize, acesse e crie novos endpoints com facilidade. Clique em um para gerenciar ou adicione um novo. <br />
-         <span>Acesse a documentação </span> <button onClick={onOpen} className="underline text-blue-600">clicando aqui</button>
-          </span>
-        </>}
-        onClick={()=>logout(r)} 
-        Icon={()=> {return <>
-        <svg xmlns="http://www.w3.org/2000/svg" height="70px" viewBox="0 -960 960 960" width="30px" fill="red">
-        <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/></svg>
-        </>}} 
-        text=""/>
-        <div className="flex flex-col h-[100%] w-[100%] mt-5 px-20 lg:px-10">
-          <Tabs 
-            key={'lg'}
-            aria-label="Tabs sizes"
-            size={'lg'}
-            className="m-auto"
-            selectedKey={selected}
-            onSelectionChange={async (key) => {
-              setLoading(true);
-              
-              let response:any;
-              if (key === "Users") {
-                response = await User.listUsers();
-              } else if (key === "Endpoint"){
-                response = (await endpointService.listEndpoints()).data;
-              }
 
-              const newData = response ?? [];
-              
-              setData(newData);
-              setFilteredData(newData);
-              setIsEmptyData(newData.length === 0);
-              setSelected(String(key));
+      {/* Header */}
+      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 smi:px-6 lgi:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+                <Database className="w-4 h-4 text-white" />
+              </div>
+              <h1 className="text-xl font-bold text-gray-900">DirrochaCMS</h1>
+            </div>
 
-              setLoading(false);
-            }}
-            disabledKeys={!authSettings.loginEnabled && !authSettings.registerEnabled ? ["Users"] : []}
-          >
-            <Tab key="Endpoint" title="Endpoint" />
-            <Tab key="Users" title="Users" />
-          </Tabs>
-            <div className="h-5"></div>
-            <h1 className="m-auto mt-0 mb-1 ml-0 opacity-65 sm:text-sm">Pesquisa</h1>
-            <input name="search" type="text" className={`m-auto mt-1 mb-0 w-[100%] h-14 rounded-lg border-gray-200 border-2 px-5 sm:h-12`} placeholder={selected==="Endpoint"?"digite o nome":"digite o email"} 
-             onChange={(e) => handleSearch(e.target.value)}/>
-            <div className="h-5"></div>
-            {selected==="Endpoint"?(<>
-            <h1 className="m-auto mt-0 mb-1 ml-0 opacity-65 sm:text-sm">EndPoints</h1>
-            {loading ? (
-              <span className="loader border-8 border-black border-t-transparent rounded-full w-12 h-12 animate-spin m-auto my-20"></span>
-            ) :  isEmptyData ? (  
-              <h1 className="m-auto my-10 text-center text-lg">Nenhum dado encontrado</h1>
-            ) :
-            <div className="w-[100%] flex flex-col h-auto gap-3">
-                {filteredData.map((e:any,i:any)=>(<div key={i}><Item text={e.title} onClick={()=>{r.push("/home/"+e.router)}}/></div>))}
-            </div>}
-            </>):(<>
-            <h1 className="m-auto mt-0 mb-1 ml-0 opacity-65 sm:text-sm">Usuarios cadastrados</h1>
-              {loading ? (
-              <span className="loader border-8 border-black border-t-transparent rounded-full w-12 h-12 animate-spin m-auto my-20"></span>
-            ) :  isEmptyData ? (  
-              <h1 className="m-auto my-10 text-center text-lg">Nenhum dado encontrado</h1>
-            ) :null}
-            <div className="w-[100%] flex flex-col h-auto gap-3">
-            {!loading?(Array.isArray(filteredData) && filteredData.map((e:any,i:number) => (
-              <div key={i}><ItemUser name={e.name} email={e.email} onDelete={handleUserDelete}/></div>
-            ))):null}
+            <div className="flex items-center space-x-3">
+              <Button variant="outline" size="sm" onClick={() => router.push("/create")}>
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
+              </Button>
+
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="hidden smi:flex">
+                    <FileText className="w-4 h-4 mr-2" />
+                    Docs
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl max-h-[80vh]">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center space-x-2">
+                      <FileText className="w-5 h-5" />
+                      <span>DirrochaCMS Documentation</span>
+                    </DialogTitle>
+                    <DialogDescription>Complete guide for managing endpoints and items</DialogDescription>
+                  </DialogHeader>
+                  <ScrollArea className="h-[60vh] pr-4">
+                    <DocumentationContent />
+                  </ScrollArea>
+                </DialogContent>
+              </Dialog>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  handleLogout(router)
+                }}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50 bg-transparent"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </Button>
             </div>
-              
-            </>)}
-            <div className="h-5"></div>
-            <Button color="primary" variant="ghost" className="h-16" isLoading={false} onClick={()=>{r.push("/create")}}>
-            Configurações
-            </Button>
-            
-            <div className="h-5"></div>
-            <div className="h-1"></div>
-            <span className="m-auto"></span>
-            </div>
+          </div>
         </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 smi:px-6 lgi:px-8 py-8">
+        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader>
+            <div className="flex flex-col smi:flex-row smi:items-center smi:justify-between space-y-4 smi:space-y-0">
+              <div>
+                <CardTitle className="text-2xl">Content Dashboard</CardTitle>
+                <CardDescription className="text-base mt-1">
+                  Manage your endpoints and users in one place
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="space-y-6">
+            <Tabs 
+              value={selectedTab} 
+              onValueChange={(value:any) => setSelectedTab(value)}
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="endpoints" className="flex items-center space-x-2">
+                    <Database className="w-4 h-4" />
+                    <span>Endpoints</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="users"
+                    className="flex items-center space-x-2"
+                    disabled={!authSettings.loginEnabled && !authSettings.registerEnabled}
+                  >
+                    <Users className="w-4 h-4" />
+                    <span>Users</span>
+                  </TabsTrigger>
+                </TabsList>
+
+              <TabsContent value="endpoints" className="space-y-6">
+                <div className="space-y-2">
+                  <Label>Search Endpoints</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      placeholder="Search by name..."
+                      onChange={(e) => handleSearch(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                {loading ? (
+                  <div className="flex justify-center py-12">
+                    <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : isEmptyData ? (
+                  <div className="text-center py-12">
+                    <Eye className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No endpoints found</h3>
+                    <p className="text-gray-600 mb-4">Create your first endpoint in settings</p>
+                    <Button onClick={() => router.push("/create")}>
+                      <Settings className="w-4 h-4 mr-2" />
+                      Go to Settings
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2 lgi:grid-cols-3">
+                    {filteredData.map((endpoint: any) => (
+                      <Card
+                        key={endpoint.id}
+                        className="hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-blue-200"
+                        onClick={() => router.push(`/home/${endpoint.router}`)}
+                      >
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-lg truncate">{endpoint.title}</CardTitle>
+                          <CardDescription className="text-sm">/{endpoint.router}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">
+                              {endpoint.campos?.length || 0} fields
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                const hostname = window.location.hostname
+                                const protocol = hostname === "localhost" || hostname === "0.0.0.0" ? "http://" : "https://"
+                                const port = hostname === "localhost" || hostname === "0.0.0.0" ? ":3000" : ""
+                                window.open(`${protocol}${hostname}${port}/api/${endpoint.router}`, "_blank")
+                              }}
+                            >
+                              <ExternalLink className="w-4 h-4 mr-2" />
+                              API
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="users" className="space-y-6">
+                <div className="space-y-2">
+                  <Label>Search Users</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      placeholder="Search by email..."
+                      onChange={(e) => handleSearch(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                {loading ? (
+                  <div className="flex justify-center py-12">
+                    <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : isEmptyData ? (
+                  <div className="text-center py-12">
+                    <Eye className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
+                    <p className="text-gray-600">User registration might be disabled</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {filteredData.map((user: any) => (
+                      <Card key={user.email}>
+                        <CardContent className="p-4 flex justify-between items-center">
+                          <div>
+                            <p className="font-medium">{user.name}</p>
+                            <p className="text-sm text-gray-600">{user.email}</p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700"
+                            onClick={() => {
+                              User.deleteUser(user.email).then(() => {
+                                handleUserDelete(user.email)
+                                toast.success("User deleted successfully")
+                              }).catch(() => {
+                                toast.error("Failed to delete user")
+                              })
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       </main>
+
+      {/* Documentation Modal */}
+      <Dialog open={showDocs} onOpenChange={setShowDocs}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl flex items-center gap-2">
+              <span className="text-blue-600">📄</span>
+              <span>System Documentation</span>
+            </DialogTitle>
+            <DialogDescription>
+              Complete guide for managing endpoints and content items
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-8">
+            {/* Creating an Endpoint */}
+            <div>
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <span className="p-2 bg-blue-50 rounded-md text-blue-600">⚙️</span>
+                Creating an Endpoint
+              </h3>
+              <p className="mt-2 text-gray-700">
+                To create a new endpoint, go to Settings and fill in the endpoint details. 
+                Specify the fields you want to include and their types. Click "Save" when done.
+              </p>
+            </div>
+
+            {/* Accessing Endpoint API */}
+            <div>
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <span className="p-2 bg-purple-50 rounded-md text-purple-600">🔗</span>
+                Accessing Endpoint API
+              </h3>
+              <p className="mt-2 text-gray-700">
+                Each endpoint has a corresponding API URL that you can access. 
+                Click the API button on the endpoint card to open it in a new tab.
+              </p>
+            </div>
+
+            {/* Managing Content */}
+            <div>
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <span className="p-2 bg-green-50 rounded-md text-green-600">➕</span>
+                Managing Content Items
+              </h3>
+              <p className="mt-2 text-gray-700">
+                Click on an endpoint to view and manage its content items. You can add, edit, 
+                or delete items as needed. Each item will be available through the endpoint API.
+              </p>
+            </div>
+
+            {/* User Management */}
+            <div>
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <span className="p-2 bg-yellow-50 rounded-md text-yellow-600">👥</span>
+                User Management
+              </h3>
+              <p className="mt-2 text-gray-700">
+                When user authentication is enabled, you can manage registered users in the Users tab. 
+                Administrators can delete users as needed.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button onClick={() => setShowDocs(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
-  );
+  )
 }
 
-
-function DocSection({ isOpen, onOpen, onOpenChange }: any) {
+function DocumentationContent() {
   return (
-    <>
-      <Modal isOpen={isOpen} onOpenChange={onOpenChange} placement={"center"} scrollBehavior={'inside'}>
-        <ModalContent className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden shadow-2xl">
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1 text-3xl font-bold text-gray-900 bg-white py-6 px-8 border-b border-gray-200">
-                <div className="flex items-center gap-3">
-                  <span className="text-blue-600">📄</span>
-                  <span>Documentação do Sistema Dirrocha CMS</span>
-                </div>
-                <p className="text-sm font-normal text-gray-500 mt-1">
-                  Guia completo para gerenciamento de endpoints e itens.
-                </p>
-              </ModalHeader>
-              <ModalBody className="space-y-6 py-0">
-                {/* Seção de Documentação do Projeto */}
-                <div className=" py-8 rounded-xl">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                    <span className="p-3 bg-blue-50 rounded-full text-blue-600">📄</span>
-                    <span>Gerenciamento de Endpoints e Itens</span>
-                  </h1>
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold mb-3 flex items-center">
+          <Settings className="w-5 h-5 mr-2 text-blue-600" />
+          Creating an Endpoint
+        </h3>
+        <p className="text-gray-700 leading-relaxed">
+          To create a new endpoint, click the <strong>Settings</strong> button. Fill in the endpoint name and select the
+          fields you want to include. Click <strong>Save</strong> to finalize.
+        </p>
+      </div>
 
-                  {/* Criar um Endpoint */}
-                  <div className="mb-8">
-                    <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                      <span className="p-2 bg-blue-50 rounded-md text-blue-600">⚙️</span>
-                      Criar um Endpoint
-                    </h2>
-                    <p className="text-gray-700 leading-relaxed pl-10">
-                      Para criar um novo endpoint, clique no botão de{" "}
-                      <span className="inline-block bg-blue-50 text-blue-700 px-3 py-1 rounded-md text-sm font-medium shadow-sm">
-                        Configuração
-                      </span>
-                      . Preencha o nome do endpoint como deseja chamá-lo e, em seguida, selecione os campos que deseja incluir. Para finalizar, clique em{" "}
-                      <span className="inline-block bg-green-50 text-green-700 px-3 py-1 rounded-md text-sm font-medium shadow-sm">
-                        Salvar
-                      </span>
-                      .
-                    </p>
-                  </div>
+      <Separator />
 
-                  {/* Acessar a API de um Endpoint */}
-                  <div className="mb-8">
-                    <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                      <span className="p-2 bg-purple-50 rounded-md text-purple-600">🔗</span>
-                      Acessar a API de um Endpoint
-                    </h2>
-                    <p className="text-gray-700 leading-relaxed pl-10">
-                      Na página inicial, ao acessar um endpoint, na parte superior haverá um link que direciona para a API específica daquele endpoint.
-                    </p>
-                  </div>
+      <div>
+        <h3 className="text-lg font-semibold mb-3 flex items-center">
+          <Eye className="w-5 h-5 mr-2 text-purple-600" />
+          Accessing Endpoint API
+        </h3>
+        <p className="text-gray-700 leading-relaxed">
+          On the home page, when accessing an endpoint, there will be a link at the top that directs to the specific API
+          for that endpoint.
+        </p>
+      </div>
 
-                  {/* Cadastrar um Item */}
-                  <div className="mb-8">
-                    <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                      <span className="p-2 bg-green-50 rounded-md text-green-600">➕</span>
-                      Cadastrar um Item
-                    </h2>
-                    <p className="text-gray-700 leading-relaxed pl-10">
-                      Para cadastrar um novo item em um endpoint, acesse o endpoint desejado e clique no botão{" "}
-                      <span className="inline-block bg-blue-50 text-blue-700 px-3 py-1 rounded-md text-sm font-medium shadow-sm">
-                        Adicionar
-                      </span>
-                      . Preencha os campos com as informações do item e clique em{" "}
-                      <span className="inline-block bg-green-50 text-green-700 px-3 py-1 rounded-md text-sm font-medium shadow-sm">
-                        Salvar
-                      </span>{" "}
-                      para finalizar.
-                    </p>
-                  </div>
+      <Separator />
 
-                  {/* Editar ou Excluir um Item */}
-                  <div className="mb-8">
-                    <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                      <span className="p-2 bg-yellow-50 rounded-md text-yellow-600">✏️</span>
-                      Editar ou Excluir um Item
-                    </h2>
-                    <p className="text-gray-700 leading-relaxed pl-10">
-                      Para editar ou excluir um item, acesse o endpoint e clique no item desejado. Na página de detalhes, você poderá alterar as informações ou excluir o item. Para salvar as alterações, clique em{" "}
-                      <span className="inline-block bg-green-50 text-green-700 px-3 py-1 rounded-md text-sm font-medium shadow-sm">
-                        Salvar
-                      </span>
-                      . Na parte superior da página, há um link clicável que leva diretamente ao item específico na API.
-                    </p>
-                  </div>
-                </div>
-              </ModalBody>
+      <div>
+        <h3 className="text-lg font-semibold mb-3 flex items-center">
+          <Plus className="w-5 h-5 mr-2 text-green-600" />
+          Adding an Item
+        </h3>
+        <p className="text-gray-700 leading-relaxed">
+          To add a new item to an endpoint, access the desired endpoint and click the <strong>Add</strong> button. Fill
+          in the fields with the item information and click <strong>Save</strong> to finish.
+        </p>
+      </div>
 
-              <ModalFooter className="bg-white py-6 px-8 border-t border-gray-200">
-                <Button
-                  color="primary"
-                  onPress={() => { onClose() }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 transform hover:scale-105 shadow-md"
-                >
-                  Fechar
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
-    </>
-  );
+      <Separator />
+
+      <div>
+        <h3 className="text-lg font-semibold mb-3 flex items-center">
+          <FileText className="w-5 h-5 mr-2 text-yellow-600" />
+          Editing or Deleting an Item
+        </h3>
+        <p className="text-gray-700 leading-relaxed">
+          To edit or delete an item, access the endpoint and click on the desired item. On the details page, you can
+          change the information or delete the item. To save changes, click <strong>Save</strong>.
+        </p>
+      </div>
+    </div>
+  )
 }
