@@ -1,35 +1,59 @@
-import Image from "next/image";
-import localFont from "next/font/local";
-import React, { MouseEventHandler, useEffect, useState } from "react";
-import Head from "next/head";
-import { useRouter } from "next/router";
-import Cookies from "js-cookie";
-import axios from "axios";
-import { logout } from "@/services/logout";
-import toast from "react-hot-toast";
-import { User } from "@/services/user/user";
-import { Button, Chip, cn, Code, Divider, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Switch, Tab, Tabs, useDisclosure } from "@heroui/react";
-import { endpointService } from "@/services/endpointService";
-import Navbar from "@/components/navbar";
-import { SwitchToggle } from "@/components/switchToggle";
-import { optionsData } from "@/utils/typesFormat";
+"use client"
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { ArrowLeft, Database, Users, Plus, Settings, Shield, Info } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Switch } from "@/components/ui/switch"
+import { Badge } from "@/components/ui/badge"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
+import toast from "react-hot-toast"
+import Cookies from "js-cookie"
+import axios from "axios"
+import { logout } from "@/services/logout"
+import { endpointService } from "@/services/endpointService"
+import { User } from "@/services/user/user"
 
-export default function Home() {
-  const [selected, setSelected] = React.useState<string>("Endpoint");
-  const [nomeEndpoint, setNomeEndpoint] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({ nomeEndpoint: false, campos: false });
+interface FieldOption {
+  key: string
+  title: string
+  description: string
+  type: string
+  icon: string
+}
+
+const fieldOptions: FieldOption[] = [
+  { key: "titulo", title: "Title", description: "Main title or heading", type: "string", icon: "📝" },
+  { key: "data", title: "Date", description: "Date field for timestamps", type: "date", icon: "📅" },
+  { key: "descricao", title: "Description", description: "Long text description", type: "text", icon: "📄" },
+  { key: "breve_descricao", title: "Brief Description", description: "Short summary text", type: "string", icon: "📋" },
+  { key: "artigo", title: "Article", description: "Full article content", type: "text", icon: "📰" },
+  { key: "image", title: "Image", description: "Image upload field", type: "image", icon: "🖼️" },
+  { key: "nome", title: "Name", description: "Name field", type: "string", icon: "👤" },
+  { key: "senha", title: "Password", description: "Password field", type: "password", icon: "🔒" },
+  { key: "texto", title: "Text", description: "General text field", type: "string", icon: "✏️" },
+  { key: "link", title: "Link", description: "URL or link field", type: "url", icon: "🔗" },
+  { key: "preco", title: "Price", description: "Price or currency field", type: "number", icon: "💰" },
+]
+
+export default function CreatePage() {
+  const [selectedTab, setSelectedTab] = useState("endpoint")
+  const [loading, setLoading] = useState(false)
+  const [endpointName, setEndpointName] = useState("")
   const [selectedFields, setSelectedFields] = useState<Record<string, boolean>>({
     titulo: false,
     data: false,
@@ -42,344 +66,518 @@ export default function Home() {
     texto: false,
     link: false,
     preco: false,
-  });
-  const r = useRouter()
-  useEffect(()=>{
+  })
+  const [errors, setErrors] = useState({ endpointName: false, fields: false })
+
+  // User settings
+  const [userSettings, setUserSettings] = useState({
+    loginEnabled: false,
+    registerEnabled: false,
+    logoutEnabled: false,
+  })
+
+  const router = useRouter()
+
+  useEffect(() => {
     async function checkAuth() {
-      const token = Cookies.get("token");
+      const token = Cookies.get("token")
     
       if (!token) {
-        return false;
+        return false
       }
     
       try {
         const response = await axios.get("/api/verifyToken", {
           headers: {
-            Authorization: `Bearer ${token}`, // Enviando o token como Bearer
+            Authorization: `Bearer ${token}`,
           },
-        });
+        })
     
-        return true;
+        return true
       } catch (error) {
-        // console.error("Erro na autenticação:", error.response?.data);
-        return false;
+        return false
       }
     }
+
     checkAuth().then((isAuthenticated) => {
       if (!isAuthenticated) {
-        logout(r)
+        logout(router)
       }
-    });
-  },[])
+    })
 
-  const formatarNomeEndpoint = (nome: string): string => {
-    return nome.replace(/\s+/g, "_");
-  };
+    // Fetch current user settings
+    fetchUserSettings()
+  }, [])
 
-  const getSelectedFields = () => {
-    return Object.keys(selectedFields).filter((key) => selectedFields[key]);
-  };
-  
+  const fetchUserSettings = async () => {
+    try {
+      const settings = await User.getAuthVisibility()
+      setUserSettings({
+        loginEnabled: settings.loginEnabled,
+        registerEnabled: settings.registerEnabled,
+        logoutEnabled: settings.logoutEnabled,
+      })
+    } catch (error) {
+      toast.error("Failed to fetch user settings")
+    }
+  }
+
+  const validateEndpointName = (name: string): boolean => {
+    return /^[a-zA-Z0-9_]+$/.test(name)
+  }
 
   const validateFields = () => {
-    const isNomeVazio = nomeEndpoint.trim() === "";
-    const isCamposVazio = getSelectedFields().length === 0;
+    const isNameEmpty = endpointName.trim() === ""
+    const isFieldsEmpty = Object.values(selectedFields).every((value) => !value)
 
-    setErrors({ nomeEndpoint: isNomeVazio, campos: isCamposVazio });
+    setErrors({
+      endpointName: isNameEmpty,
+      fields: isFieldsEmpty,
+    })
 
-    return !isNomeVazio && !isCamposVazio;
-  };
+    return !isNameEmpty && !isFieldsEmpty
+  }
 
-  const validarNomeEndpoint = (nome: string): boolean => {  return /^[a-zA-Z0-9_]+$/.test(nome); };
+  const handleFieldToggle = (fieldKey: string) => {
+    setSelectedFields((prev) => ({
+      ...prev,
+      [fieldKey]: !prev[fieldKey],
+    }))
+    validateFields()
+  }
 
-  const saveData = async () => {
-    const toastId = toast.loading("Criando endpoint ...",{duration:4000});
-    if (!validateFields()) return;
+  const getSelectedFieldsList = () => {
+    return Object.keys(selectedFields).filter((key) => selectedFields[key])
+  }
 
-    setLoading(true);
-  
+  const handleCreateEndpoint = async () => {
+    if (!validateFields()) return
+
+    const toastId = toast.loading("Creating endpoint...", { duration: 4000 })
+    setLoading(true)
+    
     try {
-      const result = await endpointService.addEndpoint({title: nomeEndpoint,router: nomeEndpoint,campos: getSelectedFields()});
-  
+      const result = await endpointService.addEndpoint({
+        title: endpointName,
+        router: endpointName,
+        campos: getSelectedFieldsList()
+      })
+
       if (result && result.success) {
         setTimeout(() => {
-          setLoading(false);
+          setLoading(false)
           toast.dismiss(toastId)
-          toast.success("Endpoint criado com sucesso",{duration:4000});
-          r.push("/home");
-        }, 1000);
+          toast.success("Endpoint created successfully!", { duration: 4000 })
+          router.push("/home")
+        }, 1000)
       } else {
         setTimeout(() => {
-          setLoading(false);
-        }, 1000);
+          setLoading(false)
+          toast.dismiss(toastId)
+          toast.error("Failed to create endpoint", { duration: 4000 })
+        }, 1000)
       }
     } catch (error) {
       toast.dismiss(toastId)
-      toast.error("Erro ao criar o endpoint ",{duration:4000});
-      console.error("Erro ao adicionar endpoint:", error);
-      setLoading(false);
+      toast.error("Error creating endpoint", { duration: 4000 })
+      console.error("Error adding endpoint:", error)
+      setLoading(false)
     }
-  };
+  }
 
-  const toggleField = (field: string) => {
-    setSelectedFields((prev) => ({
-      ...prev,
-      [field]: !prev[field],
-    }));
-    validateFields();
-  };
-
-
-
-  return (
+  const handleSaveUserSettings = async () => {
+    const toastId = toast.loading("Saving changes...", { duration: 4000 })
+    setLoading(true)
     
-    <div
-      className={`${geistSans.variable} ${geistMono.variable} grid grid-rows-[20px_1fr_20px] items-center w-[100%] justify-items-center min-h-screen p-8 pb-20 gap-16 sm:py-10 sm:px-3 font-[family-name:var(--font-geist-sans)]`}
-    >
-      <Head>
-      <title>Adicionar Endpoint | Plataforma | Gerenciamento de Conteúdos</title>
-      <meta name="description" content="Plataforma de gerenciamento de conteúdos e endpoints" />
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </Head>
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start w-[100%] h-auto">
-        {
-        <div className="flex flex-col m-auto w-[100%] max-w-[700px] h-auto bg-[#F9FAFC] shadow-lg rounded-2xl md:max-w-[100%]">
-          <Navbar 
-          Component={null}
-          onClick={()=>r.push("/home")} 
-          Icon={()=> {return <>
-            <svg xmlns="http://www.w3.org/2000/svg" height="50px" viewBox="0 -960 960 960" width="30px" fill="black">
-                <path d="M400-240 160-480l240-240 56 58-142 142h486v80H314l142 142-56 58Z"/>
-            </svg>
-          </>}} 
-          text="Configure o nome e os campos necessários para estruturar seu endpoint de forma rápida e eficiente."/>
-          <div className="flex flex-col h-[100%] w-[100%] mt-5 px-20 lg:px-10">
-          <Tabs key={'lg'} aria-label="Tabs sizes" size={'lg'} className="m-auto" selectedKey={selected} onSelectionChange={(key) => setSelected(String(key))}>
-            <Tab key="Endpoint" title="Endpoint" />
-            <Tab key="Users" title="Users" />
-          </Tabs>
-            {selected==="Endpoint"?(<>
-            <div className="h-5"></div>
-            <h1 className="m-auto mt-3 mb-1 ml-0 opacity-65 sm:text-sm">Qual sera o nome do endpoint?</h1>
-            <input
-              type="text"
-              className={`m-auto mt-0 mb-0 w-[100%] h-14 rounded-lg ${errors.nomeEndpoint ? "border-red-500" : "border-gray-200"} border-2 px-5 sm:h-12`}
-              placeholder="Digite o nome do endpoint"
-              value={nomeEndpoint}
-              onChange={(e) => {
-                const valor = e.target.value;
-                if (validarNomeEndpoint(valor) || valor === "") {
-                  setNomeEndpoint(valor);
-                  validateFields(); // Valida campos ao digitar
-                }
-              }}
-            />
-
-            {errors.nomeEndpoint && <p className="text-red-500 text-sm mt-1">O nome do endpoint é obrigatório.</p>}
-            <div className="h-5"></div>
-            <h1 className="m-auto mt-3 mb-3 ml-0 opacity-65 sm:text-sm">Quais campos voce quer no endpoint?</h1>
-            <div className="flex flex-col gap-3">
-              {optionsData.map(({ title, desc, key }) => (
-                <SwitchToggle
-                  key={key}
-                  title={title}
-                  desc={desc}
-                  value={selectedFields[key]}
-                  setValue={() => toggleField(key)}
-                  onChange={validateFields}
-                />
-              ))}
-              {errors.campos && <p className="text-red-500 text-sm mt-1">Selecione pelo menos um campo.</p>}
-            </div>
-
-
-            <div className="h-5"></div>
-            <Button color="primary" variant="solid" className="h-14" isLoading={loading} onClick={()=>{saveData()}}>
-            Criar endpoint
-            </Button>
-            <div className="h-5"></div>
-            <div className="h-1"></div>
-            <span className="m-auto"></span>
-            </>):(<><UserSettings/> </>)}
-            </div>
-        </div>
-        }
-      </main>
-    </div>
-  );
-}
-
-
-
-
-
-const UserSettings: React.FC = () => {
-  const [login, setLogin] = useState<boolean>(false);
-  const [register, setRegister] = useState<boolean>(false);
-  const [logout, setlogout] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
-  const {isOpen, onOpen, onOpenChange} = useDisclosure();
-  const r = useRouter()
-  useEffect(() => {
-      async function fetchSettings() {
-          const settings = await User.getAuthVisibility();
-          setLogin(settings.loginEnabled);
-          setRegister(settings.registerEnabled);
-          setlogout(settings.logoutEnabled);
-      }
-      fetchSettings();
-  }, []);
-
-  const saveData = async () => {
-      const toastId = toast.loading("Salvando alterações ...",{duration:4000});
-      setLoading(true);
-      const success = await User.setAuthVisibility({ login, register, logout });
-      setLoading(false);
+    try {
+      const success = await User.setAuthVisibility({ 
+        login: userSettings.loginEnabled,
+        register: userSettings.registerEnabled,
+        logout: userSettings.logoutEnabled
+      })
 
       if (success) {
-          setTimeout(() => {
-            setLoading(false);
-            toast.dismiss(toastId)
-            toast.success("Alterações salvas com sucesso",{duration:4000});
-            r.push("/home");
-          }, 1000);
-      } else {
-          setTimeout(() => {
+        setTimeout(() => {
+          setLoading(false)
           toast.dismiss(toastId)
-          toast.error("Erro ao salvar alterações",{duration:4000});
-          setLoading(false);
-        }, 1000);
+          toast.success("Changes saved successfully!", { duration: 4000 })
+          router.push("/home")
+        }, 1000)
+      } else {
+        setTimeout(() => {
+          setLoading(false)
+          toast.dismiss(toastId)
+          toast.error("Error saving changes", { duration: 4000 })
+        }, 1000)
       }
+    } catch (error) {
       toast.dismiss(toastId)
-    };
+      toast.error("Error saving changes", { duration: 4000 })
+      console.error("Error saving user settings:", error)
+      setLoading(false)
+    }
+  }
 
   return (
-      <>
-          <div className="h-5"></div>
-          <h1 className="m-auto mt-3 mb-1 ml-0 opacity-65 sm:text-sm">Sistema de usuários - <span className="text-blue-700 underline select-none cursor-pointer" onClick={onOpen}>Saiba mais</span></h1>
-          <div className="h-5"></div>
-          <div className="flex flex-col gap-3">
-              <SwitchToggle
-                  title="Login de usuários"
-                  desc="Esta função habilita o sistema de login no endpoint /api/user/login"
-                  value={login}
-                  setValue={setLogin}
-                  onChange={()=>{}}
-                  />
-              <SwitchToggle
-                  title="Registro de usuários"
-                  desc="Esta função habilita o sistema de registro de usuários no endpoint /api/user/register"
-                  value={register}
-                  setValue={setRegister}
-                  onChange={()=>{}}
-                  />
-              <SwitchToggle
-                  title="Logout de usuário"
-                  desc="Esta função habilita o sistema de logout de usuários no endpoint /api/user/logout"
-                  value={logout}
-                  setValue={setlogout}
-                  onChange={()=>{}}
-                  />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      {/* Header */}
+      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 smi:px-6 lgi:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" size="sm" onClick={() => router.push("/home")}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Home
+              </Button>
+
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">Configuration</h1>
+                <p className="text-sm text-gray-600">Set up endpoints and user management</p>
+              </div>
+            </div>
           </div>
-          <div className="h-5"></div>
-          <Button color="primary" variant="solid" className="h-14" isLoading={loading} onClick={saveData}>
-              Salvar configuração
-          </Button>
-          <div className="h-5"></div>
-          <div className="h-1"></div>
-          <Modal isOpen={isOpen} onOpenChange={onOpenChange} placement={"center"}  scrollBehavior={'inside'}>
-              <ModalContent>
-                {(onClose) => (
-                  <>
-                    <ModalHeader className="flex flex-col gap-1">Saiba mais sobre o Endpoint User</ModalHeader>
-                    <ModalBody>
-                      <p>
-                        Para acessar as funcionalidades do sistema, utilize os endpoints <strong>login</strong> e <strong>register</strong> para autenticação e criação de conta.
-                      </p>
-                      <Divider className="my-4" />
-                      {/* Seção de Login */}
-                      <h1>🔑 <strong>Autenticação - Login</strong></h1>
-                      <p>Realize o login enviando uma requisição <strong>POST</strong> para o seguinte endpoint:</p>
-                      
-                      <div className="flex flex-row items-center gap-2"> 
-                        <h2>Endpoint:</h2>
-                        <Chip color="primary">/api/user/login</Chip>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-4xl mx-auto px-4 smi:px-6 lgi:px-8 py-8">
+        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-2xl">System Configuration</CardTitle>
+            <CardDescription className="text-base">
+              Configure endpoints and user management settings for your CMS
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="endpoint" className="flex items-center space-x-2">
+                  <Database className="w-4 h-4" />
+                  <span>Endpoints</span>
+                </TabsTrigger>
+                <TabsTrigger value="users" className="flex items-center space-x-2">
+                  <Users className="w-4 h-4" />
+                  <span>User Management</span>
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="endpoint" className="space-y-6 mt-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="endpoint-name" className="text-base font-medium">
+                      Endpoint Name
+                    </Label>
+                    <Input
+                      id="endpoint-name"
+                      placeholder="e.g., blog_posts, products, users"
+                      value={endpointName}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        if (validateEndpointName(value) || value === "") {
+                          setEndpointName(value)
+                          validateFields()
+                        }
+                      }}
+                      className={errors.endpointName ? "border-red-500" : ""}
+                    />
+                    {errors.endpointName && <p className="text-sm text-red-600">Endpoint name is required</p>}
+                    <p className="text-sm text-gray-600">
+                      Use only letters, numbers, and underscores. This will be your API endpoint path.
+                    </p>
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-base font-medium">Select Fields</Label>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Choose the fields you want to include in your endpoint
+                        </p>
                       </div>
+                      <Badge variant="secondary">{getSelectedFieldsList().length} selected</Badge>
+                    </div>
 
-                      <p><strong>Método:</strong> POST</p>
-                      <p><strong>Corpo da requisição (JSON):</strong></p>
+                    {errors.fields && (
+                      <Alert variant="destructive">
+                        <AlertDescription>Please select at least one field for your endpoint</AlertDescription>
+                      </Alert>
+                    )}
 
-                      <Code size="sm">body: {`{`} <br />
-                         "email":"teste@teste.com" , <br />
-                         "password":"senha123"<br />
-                         {`}`}
-                      </Code>
+                    <div className="grid gap-4 mdi:grid-cols-2">
+                      {fieldOptions.map((field) => (
+                        <Card
+                          key={field.key}
+                          className={`cursor-pointer transition-all hover:shadow-md ${
+                            selectedFields[field.key] ? "ring-2 ring-blue-500 bg-blue-50" : "hover:bg-gray-50"
+                          }`}
+                          onClick={() => handleFieldToggle(field.key)}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-start space-x-3">
+                              <div className="text-2xl">{field.icon}</div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between">
+                                  <h3 className="font-medium text-gray-900">{field.title}</h3>
+                                  <Switch
+                                    checked={selectedFields[field.key] || false}
+                                    onCheckedChange={() => handleFieldToggle(field.key)}
+                                  />
+                                </div>
+                                <p className="text-sm text-gray-600 mt-1">{field.description}</p>
+                                <Badge variant="outline" className="mt-2 text-xs">
+                                  {field.type}
+                                </Badge>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
 
-                      <p>
-                        Se as credenciais estiverem corretas, o servidor retornará um <strong>token JWT (JSON Web Token)</strong>, 
-                        que deverá ser utilizado nas requisições futuras para acessar rotas protegidas do sistema.
-                      </p>
-                      <p><strong>Exemplo de resposta:</strong></p>
-                      <Code size="sm">response: {`{`} <br />
-                        "token": "..."<br />
-                         {`}`}
-                      </Code>
-                      <div className="h-10"></div>
-                      {/* Seção de Registro */}
-                      <h1>📝 <strong>Cadastro - Criar Conta</strong></h1>
-                      <p>Para criar um novo usuário, envie uma requisição <strong>POST</strong> para o seguinte endpoint:</p>
-                      <Divider className="my-4" />
-                      <div className="flex flex-row items-center gap-2"> 
-                        <h2>Endpoint:</h2>
-                        <Chip color="primary">/api/user/register</Chip>
+                  <Separator />
+
+                  <Button
+                    onClick={handleCreateEndpoint}
+                    className="w-full h-12 text-base font-medium"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Creating Endpoint...</span>
                       </div>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create Endpoint
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </TabsContent>
 
-                      <p><strong>Método:</strong> POST</p>
-                      <p><strong>Corpo da requisição (JSON):</strong></p>
-
-                      <Code size="sm">body: {`{`} <br />
-                         "name":"teste" , <br />
-                         "email":"teste@teste.com" , <br />
-                         "password":"senha123"<br />
-                         {`}`}
-                      </Code>
-
-                      <p>
-                        Se as credenciais estiverem corretas, o servidor retornará um <strong>token JWT (JSON Web Token)</strong>, 
-                        que deverá ser utilizado nas requisições futuras para acessar rotas protegidas do sistema.
+              <TabsContent value="users" className="space-y-6 mt-6">
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-medium">User Management System</h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Configure user authentication and registration settings
                       </p>
-                      <p><strong>Exemplo de resposta:</strong></p>
-                      <Code size="sm">response: {`{`} <br />
-                        "token": "..."<br />
-                         {`}`}
-                      </Code>
-                      <Divider className="my-4" />
-                      <div className="flex flex-row items-center gap-2"> 
-                        <h2>Endpoint:</h2>
-                        <Chip color="primary">/api/user/logout</Chip>
+                    </div>
+
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Info className="w-4 h-4 mr-2" />
+                          Learn More
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-3xl max-h-[80vh]">
+                        <DialogHeader>
+                          <DialogTitle>User Management API Documentation</DialogTitle>
+                          <DialogDescription>Learn how to use the user authentication endpoints</DialogDescription>
+                        </DialogHeader>
+                        <ScrollArea className="h-[60vh] pr-4">
+                          <UserManagementDocs />
+                        </ScrollArea>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+
+                  <div className="space-y-4">
+                    <Card className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <h4 className="font-medium">User Login</h4>
+                          <p className="text-sm text-gray-600">
+                            Enable user authentication via /api/user/login endpoint
+                          </p>
+                        </div>
+                        <Switch
+                          checked={userSettings.loginEnabled}
+                          onCheckedChange={(checked:any) => setUserSettings((prev) => ({ ...prev, loginEnabled: checked }))}
+                        />
                       </div>
+                    </Card>
 
-                      <p><strong>Método:</strong> POST</p>
-                      <p><strong>Authentication Bearer:</strong> Bearer eyJhbGciO...</p>
+                    <Card className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <h4 className="font-medium">User Registration</h4>
+                          <p className="text-sm text-gray-600">
+                            Allow new users to register via /api/user/register endpoint
+                          </p>
+                        </div>
+                        <Switch
+                          checked={userSettings.registerEnabled}
+                          onCheckedChange={(checked:any) =>
+                            setUserSettings((prev) => ({ ...prev, registerEnabled: checked }))
+                          }
+                        />
+                      </div>
+                    </Card>
 
-                      <p>
-                        Se as credenciais token estiverem corretas e validas, o servidor retornará um <strong>token JWT (JSON Web Token)</strong>, 
-                        que indicara que o token foi invalidado com sucesso no sistema.
-                      </p>
+                    <Card className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <h4 className="font-medium">User Logout</h4>
+                          <p className="text-sm text-gray-600">
+                            Enable token invalidation via /api/user/logout endpoint
+                          </p>
+                        </div>
+                        <Switch
+                          checked={userSettings.logoutEnabled}
+                          onCheckedChange={(checked:any) =>
+                            setUserSettings((prev) => ({ ...prev, logoutEnabled: checked }))
+                          }
+                        />
+                      </div>
+                    </Card>
+                  </div>
 
-                  </ModalBody>
+                  <Alert>
+                    <Shield className="h-4 w-4" />
+                    <AlertDescription>
+                      User management features require proper Firebase configuration. Make sure your environment
+                      variables are set correctly.
+                    </AlertDescription>
+                  </Alert>
 
-                    <ModalFooter>
-                      <Button color="primary" onPress={()=>{
-                        onClose()
-                      }}>
-                        Fechar
-                      </Button>
-                    </ModalFooter>
-                  </>
-                )}
-              </ModalContent>
-            </Modal>
-      </>
-  );
-};
+                  <Button
+                    onClick={handleSaveUserSettings}
+                    className="w-full h-12 text-base font-medium"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Saving Settings...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <Settings className="w-4 h-4 mr-2" />
+                        Save Configuration
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </main>
+    </div>
+  )
+}
+
+function UserManagementDocs() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold mb-3 flex items-center">
+          <Shield className="w-5 h-5 mr-2 text-blue-600" />
+          Authentication - Login
+        </h3>
+        <p className="text-gray-700 leading-relaxed mb-4">
+          Authenticate users by sending a POST request to the login endpoint:
+        </p>
+
+        <div className="bg-gray-100 rounded-lg p-4 mb-4">
+          <p className="font-medium mb-2">Endpoint:</p>
+          <Badge variant="secondary">/api/user/login</Badge>
+
+          <p className="font-medium mt-4 mb-2">Method:</p>
+          <Badge>POST</Badge>
+
+          <p className="font-medium mt-4 mb-2">Request Body:</p>
+          <pre className="bg-gray-800 text-green-400 p-3 rounded text-sm overflow-x-auto">
+            {`{
+  "email": "user@example.com",
+  "password": "password123"
+}`}
+          </pre>
+
+          <p className="font-medium mt-4 mb-2">Response:</p>
+          <pre className="bg-gray-800 text-green-400 p-3 rounded text-sm overflow-x-auto">
+            {`{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}`}
+          </pre>
+        </div>
+      </div>
+
+      <Separator />
+
+      <div>
+        <h3 className="text-lg font-semibold mb-3 flex items-center">
+          <Users className="w-5 h-5 mr-2 text-green-600" />
+          Registration - Create Account
+        </h3>
+        <p className="text-gray-700 leading-relaxed mb-4">
+          Allow users to create new accounts by sending a POST request:
+        </p>
+
+        <div className="bg-gray-100 rounded-lg p-4 mb-4">
+          <p className="font-medium mb-2">Endpoint:</p>
+          <Badge variant="secondary">/api/user/register</Badge>
+
+          <p className="font-medium mt-4 mb-2">Method:</p>
+          <Badge>POST</Badge>
+
+          <p className="font-medium mt-4 mb-2">Request Body:</p>
+          <pre className="bg-gray-800 text-green-400 p-3 rounded text-sm overflow-x-auto">
+            {`{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "password123"
+}`}
+          </pre>
+
+          <p className="font-medium mt-4 mb-2">Response:</p>
+          <pre className="bg-gray-800 text-green-400 p-3 rounded text-sm overflow-x-auto">
+            {`{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}`}
+          </pre>
+        </div>
+      </div>
+
+      <Separator />
+
+      <div>
+        <h3 className="text-lg font-semibold mb-3 flex items-center">
+          <Settings className="w-5 h-5 mr-2 text-red-600" />
+          Logout - Invalidate Token
+        </h3>
+        <p className="text-gray-700 leading-relaxed mb-4">
+          Invalidate user tokens by sending a POST request with authentication:
+        </p>
+
+        <div className="bg-gray-100 rounded-lg p-4">
+          <p className="font-medium mb-2">Endpoint:</p>
+          <Badge variant="secondary">/api/user/logout</Badge>
+
+          <p className="font-medium mt-4 mb-2">Method:</p>
+          <Badge>POST</Badge>
+
+          <p className="font-medium mt-4 mb-2">Headers:</p>
+          <pre className="bg-gray-800 text-green-400 p-3 rounded text-sm overflow-x-auto">
+            {`Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`}
+          </pre>
+
+          <p className="font-medium mt-4 mb-2">Response:</p>
+          <pre className="bg-gray-800 text-green-400 p-3 rounded text-sm overflow-x-auto">
+            {`{
+  "message": "Token invalidated successfully"
+}`}
+          </pre>
+        </div>
+      </div>
+    </div>
+  )
+}
