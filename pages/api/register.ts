@@ -18,6 +18,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const token = await registerUser(name, password);
     res.status(200).json({ token });
   } catch (error: any) {
-    res.status(405).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 }

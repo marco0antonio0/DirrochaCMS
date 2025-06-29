@@ -24,14 +24,27 @@ const config: Config = {
         'lg': { max: '1023px' },
         // => @media (max-width: 1023px) { ... }
 
-        'lgi': { min: '1023px' },
-        // => @media (max-width: 1023px) { ... }
-
         'xl': { max: '1279px' },
         // => @media (max-width: 1279px) { ... }
 
         '2xl': { max: '1535px' },
         // => @media (max-width: 1535px) { ... }
+        // =========================================================================================
+        // =========================================================================================
+        'smi': { min: '639px' },
+        // => @media (min-width: 639px) { ... }
+
+        'mdi': { min: '767px' },
+        // => @media (min-width: 767px) { ... }
+
+        'lgi': { min: '1023px' },
+        // => @media (min-width: 1023px) { ... }
+
+        'xil': { min: '1279px' },
+        // => @media (min-width: 1279px) { ... }
+
+        '2xli': { min: '1535px' },
+        // => @media (min-width: 1535px) { ... }
       }
     },
   },
