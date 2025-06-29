@@ -400,7 +400,7 @@ export default function CreatePage() {
                         </div>
                         <Switch
                           checked={userSettings.loginEnabled}
-                          onCheckedChange={(checked) => setUserSettings((prev) => ({ ...prev, loginEnabled: checked }))}
+                          onCheckedChange={(checked:any) => setUserSettings((prev) => ({ ...prev, loginEnabled: checked }))}
                         />
                       </div>
                     </Card>
@@ -415,7 +415,7 @@ export default function CreatePage() {
                         </div>
                         <Switch
                           checked={userSettings.registerEnabled}
-                          onCheckedChange={(checked) =>
+                          onCheckedChange={(checked:any) =>
                             setUserSettings((prev) => ({ ...prev, registerEnabled: checked }))
                           }
                         />
@@ -432,7 +432,7 @@ export default function CreatePage() {
                         </div>
                         <Switch
                           checked={userSettings.logoutEnabled}
-                          onCheckedChange={(checked) =>
+                          onCheckedChange={(checked:any) =>
                             setUserSettings((prev) => ({ ...prev, logoutEnabled: checked }))
                           }
                         />
