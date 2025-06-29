@@ -1,47 +1,28 @@
-import Image from "next/image";
-import localFont from "next/font/local";
-import { useEffect, useRef, useState } from "react";
-import Head from "next/head";
+"use client"
+
+import type React from "react"
+
+import { useState, useEffect, useRef } from "react"
+import { useRouter } from "next/navigation"
+import { Eye, EyeOff, Shield, Zap, Database } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Textarea } from "@/components/ui/textarea"
+import toast from "react-hot-toast"
+import { getData } from "@/services/storage";
 import axios from "axios";
 import Cookies from "js-cookie";
-import { getData } from "@/services/storage";
-import { useRouter } from "next/router";
-import { loginUser, registerUser } from "@/services/auth";
-import toast from "react-hot-toast";
-import { Button } from "@heroui/react";
-import { SessaoService } from "@/services/sessaoService";
-import { envText } from "@/utils/textExample";
-import { Eye, EyeOff } from "lucide-react";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
-
-export default function Home() {
-  const [isFirstAccess, setIsFirstAccess] = useState(false);
-  const textAreaRef = useRef<HTMLTextAreaElement>(null);
-  const [copied, setCopied] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [credentials, setCredentials] = useState({
-    name: "",
-    password: "",
-    confirmPassword: "",
-  });
-  const [errors, setErrors] = useState({
-    name: false,
-    password: false,
-    Unauthorized_firebase:false,
-    Unauthorized: false,
-    confirmPassword: false,
-  });
-  const [loading, setLoading] = useState(false);
+export default function LoginPage() {
+  const [isFirstAccess, setIsFirstAccess] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const textAreaRef = useRef<HTMLTextAreaElement>(null)
+  const router = useRouter()
   async function checkAuth() {
     const token = Cookies.get("token");
     if (!token) {
@@ -60,214 +41,332 @@ export default function Home() {
       return false;
     }
   }
-  const r = useRouter()
-  useEffect(()=>{
-    checkAuth().then((isAuthenticated) => {
-      if (isAuthenticated) {
-        r.push("/home")
-      }
-    });
-  },[])
-  useEffect(() => {
-    getData().then((data) => {
-      setIsFirstAccess(!(data != null) ? true : false);
-    });
-  }, []);
+  const [credentials, setCredentials] = useState({
+    name: "",
+    password: "",
+    confirmPassword: "",
+  })
 
-  function changeCredentials(param: string, value: any) {
-    setCredentials((prev) => ({ ...prev, [param]: value.target.value }));
-    setErrors((prev) => ({ ...prev, Unauthorized: false })); 
-    setErrors((prev) => ({ ...prev, [param]: value.target.value.trim() === "" }));
+  const [errors, setErrors] = useState({
+    name: false,
+    password: false,
+    confirmPassword: false,
+    unauthorized: false,
+    unauthorized_firebase: false,
+  })
+
+  const envText = `NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+NEXT_PUBLIC_ENV=development
+SECRET_KEY=your_secret_key`
+const r = useRouter()
+useEffect(()=>{
+  checkAuth().then((isAuthenticated) => {
+    if (isAuthenticated) {
+      r.push("/home")
+    }
+  });
+}, [])
+useEffect(() => {
+  getData().then((data) => {
+    setIsFirstAccess(!(data != null) ? true : false);
+  });
+}, []);
+
+  const handleCredentialChange = (field: string, value: string) => {
+    setCredentials((prev) => ({ ...prev, [field]: value }))
+    setErrors((prev) => ({
+      ...prev,
+      [field]: value.trim() === "",
+      unauthorized: false,
+      unauthorized_firebase: false,
+    }))
   }
 
-  function checkFieldsIsEmpty() {
-    let newErrors = {
+  const validateFields = () => {
+    const newErrors = {
       name: credentials.name.trim() === "",
       password: credentials.password.trim() === "",
       confirmPassword: isFirstAccess ? credentials.confirmPassword.trim() === "" : false,
-      Unauthorized_firebase:false,
-      Unauthorized:false,
-    };
-    setErrors(newErrors);
-    return !Object.values(newErrors).includes(true);
+      unauthorized: false,
+      unauthorized_firebase: false,
+    }
+
+    if (isFirstAccess && credentials.password !== credentials.confirmPassword) {
+      newErrors.confirmPassword = true
+    }
+
+    if (isFirstAccess && credentials.password.length < 6) {
+      newErrors.password = true
+    }
+
+    setErrors(newErrors)
+    return !Object.values(newErrors).some((error) => error)
   }
 
-  async function onClickButton() {
-    if (!checkFieldsIsEmpty()) return;
+  const handleSubmit = async () => {
+    if (!validateFields()) return;
+  
     setLoading(true);
-
-    if(errors.confirmPassword && isFirstAccess) return;
-    
-    if (isFirstAccess) {toast("Criando conta ...",{duration:4000});}
     try {
-    if (isFirstAccess) {
-    if (credentials.password !== credentials.confirmPassword) {
-          setErrors((prev) => ({ ...prev, confirmPassword: true }));
-          return;
-        }
-    let response:any = null
-    if(!process.env.NEXT_PUBLIC_ENV){
-    try {
-    } catch (error) {
-      let newErrors = {
-        name: credentials.name.trim() === "",
-        password: credentials.password.trim() === "",
-        confirmPassword: isFirstAccess ? credentials.confirmPassword.trim() === "" : false,
-        Unauthorized_firebase:true,
-        Unauthorized:false,
-      }
-          setLoading(false);
-          setErrors(newErrors);
-          return null;
-    }
-        
-        if(response!=null && response.status !=200){
-          let newErrors = {
-            name: credentials.name.trim() === "",
-            password: credentials.password.trim() === "",
-            confirmPassword: isFirstAccess ? credentials.confirmPassword.trim() === "" : false,
-            Unauthorized_firebase:true,
-            Unauthorized:false}
-          setErrors(newErrors);
-          setLoading(false);
-          toast.error("Falha ao criar a conta ...",{duration:4000})
-          return;
-        }}
+      if (isFirstAccess) {
         const responseRegister = await axios.post("/api/register", {
           name: credentials.name,
           password: credentials.password,
         });
-        Cookies.set("token", responseRegister.data.token, { expires: 1 });
-        if (responseRegister.data.token) {
-          setLoading(false);
-          toast.success("Conta criada com sucesso",{duration:4000});
-          toast.success("Seja bem vindo(a)",{duration:4000});
-            setTimeout(() => {
-              window.location.href = "/home";
-            }, 0);
-          }
-        }else{
+        if (responseRegister.status === 200){
+          Cookies.set("token", responseRegister.data.token, { expires: 1 });
+          localStorage.setItem("cms_configured", "true");
+  
+          toast.success("Conta criada com sucesso", { duration: 4000 });
+          toast.success("Seja bem-vindo(a)", { duration: 4000 });
+  
+          setTimeout(() => {
+            window.location.href = "/home";
+          }, 0);
+        } else {
+          toast.error("Erro ao criar conta");
+        }
+  
+      } else {
         const response = await axios.post("/api/login", {
           name: credentials.name,
           password: credentials.password,
         });
-        Cookies.set("token", response.data.token, { expires: 1 }); 
-        window.location.href = "/home"; 
-      }
-      
-
-    } catch (error: any) {
-      setTimeout(() => {
-        if (error.response) {
-          const status = error.response.status;
-          if (status === 401) {
-            setErrors((prev) => ({ ...prev, Unauthorized: true })); 
-          } else if (status === 400) {
-            setErrors((prev) => ({ ...prev, name: true })); 
-          } else {
-            console.error(`Erro: ${status} - ${error.response.data?.message || "Erro desconhecido"}`);
-          }
+  
+        if (response.status === 200 && response.data.token) {
+          Cookies.set("token", response.data.token, { expires: 1 });
+          toast.success("Login realizado com sucesso!");
+          window.location.href = "/home";
         } else {
-          console.error("Erro na requisição:", error.message);
+          toast.error("Falha na autenticação");
         }
-        setLoading(false);
-    }, 0);
-    }finally{
-          setLoading(false);
+      }
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        toast.error("Usuário ou senha incorretos");
+        setErrors((prev) => ({ ...prev, unauthorized: true }));
+      } else {
+        toast.error("Erro ao autenticar");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSubmit()
     }
   }
 
-
-function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
-  if (event.key === "Enter") {
-    onClickButton();
+  const copyEnvConfig = () => {
+    if (textAreaRef.current) {
+      textAreaRef.current.select()
+      navigator.clipboard.writeText(envText).then(() => {
+        setCopied(true)
+        toast.success("Environment configuration copied!")
+        setTimeout(() => setCopied(false), 2000)
+      })
+    }
   }
-}
-  return (
-    <div
-      className={`${geistSans.variable} ${geistMono.variable} grid grid-rows-[20px_1fr_20px] items-center w-[100%] justify-items-center min-h-screen p-8 pb-20 gap-16 sm:py-10 sm:px-3 font-[family-name:var(--font-geist-sans)]`}
-    >
-      <Head>
-        <title>Login Page</title>
-        <meta name="description" content="Plataforma de gerenciamento de conteúdos e endpoints" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </Head>
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start w-[100%]">
-        <div className={`flex flex-col m-auto w-[100%] max-w-[700px]  bg-[#F9FAFC] shadow-lg rounded-2xl ${isFirstAccess?"h-auto":"h-[550px] md:max-w-[100%] sm:h-[450px]"} `}>
-          <div className={`m-auto mt-0 bg-[#FFFFFF] w-[100%] h-[40%] rounded-t-2xl shadow-sm flex flex-col sm:h-[30%] ${isFirstAccess?"py-8":""}`}>
-            <h1 className="m-auto mb-0 text-3xl font-semibold sm:text-2xl">{isFirstAccess ? "Register" : "Sign In"}</h1>
-            {isFirstAccess && !process.env.NEXT_PUBLIC_ENV?<span className="m-auto mt-3 text-lg opacity-65 sm:text-sm sm:mt-0 text-left px-20">
-👋 Olá, seja bem-vindo! 🚀<br />
 
-🔑 Passo 1: Obtenha suas credenciais do Firebase<br />
-📌 Passo 2: Insira suas credenciais nos campos abaixo e ative o Firestore 🔥<br />
-📝 Passo 3: Cadastre seu login e senha para começar! ✅<br />
-</span>:<span className="m-auto mt-3 text-lg opacity-65 sm:text-sm sm:mt-0 text-left px-20">Use your email and password to sign in</span>}
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-6xl grid lgi:grid-cols-2 gap-8 items-center">
+        {/* Left Side - Branding */}
+        <div className="hidden lgi:flex flex-col justify-center space-y-8 px-8">
+          <div className="space-y-6">
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
+                <Database className="w-6 h-6 text-white" />
+              </div>
+              <h1 className="text-3xl font-bold text-gray-900">DirrochaCMS</h1>
+            </div>
+
+            <p className="text-xl text-gray-600 leading-relaxed">
+              Your lightweight solution for content management. Create, manage, and deploy APIs with ease.
+            </p>
+
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Zap className="w-4 h-4 text-blue-600" />
+                </div>
+                <span className="text-gray-700">Lightning fast API creation</span>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                  <Shield className="w-4 h-4 text-green-600" />
+                </div>
+                <span className="text-gray-700">Secure authentication system</span>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <Database className="w-4 h-4 text-purple-600" />
+                </div>
+                <span className="text-gray-700">Flexible data management</span>
+              </div>
+            </div>
           </div>
-          <div className="flex flex-col h-[100%] w-[100%] px-20 lg:px-10">
-          {!(isFirstAccess && !process.env.NEXT_PUBLIC_ENV)?
-          <>
-           <div className={`${isFirstAccess?"h-5":""}`}></div>
-            <h1 className="m-auto mb-1 ml-0 opacity-65 sm:text-sm">EMAIL ADRESS</h1>
-            <input onKeyDown={handleKeyDown}  type="email" className={`m-auto mt-0 mb-0 w-[100%] h-14 rounded-lg ${errors.name?"border-red-500":"border-gray-200"} border-2 px-5 sm:h-12`} placeholder="user@email.com" onChange={(e)=>changeCredentials('name',e)}/>
-            {errors.name && <span className="text-red-500 text-sm mt-1">Campo Email vazio</span>}
-            {errors.Unauthorized && <span className="text-red-500 text-sm mt-1">Campo Email ou Senha incorretos</span>}
-            <div className={`${isFirstAccess?"h-5":""}`}></div>
-            <div className={`${isFirstAccess?"h-0":"h-5"}`}></div>
-            <h1 className="m-auto mt-0 mb-1 ml-0 opacity-65 sm:text-sm">PASSWORD</h1>
-            <div className="relative w-[100%]">
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-2 flex items-center justify-center h-full w-10"
-            >
-              {showPassword ? <Eye size={20} className="text-gray-500" /> : <EyeOff size={20} className="text-gray-500" />}
-            </button>
-            <input onKeyDown={handleKeyDown}  type={!showPassword?"password":"text"} className={`m-auto mt-0 mb-0 w-[100%] h-14 rounded-lg ${errors.password?"border-red-500":"border-gray-200"}  border-2 px-5 sm:h-12`} placeholder="Passwords" onChange={(e)=>changeCredentials('password',e)}/>
-            </div>
-            {errors.password && <span className="text-red-500 text-sm mt-1">Campo senha vazio</span>}
-            {errors.Unauthorized && <span className="text-red-500 text-sm mt-1">Campo Email ou Senha incorretos</span>}
-            {isFirstAccess && (
-              <>
-              <h1 className="m-auto mt-5 mb-0 ml-0 opacity-65 sm:text-sm">CONFIRM PASSWORD</h1>
-              <input onKeyDown={handleKeyDown}  type={!showPassword?"password":"text"} className={`m-auto mt-1 mb-0 w-[100%] h-14 rounded-lg ${errors.password?"border-red-500":"border-gray-200"}  border-2 px-5 sm:h-12`} placeholder="Confirm Password" onChange={(e) => changeCredentials("confirmPassword", e)}/>
-                {errors.confirmPassword && <span className="text-red-500 text-sm">Passwords must match</span>}
-              </>
-            )}
-            <div className={`${isFirstAccess?"h-8":"h-5"}`}></div>
-            {errors.Unauthorized_firebase && <span className="text-red-500 text-sm mt-1 text-center">Acesso a firestore negado <br />verifique as se as credenciais estão corretas e o firestore esta ativado</span>}
-            <div className={`${isFirstAccess?"h-8":"h-5"}`}></div>
-            <Button color="primary" variant="solid" className="h-16" isLoading={loading} onClick={onClickButton}>
-            Sign in
-            </Button>
-            <div className={`${isFirstAccess?"h-10":""}`}></div>
-            <div className="h-1"></div>
-            <span className="m-auto">
-            </span>
-           </>:<>
-           <div className="m-auto py-10">
-              <h1>Configure as credenciais env conforme ilustro abaixo e refaça o build/deploy:</h1>
-              <textarea name="" id="" className="w-[100%] h-[200px] align-middle items-center rounded-lg" readOnly ref={textAreaRef}>
-              {envText}
-              </textarea>
-              <div className="h-5"></div>
-              <Button color="primary" variant="solid" className="h-16 w-[100%]" isLoading={loading} onClick={()=>{     
-                if (textAreaRef.current) {
-                textAreaRef.current.select();
-                navigator.clipboard.writeText(envText).then(() => {
-                  setCopied(true);
-                  toast.success("Env copiado com sucesso",{duration:4000});
-                  setTimeout(() => setCopied(false), 2000);
-                });
-              }}}>
-                {loading ? <span className="loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin"></span> : "Copiar"}
-            </Button>
-           </div>
-           
-           </>}
-            </div>
         </div>
-      </main>
+
+        {/* Right Side - Auth Form */}
+        <div className="w-full max-w-md mx-auto lgi:mx-0">
+          <Card className="shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader className="space-y-4 pb-8">
+              <div className="text-center">
+                <CardTitle className="text-2xl font-bold text-gray-900">
+                  {isFirstAccess ? "Create Account" : "Welcome Back"}
+                </CardTitle>
+                <CardDescription className="text-gray-600 mt-2">
+                  {isFirstAccess ? "Set up your DirrochaCMS instance" : "Sign in to your account to continue"}
+                </CardDescription>
+              </div>
+              {!process.env.NEXT_PUBLIC_ENV && (
+                <div className="flex justify-center mt-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsFirstAccess(!isFirstAccess)}
+                    className="text-blue-600 hover:text-blue-700"
+                  >
+                    {isFirstAccess ? "Already have an account? Sign in" : "First time? Create account"}
+                  </Button>
+                </div>
+              )}
+            </CardHeader>
+
+            <CardContent className="space-y-6">
+              {!process.env.NEXT_PUBLIC_ENV && isFirstAccess ? (
+                <div className="space-y-4">
+                  <Alert>
+                    <Shield className="h-4 w-4" />
+                    <AlertDescription>Configure your Firebase credentials to get started</AlertDescription>
+                  </Alert>
+
+                  <div className="space-y-3">
+                    <Label htmlFor="env-config">Environment Configuration</Label>
+                    <Textarea
+                      ref={textAreaRef}
+                      value={envText}
+                      readOnly
+                      className="font-mono text-sm h-32"
+                      id="env-config"
+                    />
+                    <Button onClick={copyEnvConfig} className="w-full" disabled={loading}>
+                      {copied ? "Copied!" : "Copy Configuration"}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email Address</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="user@example.com"
+                      value={credentials.name}
+                      onChange={(e) => handleCredentialChange("name", e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      className={errors.name ? "border-red-500" : ""}
+                    />
+                    {errors.name && <p className="text-sm text-red-600">Email is required</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Enter your password"
+                        value={credentials.password}
+                        onChange={(e) => handleCredentialChange("password", e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        className={errors.password ? "border-red-500 pr-10" : "pr-10"}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4 text-gray-400" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-gray-400" />
+                        )}
+                      </Button>
+                    </div>
+                    {errors.password && (
+                      <p className="text-sm text-red-600">
+                        {isFirstAccess ? "Password must be at least 6 characters" : "Password is required"}
+                      </p>
+                    )}
+                  </div>
+
+                  {isFirstAccess && (
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">Confirm Password</Label>
+                      <div className="relative">
+                        <Input
+                          id="confirmPassword"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Confirm your password"
+                          value={credentials.confirmPassword}
+                          onChange={(e) => handleCredentialChange("confirmPassword", e.target.value)}
+                          onKeyDown={handleKeyDown}
+                          className={errors.confirmPassword ? "border-red-500 pr-10" : "pr-10"}
+                        />
+                      </div>
+                      {errors.confirmPassword && (
+                        <p className="text-sm text-red-600">
+                          {credentials.confirmPassword.trim() === ""
+                            ? "Please confirm your password"
+                            : "Passwords must match"}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {(errors.unauthorized || errors.unauthorized_firebase) && (
+                    <Alert variant="destructive">
+                      <AlertDescription>
+                        {errors.unauthorized_firebase
+                          ? "Firebase access denied. Check your credentials and ensure Firestore is enabled."
+                          : "Invalid email or password. Please try again."}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  <Button onClick={handleSubmit} className="w-full h-12 text-base font-medium" disabled={loading}>
+                    {loading ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>{isFirstAccess ? "Creating Account..." : "Signing In..."}</span>
+                      </div>
+                    ) : isFirstAccess ? (
+                      "Create Account"
+                    ) : (
+                      "Sign In"
+                    )}
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
-  );
+  )
 }
