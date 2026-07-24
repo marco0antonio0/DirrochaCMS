@@ -1,4 +1,8 @@
-# DirrochaCMS
+<p align="center">
+  <img src="./public/favicon.svg" alt="DirrochaCMS logo" width="96" height="96">
+</p>
+
+<h1 align="center">DirrochaCMS</h1>
 
 CMS leve para criar endpoints dinâmicos e gerenciar conteúdo usando Next.js, React e Firebase.
 
