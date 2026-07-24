@@ -4,6 +4,7 @@ import type { ReactNode } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Database } from "lucide-react"
 import { Button } from "@/app/components/ui/button"
+import { adminPath } from "@/app/lib/admin-path"
 
 interface AppHeaderProps {
   /** Label shown after the logo as a breadcrumb, e.g. "Configuration" or an endpoint name. Omit on the Home page itself. */
@@ -39,7 +40,7 @@ export function AppHeader({ page, onBack, actions }: AppHeaderProps) {
 
             <button
               type="button"
-              onClick={() => router.push("/home")}
+              onClick={() => router.push(adminPath("/home"))}
               className="flex min-w-0 items-center gap-2 smi:gap-3"
             >
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600">

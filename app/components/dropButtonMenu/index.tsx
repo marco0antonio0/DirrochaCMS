@@ -12,6 +12,7 @@ import {
 import { FileText, Home, LogOut, Plus, Settings, Trash2 } from "lucide-react";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
+import { adminPath } from "@/app/lib/admin-path";
 
 type ButtonDropdownProps = {
   actiondelet?: () => void;
@@ -121,7 +122,7 @@ export default function ButtonDropdown({
           <DropdownItem
             key="homePage"
             startContent={<Home className="h-4 w-4 text-slate-500" />}
-            onClick={() => router.push("/home")}
+            onClick={() => router.push(adminPath("/home"))}
           >
             Página inicial
           </DropdownItem>

@@ -31,6 +31,7 @@ import { endpointService } from "@/backend/endpoint/endpoint.service"
 import { User } from "@/backend/user/user.service"
 import { ScrollArea } from "@/app/components/ui/scroll-area"
 import ButtonDropdown from "@/app/components/dropButtonMenu"
+import { adminPath } from "@/app/lib/admin-path"
 
 export default function Home() {
   const [loading, setLoading] = useState(false)
@@ -144,10 +145,10 @@ export default function Home() {
       <AppHeader
         actions={
           <ButtonDropdown
-            addItem={() => router.push("/create")}
+            addItem={() => router.push(adminPath("/create"))}
             addLabel="Novo endpoint"
             addDescription="Cria uma nova rota de API"
-            onSettings={() => router.push("/create")}
+            onSettings={() => router.push(adminPath("/create"))}
             onDocs={() => setShowDocs(true)}
             onLogout={() => handleLogout(router)}
           />
@@ -167,7 +168,7 @@ export default function Home() {
               </div>
 
               {selectedTab === "endpoints" && (
-                <Button onClick={() => router.push("/create")} className="w-full smi:w-auto">
+                <Button onClick={() => router.push(adminPath("/create"))} className="w-full smi:w-auto">
                   <Plus className="w-4 h-4 mr-2" />
                   Novo endpoint
                 </Button>
@@ -220,7 +221,7 @@ export default function Home() {
                     <p className="mx-auto mb-4 mt-2 max-w-md text-sm text-gray-600 smi:text-base">
                       Um endpoint define um tipo de conteúdo e sua API. Crie o primeiro para começar.
                     </p>
-                    <Button onClick={() => router.push("/create")} className="w-full smi:w-auto">
+                    <Button onClick={() => router.push(adminPath("/create"))} className="w-full smi:w-auto">
                       <Plus className="w-4 h-4 mr-2" />
                       Novo endpoint
                     </Button>
@@ -231,7 +232,7 @@ export default function Home() {
                       <Card
                         key={endpoint.id}
                         className="hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-blue-200"
-                        onClick={() => router.push(`/home/${endpoint.router}`)}
+                        onClick={() => router.push(adminPath(`/home/${endpoint.router}`))}
                       >
                         <CardHeader className="pb-3">
                           <CardTitle className="text-lg truncate">{endpoint.title}</CardTitle>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Database, FileText, GripVertical, ImageIcon, ListPlus, Plus, Settings, Shield, Trash2, Users, Wand2, Info } from "lucide-react"
+import { Database, FileText, Globe, GripVertical, ImageIcon, ListPlus, Plus, Settings, Shield, Trash2, Users, Wand2, Info } from "lucide-react"
 import { AppHeader } from "@/app/components/app-header"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
@@ -31,6 +31,8 @@ import { logout } from "@/app/services/logout"
 import { endpointService } from "@/backend/endpoint/endpoint.service"
 import { User } from "@/backend/user/user.service"
 import ButtonDropdown from "@/app/components/dropButtonMenu"
+import { adminPath } from "@/app/lib/admin-path"
+import { siteService } from "@/backend/site/site.service"
 
 interface FieldOption {
   key: string
@@ -70,6 +72,21 @@ const fieldTypes: Array<{ value: FieldType; label: string; description: string }
   { value: "img", label: "Imagem", description: "Upload de imagem" },
 ]
 
+const wordpressPostFields: EndpointFieldSchema[] = [
+  { name: "titulo", type: "string", mult: false },
+  { name: "descricao", type: "string", mult: true },
+  { name: "image", type: "img", mult: false },
+  { name: "data", type: "date", mult: false },
+  { name: "artigo", type: "string", mult: true },
+]
+
+const wordpressPageFields: EndpointFieldSchema[] = [
+  { name: "titulo", type: "string", mult: false },
+  { name: "descricao", type: "string", mult: true },
+  { name: "image", type: "img", mult: false },
+  { name: "artigo", type: "string", mult: true },
+]
+
 export default function CreatePage() {
   const [selectedTab, setSelectedTab] = useState("endpoint")
   const [loading, setLoading] = useState(false)
@@ -87,6 +104,17 @@ export default function CreatePage() {
     registerEnabled: false,
     logoutEnabled: false,
   })
+  const [siteSettings, setSiteSettings] = useState({
+    blogEnabled: false,
+    title: "DirrochaCMS Blog",
+    description: "Conteúdos publicados pelo DirrochaCMS.",
+    postsEndpoint: "",
+    pagesEndpoint: "",
+    primaryColor: "#2563EB",
+    homeLayout: "blog" as "blog" | "page",
+    homePageSlug: "",
+  })
+  const [availableEndpoints, setAvailableEndpoints] = useState<any[]>([])
 
   const router = useRouter()
 
@@ -119,6 +147,8 @@ export default function CreatePage() {
 
     // Fetch current user settings
     fetchUserSettings()
+    fetchSiteSettings()
+    fetchAvailableEndpoints()
   }, [])
 
   const fetchUserSettings = async () => {
@@ -131,6 +161,27 @@ export default function CreatePage() {
       })
     } catch (error) {
       toast.error("Failed to fetch user settings")
+    }
+  }
+
+  const fetchSiteSettings = async () => {
+    try {
+      const settings = await siteService.getSettings()
+      setSiteSettings({
+        ...settings,
+        homeLayout: settings.homeLayout === "page" ? "page" : "blog",
+      })
+    } catch (error) {
+      toast.error("Failed to fetch site settings")
+    }
+  }
+
+  const fetchAvailableEndpoints = async () => {
+    try {
+      const response: any = await endpointService.listEndpoints()
+      setAvailableEndpoints(response.data || [])
+    } catch (error) {
+      setAvailableEndpoints([])
     }
   }
 
@@ -247,7 +298,7 @@ export default function CreatePage() {
           setLoading(false)
           toast.dismiss(toastId)
           toast.success("Endpoint created successfully!", { duration: 4000 })
-          router.push("/home")
+          router.push(adminPath("/home"))
         }, 1000)
       } else {
         setTimeout(() => {
@@ -280,7 +331,7 @@ export default function CreatePage() {
           setLoading(false)
           toast.dismiss(toastId)
           toast.success("Changes saved successfully!", { duration: 4000 })
-          router.push("/home")
+          router.push(adminPath("/home"))
         }, 1000)
       } else {
         setTimeout(() => {
@@ -297,11 +348,80 @@ export default function CreatePage() {
     }
   }
 
+  const handleSaveSiteSettings = async () => {
+    const toastId = toast.loading("Salvando site...", { duration: 4000 })
+    setLoading(true)
+
+    try {
+      const result = await siteService.setSettings(siteSettings)
+      toast.dismiss(toastId)
+
+      if (result.success) {
+        toast.success("Configurações do site salvas", { duration: 4000 })
+      } else {
+        toast.error("Erro ao salvar site", { duration: 4000 })
+      }
+    } catch (error) {
+      toast.dismiss(toastId)
+      toast.error("Erro ao salvar site", { duration: 4000 })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCreateWordPressStructure = async () => {
+    const toastId = toast.loading("Criando estrutura do site...", { duration: 4000 })
+    setLoading(true)
+
+    try {
+      const endpoints: any = await endpointService.listEndpoints()
+      const currentEndpoints = endpoints.data || []
+
+      const ensureEndpoint = async (payload: { title: string; router: string; campos: EndpointFieldSchema[] }) => {
+        const existing = currentEndpoints.find((endpoint: any) => endpoint.router === payload.router)
+        if (existing) return existing
+
+        const result = await endpointService.addEndpoint(payload)
+        if (!result.success) {
+          throw new Error(`Erro ao criar endpoint ${payload.router}`)
+        }
+
+        return result
+      }
+
+      await ensureEndpoint({ title: "Posts", router: "posts", campos: wordpressPostFields })
+      await ensureEndpoint({ title: "Páginas", router: "paginas", campos: wordpressPageFields })
+
+      const nextSettings = {
+        ...siteSettings,
+        blogEnabled: true,
+        postsEndpoint: "posts",
+        pagesEndpoint: "paginas",
+        homeLayout: "blog" as "blog" | "page",
+      }
+
+      const saveResult = await siteService.setSettings(nextSettings)
+      if (!saveResult.success) {
+        throw new Error("Erro ao salvar configurações do site")
+      }
+
+      setSiteSettings(nextSettings)
+      await fetchAvailableEndpoints()
+      toast.dismiss(toastId)
+      toast.success("Estrutura WordPress criada", { duration: 4000 })
+    } catch (error) {
+      toast.dismiss(toastId)
+      toast.error("Erro ao criar estrutura WordPress", { duration: 4000 })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <AppHeader
         page="Configuração"
-        onBack="/home"
+        onBack={adminPath("/home")}
         actions={
           <ButtonDropdown
             addItem={() => setSelectedTab("endpoint")}
@@ -324,7 +444,7 @@ export default function CreatePage() {
 
           <CardContent className="p-4 pt-0 smi:p-6 smi:pt-0">
             <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="endpoint" className="flex items-center space-x-2 text-xs smi:text-sm">
                   <Database className="w-4 h-4" />
                   <span>Endpoints</span>
@@ -332,6 +452,10 @@ export default function CreatePage() {
                 <TabsTrigger value="users" className="flex items-center space-x-2 text-xs smi:text-sm">
                   <Users className="w-4 h-4" />
                   <span>Usuários</span>
+                </TabsTrigger>
+                <TabsTrigger value="site" className="flex items-center space-x-2 text-xs smi:text-sm">
+                  <Globe className="w-4 h-4" />
+                  <span>Site</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -708,6 +832,180 @@ export default function CreatePage() {
                     )}
                   </Button>
                 </div>
+              </TabsContent>
+
+              <TabsContent value="site" className="space-y-6 mt-6">
+                <Card className="border-slate-200">
+                  <CardHeader className="border-b border-slate-100 p-4 smi:p-6">
+                    <CardTitle className="flex items-center gap-2 text-lg smi:text-xl">
+                      <Globe className="h-5 w-5 text-blue-600" />
+                      Gerador de site estilo WordPress
+                    </CardTitle>
+                    <CardDescription>
+                      Configure o site público com posts, páginas, menu e aparência básica.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-5 p-4 smi:p-6">
+                    <div className="rounded-md border border-slate-200 p-4">
+                      <div className="flex items-center justify-between gap-4">
+                        <div>
+                          <p className="font-semibold text-slate-900">Habilitar blog público</p>
+                          <p className="mt-1 text-sm text-slate-500">
+                            Ativa a página inicial pública baseada nos dados do CMS.
+                          </p>
+                        </div>
+                        <Switch
+                          className="shrink-0"
+                          checked={siteSettings.blogEnabled}
+                          onCheckedChange={(checked:any) => setSiteSettings((prev) => ({ ...prev, blogEnabled: checked }))}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
+                      <div className="flex flex-col gap-4 mdi:flex-row mdi:items-center mdi:justify-between">
+                        <div className="min-w-0">
+                          <p className="font-semibold text-blue-950">Estrutura WordPress</p>
+                          <p className="mt-1 text-sm leading-6 text-blue-800">
+                            Cria os endpoints `posts` e `paginas`, configura o menu público e deixa o CMS pronto para publicar.
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          onClick={handleCreateWordPressStructure}
+                          disabled={loading}
+                          className="h-11 w-full shrink-0 mdi:w-auto"
+                        >
+                          <Plus className="mr-2 h-4 w-4" />
+                          Criar estrutura
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 mdi:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Título do site</Label>
+                        <Input
+                          value={siteSettings.title}
+                          onChange={(event) => setSiteSettings((prev) => ({ ...prev, title: event.target.value }))}
+                          placeholder="ex: Blog da empresa"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Cor principal</Label>
+                        <div className="grid grid-cols-[48px_1fr] gap-2">
+                          <input
+                            type="color"
+                            value={siteSettings.primaryColor}
+                            onChange={(event) => setSiteSettings((prev) => ({ ...prev, primaryColor: event.target.value }))}
+                            className="h-10 w-12 rounded-md border border-slate-200 bg-white p-1"
+                            aria-label="Cor principal do site"
+                          />
+                          <Input
+                            value={siteSettings.primaryColor}
+                            onChange={(event) => setSiteSettings((prev) => ({ ...prev, primaryColor: event.target.value }))}
+                            placeholder="#2563EB"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Descrição</Label>
+                      <Input
+                        value={siteSettings.description}
+                        onChange={(event) => setSiteSettings((prev) => ({ ...prev, description: event.target.value }))}
+                        placeholder="Descreva o blog público"
+                      />
+                    </div>
+
+                    <div className="grid gap-4 mdi:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Endpoint de posts</Label>
+                        <Select
+                          value={siteSettings.postsEndpoint || "none"}
+                          onValueChange={(value) => setSiteSettings((prev) => ({ ...prev, postsEndpoint: value === "none" ? "" : value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione um endpoint" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Nenhum endpoint</SelectItem>
+                            {availableEndpoints.map((endpoint) => (
+                              <SelectItem key={endpoint.id} value={endpoint.router}>
+                                {endpoint.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Endpoint de páginas</Label>
+                        <Select
+                          value={siteSettings.pagesEndpoint || "none"}
+                          onValueChange={(value) => setSiteSettings((prev) => ({ ...prev, pagesEndpoint: value === "none" ? "" : value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione um endpoint" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Nenhum endpoint</SelectItem>
+                            {availableEndpoints.map((endpoint) => (
+                              <SelectItem key={endpoint.id} value={endpoint.router}>
+                                {endpoint.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 mdi:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Modelo da página inicial</Label>
+                        <Select
+                          value={siteSettings.homeLayout}
+                          onValueChange={(value) => setSiteSettings((prev) => ({ ...prev, homeLayout: value as "blog" | "page" }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o modelo" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="blog">Últimos posts</SelectItem>
+                            <SelectItem value="page">Página fixa</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Slug da página inicial</Label>
+                        <Input
+                          value={siteSettings.homePageSlug}
+                          disabled={siteSettings.homeLayout !== "page"}
+                          onChange={(event) => setSiteSettings((prev) => ({ ...prev, homePageSlug: event.target.value }))}
+                          placeholder="ex: inicio"
+                        />
+                      </div>
+                    </div>
+
+                    <Alert>
+                      <Info className="h-4 w-4" />
+                      <AlertDescription>
+                        Para funcionar como WordPress, use um endpoint de posts com `titulo`, `descricao`, `image`, `artigo`
+                        e um endpoint de páginas com `titulo`, `descricao`, `artigo`.
+                      </AlertDescription>
+                    </Alert>
+
+                    <Button
+                      onClick={handleSaveSiteSettings}
+                      className="h-12 w-full text-base font-medium"
+                      disabled={loading}
+                    >
+                      {loading ? "Salvando..." : "Salvar site/blog"}
+                    </Button>
+                  </CardContent>
+                </Card>
               </TabsContent>
             </Tabs>
           </CardContent>

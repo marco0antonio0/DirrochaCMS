@@ -1,4 +1,5 @@
 import { endpointService } from "@/backend/endpoint/endpoint.service";
+import { adminPath } from "@/app/lib/admin-path";
 
 export const redirectRouter = async (endpointId: string) => {
     if (endpointId) {
@@ -20,6 +21,6 @@ export const redirectRouter = async (endpointId: string) => {
   };
   
   const redirectTo404 = () => {
-    window.location.href = "/home";
+    window.location.href = adminPath("/home");
   };
   

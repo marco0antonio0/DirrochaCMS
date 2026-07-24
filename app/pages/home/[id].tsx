@@ -23,6 +23,7 @@ import { Item } from "@/app/components/item";
 import { checkAuth } from "@/app/utils/checkAuth";
 import { InputComponent, InputDateComponent, InputImageUpload, InputSingleNumberComponent } from "@/app/components/input";
 import ButtonDropdown from "@/app/components/dropButtonMenu";
+import { adminPath } from "@/app/lib/admin-path";
 
 const geistSans = localFont({
   src: "../../fonts/GeistVF.woff",
@@ -278,7 +279,7 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
     const objFormated = fetch.data.filter((e: any) => e.title === endpointId);
     const result = await endpointService.deleteEndpoint(objFormated[0]['id'])
     await refreshData(result)
-    r.push("/home")
+    r.push(adminPath("/home"))
 
    }
 
@@ -397,7 +398,7 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
       setConfirmRenameOpen(false)
 
       if (rename && nextName !== endpointId) {
-        r.push(`/home/${nextName}`)
+        r.push(adminPath(`/home/${nextName}`))
         return
       }
 
@@ -451,7 +452,7 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
   const endpointName = (endpointId as string) || ""
 
   let headerPage = ""
-  let headerOnBack: string | (() => void) = "/home"
+  let headerOnBack: string | (() => void) = adminPath("/home")
   let headerActions: React.ReactNode = null
 
   if (openModal) {
@@ -475,7 +476,7 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
     ) : null
   } else {
     headerPage = endpointName
-    headerOnBack = "/home"
+    headerOnBack = adminPath("/home")
     headerActions = !loadingData || loading ? (
       <span className="loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin" />
     ) : (

@@ -15,6 +15,7 @@ import toast from "react-hot-toast"
 import { getData } from "@/backend/auth/auth.repository";
 import axios from "axios";
 import Cookies from "js-cookie";
+import { adminPath } from "@/app/lib/admin-path";
 
 export default function LoginPage() {
   const [isFirstAccess, setIsFirstAccess] = useState(false)
@@ -67,7 +68,7 @@ const r = useRouter()
 useEffect(()=>{
   checkAuth().then((isAuthenticated) => {
     if (isAuthenticated) {
-      r.push("/home")
+      r.push(adminPath("/home"))
     }
   });
 }, [])
@@ -126,7 +127,7 @@ useEffect(() => {
           toast.success("Seja bem-vindo(a)", { duration: 4000 });
   
           setTimeout(() => {
-            window.location.href = "/home";
+            window.location.href = adminPath("/home");
           }, 0);
         } else {
           toast.error("Erro ao criar conta");
@@ -141,7 +142,7 @@ useEffect(() => {
         if (response.status === 200 && response.data.token) {
           Cookies.set("token", response.data.token, { expires: 1 });
           toast.success("Login realizado com sucesso!");
-          window.location.href = "/home";
+          window.location.href = adminPath("/home");
         } else {
           toast.error("Falha na autenticação");
         }

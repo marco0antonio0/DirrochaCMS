@@ -42,6 +42,8 @@ O DirrochaCMS foi pensado para projetos que precisam de uma API simples e editá
 - Campo `titulo_identificador` gerado automaticamente.
 - Listagem, busca, criação, edição e remoção de registros no painel.
 - Modal de confirmação para exclusões.
+- Modo site/blog público estilo WordPress, com posts, páginas, menu e home configurável.
+- Painel administrativo isolado em `/cms-admin` quando o site público está habilitado.
 - Autenticação com JWT e sessão persistida.
 - Configuração para habilitar ou desabilitar login, cadastro e logout de usuários.
 - Persistência com Firebase Firestore.
@@ -88,6 +90,7 @@ DirrochaCMS/
 │   ├── endpoint/
 │   ├── item/
 │   ├── sessao/
+│   ├── site/
 │   ├── user/
 │   ├── common/
 │   └── config/
@@ -224,21 +227,24 @@ npm run start
 
 | Rota | Descrição |
 | --- | --- |
-| `/` | Login e primeira configuração. |
-| `/home` | Lista endpoints e usuários. |
-| `/home/[id]` | Gerencia os registros de um endpoint. |
-| `/create` | Cria endpoints e ajusta configurações de usuário. |
+| `/` | Login e primeira configuração quando o blog está desativado; site/blog público quando habilitado. |
+| `/cms-admin` | Login e entrada administrativa do CMS. |
+| `/cms-admin/home` | Lista endpoints e usuários. |
+| `/cms-admin/home/[id]` | Gerencia os registros de um endpoint. |
+| `/cms-admin/create` | Cria endpoints e ajusta configurações de usuário/site. |
 | `/api/[id]` | API pública de consulta dos dados de um endpoint criado. |
 | `/api/user/login` | Login de usuário configurável. |
 | `/api/user/register` | Cadastro de usuário configurável. |
 | `/api/user/logout` | Logout de usuário configurável. |
 | `/api/verifyToken` | Validação de token JWT. |
 
+Quando o blog público está habilitado, as rotas antigas `/home` e `/create` redirecionam para `/cms-admin/home` e `/cms-admin/create`.
+
 ## Como Usar
 
 ### Criar um endpoint
 
-1. Acesse `/create`.
+1. Acesse `/cms-admin/create`.
 2. Informe o nome da rota, por exemplo `posts`.
 3. Adicione campos no builder.
 4. Escolha o tipo de cada campo:
@@ -254,7 +260,7 @@ O campo `titulo_identificador` não precisa ser declarado. Ele é criado automat
 
 ### Gerenciar registros
 
-1. Acesse `/home`.
+1. Acesse `/cms-admin/home`.
 2. Clique no endpoint desejado.
 3. Cadastre novos registros.
 4. Edite registros existentes.
@@ -262,10 +268,50 @@ O campo `titulo_identificador` não precisa ser declarado. Ele é criado automat
 
 ### Gerenciar usuários
 
-1. Acesse `/create`.
+1. Acesse `/cms-admin/create`.
 2. Abra a aba de usuários/configurações.
 3. Ative ou desative login, cadastro e logout.
 4. Salve a configuração.
+
+### Habilitar site/blog público
+
+1. Acesse `/cms-admin/create`.
+2. Abra a aba `Site`.
+3. Clique em `Criar estrutura` para gerar os endpoints padrão `posts` e `paginas`.
+4. Ajuste título, descrição, cor principal e modelo da página inicial.
+5. Ative `Habilitar blog público`.
+6. Salve.
+
+Com isso, `/` passa a renderizar o blog público e o painel administrativo fica em `/cms-admin`.
+
+### Fluxo estilo WordPress
+
+O modo público usa o próprio CMS como base para publicar conteúdo:
+
+- `posts`: endpoint para artigos do blog.
+- `paginas`: endpoint para páginas institucionais, como `sobre`, `contato` ou `inicio`.
+- `/`: exibe os últimos posts ou uma página fixa, conforme a configuração da aba `Site`.
+- `/[slug]`: exibe um post ou página pelo campo automático `titulo_identificador`.
+- Menu público: monta os links usando os primeiros registros do endpoint `paginas`.
+
+Campos recomendados para `posts`:
+
+```text
+titulo
+descricao
+image
+data
+artigo
+```
+
+Campos recomendados para `paginas`:
+
+```text
+titulo
+descricao
+image
+artigo
+```
 
 ## API
 
