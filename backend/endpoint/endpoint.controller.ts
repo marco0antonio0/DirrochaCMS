@@ -34,12 +34,21 @@ export class EndpointController {
       return res.status(404).json({ error: "Rota não encontrada", statusCode: 404 });
     }
 
-    if (endpointData[0].fixedValuesEnabled) {
-      const ttl = Math.max(Number(endpointData[0].cacheTtlSeconds || 0), 0);
+    const endpoint = endpointData[0];
+    const accessMode = endpoint.accessMode || "public";
+    if (accessMode === "password") {
+      const providedPassword = this.getRequestPassword(req);
+      if (!endpoint.accessPassword || providedPassword !== endpoint.accessPassword) {
+        return res.status(401).json({ error: "Senha do endpoint inválida ou não informada", statusCode: 401 });
+      }
+    }
+
+    if (endpoint.fixedValuesEnabled) {
+      const ttl = Math.max(Number(endpoint.cacheTtlSeconds || 0), 0);
       res.setHeader("Cache-Control", `public, max-age=${ttl}, s-maxage=${ttl}`);
     }
 
-    const data = await this.items.getItems(endpointData[0].id);
+    const data = await this.items.getItems(endpoint.id);
     if (!data || !("data" in data) || !data.data) {
       return res.status(500).json({ error: "Erro interno", statusCode: 500 });
     }
@@ -77,6 +86,12 @@ export class EndpointController {
     }
 
     return { data: results, statusCode: 200 };
+  }
+
+  private getRequestPassword(req: NextApiRequest) {
+    const headerPassword = req.headers["x-endpoint-password"];
+    if (Array.isArray(headerPassword)) return headerPassword[0] || "";
+    return headerPassword || "";
   }
 }
 

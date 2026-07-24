@@ -3,7 +3,7 @@
 import localFont from "next/font/local";
 import { useCallback, useEffect, useState } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { AlertTriangle, Clock, Copy, Database, Inbox, ListChecks, Plus, RefreshCw, Save, Search, Settings, Trash2 } from "lucide-react";
+import { AlertTriangle, Clock, Copy, Database, Dices, Inbox, KeyRound, ListChecks, Plus, RefreshCw, Save, Search, Settings, Shield, Trash2 } from "lucide-react";
 import {  generateDynamicObject } from "@/app/utils/generateDynamicObject";
 import { toKeyValueList } from "@/app/utils/toKeyValueList";
 import formatDataToDynamicObject from "@/app/utils/formatDataToDynamicObject";
@@ -35,6 +35,8 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
+type EndpointAccessMode = "public" | "password";
+
 export default function Home() {
   const [image, setImage] = useState<string | null>(null);
   const [loadingData, setLoadingData] = useState(false);
@@ -55,10 +57,18 @@ export default function Home() {
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
   const [confirmRenameOpen, setConfirmRenameOpen] = useState(false)
   const [settingsLoading, setSettingsLoading] = useState(false)
-  const [endpointSettings, setEndpointSettings] = useState({
+  const [endpointSettings, setEndpointSettings] = useState<{
+    name: string;
+    fixedValuesEnabled: boolean;
+    cacheTtlSeconds: number;
+    accessMode: EndpointAccessMode;
+    accessPassword: string;
+  }>({
     name: "",
     fixedValuesEnabled: false,
     cacheTtlSeconds: 300,
+    accessMode: "public",
+    accessPassword: "",
   })
   const [deleteTarget, setDeleteTarget] = useState<any>(null)
   const [date, setDate] = useState("");
@@ -88,6 +98,8 @@ export default function Home() {
       name: currentEndpoint.router || currentEndpoint.title || endpointId,
       fixedValuesEnabled: currentEndpoint.fixedValuesEnabled ?? false,
       cacheTtlSeconds: currentEndpoint.cacheTtlSeconds ?? 300,
+      accessMode: currentEndpoint.accessMode ?? "public",
+      accessPassword: currentEndpoint.accessPassword ?? "",
     })
   }, [data, endpointId])
 
@@ -377,12 +389,18 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
       toast.error("Informe um TTL válido")
       return
     }
+    if (endpointSettings.accessMode === "password" && !endpointSettings.accessPassword.trim()) {
+      toast.error("Informe uma senha para deixar o endpoint privado")
+      return
+    }
 
     setSettingsLoading(true)
     try {
       const payload = {
         fixedValuesEnabled: endpointSettings.fixedValuesEnabled,
         cacheTtlSeconds: ttl,
+        accessMode: endpointSettings.accessMode,
+        accessPassword: endpointSettings.accessMode === "password" ? endpointSettings.accessPassword.trim() : "",
         ...(rename ? { title: nextName, router: nextName } : {}),
       }
       const result = await endpointService.updateEndpoint(currentEndpoint.id, payload)
@@ -752,6 +770,19 @@ function ModalConfirmActionDelete({setOpenModal,setDeleteTarget,loadingData,item
 }
 
 function EndpointSettingsDialog({ open, onOpenChange, settings, setSettings, loading, onSave, onRefreshCache }: any) {
+  const generateSecurePassword = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*?"
+    const randomValues = new Uint32Array(18)
+    crypto.getRandomValues(randomValues)
+    const password = Array.from(randomValues, (value) => chars[value % chars.length]).join("")
+
+    setSettings((prev: any) => ({
+      ...prev,
+      accessMode: "password",
+      accessPassword: password,
+    }))
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-[calc(100vw-24px)] overflow-y-auto smi:max-w-lg">
@@ -777,6 +808,75 @@ function EndpointSettingsDialog({ open, onOpenChange, settings, setSettings, loa
             <p className="text-xs leading-5 text-slate-500">
               Esse nome também define a URL pública em `/api/nome_do_endpoint`.
             </p>
+          </div>
+
+          <div className="rounded-md border border-slate-200 p-4">
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-700">
+                <Shield className="h-4 w-4" />
+              </span>
+              <div className="min-w-0 flex-1 space-y-4">
+                <div>
+                  <p className="font-semibold text-slate-900">Acesso da API</p>
+                  <p className="mt-1 text-sm leading-5 text-slate-500">
+                    Público mantém `/api/{settings.name || "endpoint"}` aberto. Privado exige senha na requisição.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 rounded-md bg-slate-100 p-1">
+                  <button
+                    type="button"
+                    onClick={() => setSettings((prev: any) => ({ ...prev, accessMode: "public" }))}
+                    className={`h-10 rounded-md text-sm font-semibold transition ${
+                      settings.accessMode !== "password"
+                        ? "bg-white text-slate-950 shadow-sm"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    Público
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSettings((prev: any) => ({ ...prev, accessMode: "password" }))}
+                    className={`inline-flex h-10 items-center justify-center gap-2 rounded-md text-sm font-semibold transition ${
+                      settings.accessMode === "password"
+                        ? "bg-white text-slate-950 shadow-sm"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    <KeyRound className="h-4 w-4" />
+                    Privado
+                  </button>
+                </div>
+
+                {settings.accessMode === "password" ? (
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-slate-700">Senha do endpoint</label>
+                    <div className="grid gap-2 smi:grid-cols-[1fr_auto]">
+                      <input
+                        type="text"
+                        value={settings.accessPassword}
+                        onChange={(event) => setSettings((prev: any) => ({ ...prev, accessPassword: event.target.value }))}
+                        placeholder="Defina uma senha forte"
+                        className="h-11 w-full rounded-md border border-slate-200 px-3 font-mono text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                      />
+                      <HeroButton
+                        type="button"
+                        variant="flat"
+                        className="h-11 w-full justify-center whitespace-nowrap smi:w-36"
+                        onClick={generateSecurePassword}
+                      >
+                        <Dices className="h-4 w-4" />
+                        Randomizar
+                      </HeroButton>
+                    </div>
+                    <p className="text-xs leading-5 text-slate-500">
+                      Envie a senha no header `x-endpoint-password`.
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            </div>
           </div>
 
           <div className="rounded-md border border-slate-200 p-4">

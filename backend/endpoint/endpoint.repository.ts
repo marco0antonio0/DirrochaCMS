@@ -4,12 +4,16 @@ import type { EndpointPayload, EndpointUpdatePayload } from "@/backend/endpoint/
 import { addDoc, collection, deleteDoc, doc, getDocs, updateDoc } from "firebase/firestore";
 
 export class EndpointRepository {
-  async createEndpoint({ title, router, campos }: EndpointPayload) {
+  async createEndpoint({ title, router, campos, fixedValuesEnabled, cacheTtlSeconds, accessMode, accessPassword }: EndpointPayload) {
     try {
       const docRef = await addDoc(collection(db, ENDPOINT_COLLECTION), {
         title,
         router,
         campos,
+        fixedValuesEnabled: fixedValuesEnabled ?? false,
+        cacheTtlSeconds: cacheTtlSeconds ?? 300,
+        accessMode: accessMode ?? "public",
+        accessPassword: accessMode === "password" ? accessPassword || "" : "",
         createdAt: new Date(),
       });
 

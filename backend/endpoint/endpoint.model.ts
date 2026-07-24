@@ -10,6 +10,8 @@ export interface EndpointPayload {
   campos: Array<string | EndpointField>;
   fixedValuesEnabled?: boolean;
   cacheTtlSeconds?: number;
+  accessMode?: "public" | "password";
+  accessPassword?: string;
 }
 
 export interface EndpointUpdatePayload {
@@ -17,6 +19,8 @@ export interface EndpointUpdatePayload {
   router?: string;
   fixedValuesEnabled?: boolean;
   cacheTtlSeconds?: number;
+  accessMode?: "public" | "password";
+  accessPassword?: string;
   cacheRefreshedAt?: Date;
   updatedAt?: Date;
 }
