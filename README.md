@@ -228,7 +228,7 @@ npm run start
 | `/home` | Lista endpoints e usuários. |
 | `/home/[id]` | Gerencia os registros de um endpoint. |
 | `/create` | Cria endpoints e ajusta configurações de usuário. |
-| `/api/[id]` | API pública de consulta dos dados de um endpoint criado. |
+| `/api/[id]` | API de consulta dos dados de um endpoint criado. Pode ser pública ou protegida por senha. |
 | `/api/user/login` | Login de usuário configurável. |
 | `/api/user/register` | Cadastro de usuário configurável. |
 | `/api/user/logout` | Logout de usuário configurável. |
@@ -259,6 +259,19 @@ O campo `titulo_identificador` não precisa ser declarado. Ele é criado automat
 3. Cadastre novos registros.
 4. Edite registros existentes.
 5. Exclua registros pelo botão de deletar e confirme no modal.
+
+### Configurar acesso do endpoint
+
+1. Acesse `/home`.
+2. Clique no endpoint desejado.
+3. Abra o modal de configurações pelo botão de engrenagem.
+4. Em `Acesso da API`, escolha entre:
+   - `Público`: qualquer cliente consegue consultar `/api/nome_do_endpoint`.
+   - `Privado`: a API exige uma senha no header `x-endpoint-password`.
+5. Ao escolher `Privado`, informe uma senha manualmente ou use `Randomizar` para gerar uma senha segura.
+6. Salve as alterações.
+
+Endpoints existentes permanecem públicos por padrão até que sejam alterados para `Privado`.
 
 ### Gerenciar usuários
 
@@ -299,6 +312,22 @@ Pesquisa pelo `titulo_identificador`:
 ```bash
 curl "http://localhost:3000/api/posts?t=primeiro-post"
 ```
+
+Se o endpoint estiver privado, envie a senha pelo header `x-endpoint-password`:
+
+```bash
+curl http://localhost:3000/api/posts \
+  -H "x-endpoint-password: SUA_SENHA"
+```
+
+Pesquisa em endpoint privado:
+
+```bash
+curl "http://localhost:3000/api/posts?t=primeiro-post" \
+  -H "x-endpoint-password: SUA_SENHA"
+```
+
+Não envie senhas pela URL ou query string.
 
 ### Autenticação
 
