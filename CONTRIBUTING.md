@@ -1,108 +1,110 @@
-# 🚀 Contribuindo para o DirrochaCMS
+# Contribuindo para o DirrochaCMS
 
-Obrigado por considerar contribuir para o **DirrochaCMS**! 🎉
+Obrigado por considerar contribuir com o DirrochaCMS. Este documento define um fluxo simples para manter o projeto organizado e fácil de revisar.
 
-Nosso objetivo é construir um CMS eficiente e flexível, e sua ajuda é fundamental para manter e melhorar essa ferramenta. Siga as diretrizes abaixo para garantir um fluxo de trabalho organizado e eficiente.
+## Como contribuir
 
----
+1. Verifique se já existe uma issue relacionada.
+2. Se não existir, abra uma issue explicando o problema, melhoria ou proposta.
+3. Faça um fork do repositório.
+4. Crie uma branch com nome claro.
+5. Implemente a mudança em escopo pequeno.
+6. Rode as validações locais.
+7. Abra um pull request com descrição objetiva.
 
-## 📝 Como Contribuir
+## Ambiente local
 
-### 📌 1. Verifique as Issues 🚀
-Antes de começar qualquer desenvolvimento, verifique se já existe uma **issue** aberta relacionada à funcionalidade ou correção que deseja trabalhar. Você pode visualizar as issues abertas no repositório.
-
-🔎 **Passos:**
-1. Vá até a aba de [Issues](https://github.com/marco0antonio0/DirrochaCMS/issues).
-2. Escolha uma issue que deseja trabalhar.
-3. Se não encontrar nenhuma relacionada, abra uma nova issue para discutir a mudança.
-
-### 🍴 2. Faça um Fork do Projeto 🌿
-Para começar a desenvolver, você precisa fazer um **fork** do repositório.
-
-🔎 **Passos:**
-1. No repositório do **DirrochaCMS**, clique no botão "Fork" no canto superior direito.
-2. Isso criará uma cópia do projeto em sua conta do GitHub.
-3. Clone o seu fork localmente:
-   ```bash
-   git clone https://github.com/marco0antonio0/DirrochaCMS
-   cd DirrochaCMS
-   ```
-
-### 🔀 3. Crie um Branch para sua Mudança 🌿
-Sempre crie um novo **branch** para suas alterações, com um nome descritivo.
-
-🔎 **Passo:**
 ```bash
-git checkout -b minha-feature
+git clone https://github.com/marco0antonio0/DirrochaCMS.git
+cd DirrochaCMS
+npm install
+cp .env.example .env
+npm run dev
 ```
 
-Exemplo de nomes para branch:
-- `fix/erro-login`
-- `feature/adicionar-filtro`
-- `update/documentacao`
+Preencha o `.env` com as credenciais do Firebase antes de testar os fluxos com persistência.
 
-### 🛠️ 4. Desenvolva sua Solução 👨‍💻
-Agora é hora de colocar a mão na massa! Faça as alterações necessárias para resolver a issue.
+## Padrão de branch
 
-⚡ **Dicas:**
-- Escreva código limpo e bem documentado.
-- Utilize **boas práticas** e siga o padrão do projeto.
-- Teste sua alteração antes de submetê-la.
+Use nomes curtos e descritivos:
 
-### ✅ 5. Commit e Push 🚀
-Após concluir sua modificação, siga os passos abaixo para enviar as mudanças:
+```text
+feature/criar-endpoint
+fix/modal-delete
+docs/readme
+refactor/backend-auth
+```
 
-🔎 **Passos:**
-1. Adicione os arquivos modificados para commit:
-   ```bash
-   git add .
-   ```
-2. Faça um commit descritivo:
-   ```bash
-   git commit -m "✨ Adiciona nova funcionalidade de autenticação"
-   ```
-3. Envie as alterações para o seu repositório no GitHub:
-   ```bash
-   git push origin minha-feature
-   ```
+## Commits
 
-### 🔃 6. Abra um Pull Request 📬
-Após enviar as alterações, vá até o repositório principal e abra um **Pull Request (PR)**.
+Prefira mensagens diretas:
 
-🔎 **Passos:**
-1. Acesse a aba **Pull Requests** no repositório principal.
-2. Clique em **New Pull Request**.
-3. Selecione seu branch e compare com a branch `main`.
-4. Descreva suas alterações e clique em **Create Pull Request**.
+```text
+feat: adiciona ordenacao de campos
+fix: corrige estilo da tela de endpoint
+docs: melhora guia de instalacao
+```
 
-Se sua solução resolver o problema e seguir os padrões do projeto, ela será revisada e mesclada ao código principal! 🎉
+## Antes de abrir PR
 
-### 🔍 7. Aguarde a Revisão 📜
-Um dos mantenedores irá revisar seu código e poderá solicitar ajustes antes da aprovação. Se necessário, siga as sugestões e faça um novo push com as mudanças.
+Rode:
 
----
+```bash
+npx tsc --noEmit
+npm run build
+```
 
-## 🎯 Padrões de Código 🧑‍💻
-Para manter o código organizado e legível, siga as diretrizes abaixo:
-- Utilize **ESLint** para manter um código limpo.
-- Nomeie variáveis e funções de forma clara e objetiva.
-- Prefira **const** e **let** ao invés de **var**.
-- Utilize **camelCase** para variáveis e funções.
-- Sempre adicione comentários explicativos quando necessário.
+Inclua no pull request:
 
----
+- O que mudou.
+- Por que mudou.
+- Como testar.
+- Prints ou gravação curta quando a mudança afetar UI.
+- Observações sobre migração, variáveis ou riscos.
 
-## 🛠️ Tecnologias Utilizadas 📌
-O **DirrochaCMS** é desenvolvido com as seguintes tecnologias:
-- **Next.js**
-- **Firebase**
-- **Docker & Docker Compose**
+## Padrões de código
 
-Certifique-se de entender e seguir as práticas recomendadas para cada uma delas!
+- Siga a estrutura atual do projeto.
+- Mantenha frontend em `/app`.
+- Mantenha lógica de backend em `/backend`.
+- Para novos módulos do backend, use:
 
----
+```text
+.module.ts
+.service.ts
+.repository.ts
+.controller.ts
+.entity.ts
+.model.ts
+```
 
-## 📜 Licença
-Este projeto está sob a licença **MIT**. Confira os detalhes [aqui](/LICENSE).
+- Evite refatorações fora do escopo do PR.
+- Prefira nomes claros em português ou inglês, sem misturar no mesmo contexto.
+- Atualize o README quando mudar comportamento público.
 
-⚡ **Muito obrigado por contribuir com o DirrochaCMS!** 🚀🎉
+## Reportando bugs
+
+Ao abrir uma issue de bug, informe:
+
+- Passos para reproduzir.
+- Resultado esperado.
+- Resultado atual.
+- Ambiente usado, como Node, npm, navegador e sistema operacional.
+- Prints, logs ou payloads quando ajudarem.
+
+## Propondo funcionalidades
+
+Explique:
+
+- Problema que a funcionalidade resolve.
+- Fluxo esperado.
+- Impacto em usuários existentes.
+- Possíveis alternativas.
+
+## Segurança
+
+Não publique vulnerabilidades em issues. Use o fluxo descrito em [SECURITY.md](./SECURITY.md).
+
+## Código de conduta
+
+Toda participação no projeto deve seguir [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
