@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Database } from "lucide-react"
+import { ArrowLeft, ChevronRight, Database } from "lucide-react"
 import { Button } from "@/app/components/ui/button"
 
 interface AppHeaderProps {
@@ -26,12 +26,17 @@ export function AppHeader({ page, onBack, actions }: AppHeaderProps) {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/90 backdrop-blur-sm">
+    <header className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/75 shadow-[0_1px_3px_rgba(15,23,42,0.04)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/60">
       <div className="mx-auto max-w-7xl px-3 smi:px-6 lgi:px-8">
         <div className="flex min-h-16 items-center justify-between gap-2 py-2 smi:gap-3 smi:py-0">
-          <div className="flex min-w-0 items-center">
+          <div className="flex min-w-0 items-center gap-1 smi:gap-2">
             {onBack && (
-              <Button variant="ghost" size="sm" onClick={handleBack} className="mr-1 h-9 shrink-0 px-2 smi:px-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleBack}
+                className="h-9 shrink-0 rounded-full px-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900 smi:rounded-md smi:px-3"
+              >
                 <ArrowLeft className="h-4 w-4 smi:mr-2" />
                 <span className="hidden smi:inline">Voltar</span>
               </Button>
@@ -40,18 +45,27 @@ export function AppHeader({ page, onBack, actions }: AppHeaderProps) {
             <button
               type="button"
               onClick={() => router.push("/home")}
-              className="flex min-w-0 items-center gap-2 smi:gap-3"
+              aria-label="Ir para a página inicial"
+              className="group flex min-w-0 items-center gap-2 rounded-lg outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 smi:gap-3"
             >
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600">
-                <Database className="h-4 w-4 text-white" />
-              </div>
-              <h1 className="truncate text-base font-bold text-gray-900 smi:text-xl">DirrochaCMS</h1>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 shadow-md shadow-indigo-600/25 ring-1 ring-inset ring-white/25 transition duration-200 group-hover:scale-105 group-hover:shadow-lg group-hover:shadow-indigo-600/35">
+                <Database className="h-[18px] w-[18px] text-white" />
+              </span>
+              <h1
+                className={`truncate bg-gradient-to-r from-slate-900 via-slate-800 to-slate-600 bg-clip-text text-base font-bold tracking-tight text-transparent smi:text-xl ${
+                  page ? "hidden smi:block" : ""
+                }`}
+              >
+                DirrochaCMS
+              </h1>
             </button>
 
             {page && (
-              <div className="hidden smi:flex items-center min-w-0 ml-2">
-                <span className="mx-2 text-gray-300">/</span>
-                <span className="text-sm font-medium text-gray-600 truncate">{page}</span>
+              <div className="flex min-w-0 items-center gap-1 smi:gap-2">
+                <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
+                <span className="truncate rounded-full bg-slate-100/80 px-2.5 py-1 text-xs font-semibold text-slate-600 ring-1 ring-inset ring-slate-200/80 smi:text-sm">
+                  {page}
+                </span>
               </div>
             )}
           </div>
@@ -63,6 +77,8 @@ export function AppHeader({ page, onBack, actions }: AppHeaderProps) {
           ) : null}
         </div>
       </div>
+
+      <div className="pointer-events-none absolute inset-x-0 -bottom-px h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent" />
     </header>
   )
 }
