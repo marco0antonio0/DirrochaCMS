@@ -1,13 +1,22 @@
+import type { UserRole } from "@/backend/user/user.entity";
+
 export interface UserPayload {
   email: string;
   password: string;
   name: string;
   disabled?: boolean;
-  canManageUsers?: boolean;
+  role?: UserRole;
 }
 
-export interface UserRecord extends UserPayload {
+/** Forma segura de um usuario para consumo da API: sem `password`. */
+export interface UserRecord {
   id: string;
+  name: string;
+  email: string;
+  disabled: boolean;
+  role: UserRole;
+  /** Derivado do papel; mantido para a UI nao precisar reimplementar a tabela. */
+  canManageUsers: boolean;
 }
 
 export interface UserUpdatePayload {
@@ -15,5 +24,5 @@ export interface UserUpdatePayload {
   password?: string;
   name?: string;
   disabled?: boolean;
-  canManageUsers?: boolean;
+  role?: UserRole;
 }

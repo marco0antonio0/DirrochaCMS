@@ -1,82 +1,107 @@
-import { IsStartedfirebaseConfig } from "@/backend/config/config";
+import "server-only";
 import { itemRepository, ItemRepository } from "@/backend/item/item.repository";
+import { endpointRepository } from "@/backend/endpoint/endpoint.repository";
+import { validateItemFields } from "@/backend/item/itemValidation";
 import type { Actor } from "@/backend/common/actor";
 import { historyService } from "@/backend/history/history.service";
-import toast from "react-hot-toast";
 
-const getTituloIdentificador = (items: any[]) =>
+export class ItemServiceError extends Error {
+  constructor(
+    message: string,
+    readonly status: number = 400,
+  ) {
+    super(message);
+  }
+}
+
+const getTituloIdentificador = (items: Array<{ title: string; value: unknown }>) =>
   items?.find((item) => item?.title === "titulo_identificador")?.value;
 
 export class ItemService {
   constructor(private readonly repository: ItemRepository) {}
 
-  async deleteItem({ itemId, endpointId }: { itemId: string; endpointId: string }, actor?: Actor) {
-    const toastId = toast.loading("Deletando item do endpoint...", { duration: 4000 });
-    if (!IsStartedfirebaseConfig) return { success: false, error: "Firebase não inicializado" };
+  /**
+   * Valida os campos contra o schema declarado no endpoint.
+   * Feito no servidor porque a UI nao e fronteira de confianca: a API pode ser chamada
+   * diretamente, sem passar pelo builder.
+   */
+  private async validarCampos(endpointId: string, items: unknown) {
+    const endpoint = await endpointRepository.getEndpointById(endpointId);
+    if (!endpoint) throw new ItemServiceError("O endpoint nao foi encontrado.", 404);
 
-    try {
-      const response = await this.repository.deleteItemById({ itemId, endpointId });
-      toast.dismiss(toastId);
-
-      if (response.success) {
-        toast.success("Item do endpoint deletado com sucesso", { duration: 4000 });
-
-        if (actor) {
-          const deletedTitle = (response as any).data?.formattedData?.titulo_identificador;
-          await historyService.record(endpointId, {
-            action: "item_deleted",
-            actor,
-            itemId,
-            summary: deletedTitle ? `Item "${deletedTitle}" excluído` : "Item excluído",
-          });
-        }
-      } else {
-        toast.error("Erro ao deletar o item do endpoint", { duration: 4000 });
-      }
-
-      return response;
-    } catch (error) {
-      toast.dismiss(toastId);
-      toast.error("Erro ao deletar o item do endpoint", { duration: 4000 });
-      return { success: false, error };
-    }
+    return validateItemFields(items, endpoint.campos);
   }
 
-  async createItem({ endpointId, items }: { endpointId: string; items: any[] }, actor?: Actor) {
-    if (!IsStartedfirebaseConfig) return { success: false, error: "Firebase não inicializado" };
-    const result = await this.repository.createItemForEndpoint(endpointId, items, actor);
-
-    if (result.success && actor && (result as any).id) {
-      const title = getTituloIdentificador(items);
-      await historyService.record(endpointId, {
-        action: "item_created",
-        actor,
-        itemId: (result as any).id,
-        summary: title ? `Item "${title}" adicionado` : "Item adicionado",
-      });
+  async deleteItem({ itemId, endpointId }: { itemId: string; endpointId: string }, actor: Actor) {
+    const response = await this.repository.deleteItemById({ itemId, endpointId });
+    if (!response.success) {
+      throw new ItemServiceError(
+        typeof response.error === "string" ? response.error : "Erro ao deletar o item",
+        typeof response.error === "string" ? 404 : 500,
+      );
     }
+
+    const deletedTitle = (response as any).data?.formattedData?.titulo_identificador;
+    await historyService.record(endpointId, {
+      action: "item_deleted",
+      actor,
+      itemId,
+      summary: deletedTitle ? `Item "${deletedTitle}" excluido` : "Item excluido",
+    });
+
+    return { success: true as const };
+  }
+
+  async createItem({ endpointId, items }: { endpointId: string; items: unknown }, actor: Actor) {
+    const validados = await this.validarCampos(endpointId, items);
+
+    const result = await this.repository.createItemForEndpoint(endpointId, validados, actor);
+    if (!result.success) {
+      throw new ItemServiceError(
+        typeof result.error === "string" ? result.error : "Erro ao criar item",
+        typeof result.error === "string" ? 404 : 500,
+      );
+    }
+
+    const title = getTituloIdentificador(validados);
+    await historyService.record(endpointId, {
+      action: "item_created",
+      actor,
+      itemId: result.id,
+      summary: title ? `Item "${title}" adicionado` : "Item adicionado",
+    });
 
     return result;
   }
 
   async getItems(endpointId: string) {
-    if (!IsStartedfirebaseConfig) return { success: false, error: "Firebase não inicializado" };
     return this.repository.getItemsByEndpoint(endpointId);
   }
 
-  async updateItem({ itemId, endpointId, items }: { itemId: string; endpointId: string; items: any[] }, actor?: Actor) {
-    if (!IsStartedfirebaseConfig) return { success: false, error: "Firebase não inicializado" };
-    const result = await this.repository.updateItemForEndpoint({ itemId, endpointId, items }, actor);
+  async updateItem(
+    { itemId, endpointId, items }: { itemId: string; endpointId: string; items: unknown },
+    actor: Actor,
+  ) {
+    const validados = await this.validarCampos(endpointId, items);
 
-    if (result.success && actor) {
-      const title = getTituloIdentificador(items);
-      await historyService.record(endpointId, {
-        action: "item_updated",
-        actor,
-        itemId,
-        summary: title ? `Item "${title}" atualizado` : "Item atualizado",
-      });
+    const result = await this.repository.updateItemForEndpoint(
+      { itemId, endpointId, items: validados },
+      actor,
+    );
+    if (!result.success) {
+      throw new ItemServiceError(
+        typeof result.error === "string" ? result.error : "Erro ao atualizar item",
+        typeof result.error === "string" ? 404 : 500,
+      );
     }
+
+    const title = getTituloIdentificador(validados);
+    await historyService.record(endpointId, {
+      action: "item_updated",
+      actor,
+      itemId,
+      summary: title ? `Item "${title}" atualizado` : "Item atualizado",
+    });
 
     return result;
   }

@@ -13,10 +13,8 @@ import toast from "react-hot-toast";
 import debounce from "lodash.debounce";
 import { optimizeImage } from "@/app/services/optimizeImage";
 import { Button as HeroButton } from "@heroui/react";
-import { endpointService } from "@/backend/endpoint/endpoint.service";
-import { itemService } from "@/backend/item/item.service";
-import { historyService } from "@/backend/history/history.service";
-import { getCurrentActor } from "@/app/utils/getCurrentActor";
+import { adminApi } from "@/app/services/adminApi";
+import { useRequireAuth } from "@/app/hooks/useCurrentUser";
 import { AppHeader } from "@/app/components/app-header";
 import { Card, CardHeader, CardDescription, CardContent, CardTitle } from "@/app/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/app/components/ui/dialog";
@@ -67,12 +65,16 @@ export default function Home() {
     fixedValuesEnabled: boolean;
     cacheTtlSeconds: number;
     accessMode: EndpointAccessMode;
+    /** Ja existe senha gravada? O valor em si nunca volta do servidor. */
+    accessPasswordSet: boolean;
+    /** Nova senha digitada; vazio significa "manter a atual". */
     accessPassword: string;
   }>({
     name: "",
     fixedValuesEnabled: false,
     cacheTtlSeconds: 300,
     accessMode: "public",
+    accessPasswordSet: false,
     accessPassword: "",
   })
   const [deleteTarget, setDeleteTarget] = useState<any>(null)
@@ -83,18 +85,28 @@ export default function Home() {
     setForceUpdate(prev => prev + 1);
   };
 
-  useEffect(()=>{
-    checkAuth().then((isAuthenticated) => {
-      if (!isAuthenticated) { logout(r) } });
-  },[])
+  // Redireciona para o login quando nao existe sessao valida.
+  const { user: authUser, loading: authLoading } = useRequireAuth();
+
+  // Espelha as capacidades do papel (backend/user/user.entity.ts). O servidor decide de
+  // fato; isto so evita oferecer acoes que seriam recusadas com 403.
+  const canWrite = authUser ? authUser.role !== "viewer" : false;
+  const canDelete = canWrite;
+
   useEffect(() => {
-    if(endpointId){ redirectRouter(endpointId); }
-  }, [endpointId]);
-  useEffect(() => {fetchEndPoint(); 
-  }, [endpointId]);
+    if (authLoading || !authUser) return;
+    if (endpointId) redirectRouter(endpointId);
+  }, [endpointId, authLoading, authUser]);
+
+  useEffect(() => {
+    if (authLoading || !authUser) return;
+    fetchEndPoint();
+  }, [endpointId, authLoading, authUser]);
+
   useEffect(() => {
     if (loadingData) { fetchEndItemPoint(); }
   }, [loadingData]);
+
   useEffect(() => {
     const currentEndpoint: any = data[0]
     if (!currentEndpoint) return
@@ -104,42 +116,44 @@ export default function Home() {
       fixedValuesEnabled: currentEndpoint.fixedValuesEnabled ?? false,
       cacheTtlSeconds: currentEndpoint.cacheTtlSeconds ?? 300,
       accessMode: currentEndpoint.accessMode ?? "public",
-      accessPassword: currentEndpoint.accessPassword ?? "",
+      // A senha nunca volta do servidor; o campo serve para digitar uma nova.
+      accessPasswordSet: currentEndpoint.accessPasswordSet === true,
+      accessPassword: "",
     })
   }, [data, endpointId])
 
   const fetchEndPoint = async () => {
-    if (endpointId) {
-      try {
-        const fetch: any = await endpointService.listEndpoints();
-        const objFormated = fetch.data.filter((e: any) => e.title === endpointId);
-        if (objFormated.length > 0) {
-          setdata(objFormated);
-          setLoadingData(true);
-        }
-      } catch (error) {
-        console.error("Erro ao buscar endpoints:", error);
+    if (!endpointId) return;
+    try {
+      const response = await adminApi.endpoints.list();
+      const objFormated = (response?.data || []).filter((e: any) => e.title === endpointId);
+      if (objFormated.length > 0) {
+        setdata(objFormated as any);
+        setLoadingData(true);
       }
+    } catch (error) {
+      console.error("Erro ao buscar endpoints:", error);
     }
   };
-  
+
   const fetchEndItemPoint = async () => {
-    if (endpointId && data.length > 0) {
-      try {
-        const id_endpoint = data[0]['id'];
-        const fetch: any = await itemService.getItems(id_endpoint);
-  
-        if (fetch.data && fetch.data.length > 0) {
-          setdataItem(fetch['data']);
-          setFilteredData(fetch['data']);
-          setLoadingData(true);
-          triggerUpdate();
-        }else{
-          setIsEmpytdata(true)
-        }
-      } catch (error) {
-        console.error("Erro ao buscar itens do endpoint:", error);
+    if (!endpointId || data.length === 0) return;
+    try {
+      const response = await adminApi.items.list(data[0]['id']);
+      const items = response?.data || [];
+
+      if (items.length > 0) {
+        setdataItem(items);
+        setFilteredData(items);
+        setLoadingData(true);
+        triggerUpdate();
+      } else {
+        setdataItem([]);
+        setFilteredData([]);
+        setIsEmpytdata(true);
       }
+    } catch (error) {
+      console.error("Erro ao buscar itens do endpoint:", error);
     }
   };
 
@@ -161,32 +175,23 @@ export default function Home() {
     setOpenModal(true)
   }
 
-  async function refreshData(result:any){
-    if (result.success) {
-      setTimeout(() => {
-        setLoading(false);
-
-        if(!loadingData){
-          if(endpointId){
-            endpointService.listEndpoints().then((e:any)=>{
-              var objFormated = e.data.filter((e:any)=>e.title === endpointId)
-              setdata(objFormated)
-            })
-          }
-        }
-
-      }, 1000);
-      await fetchEndItemPoint()
-      setItemSelected(null)
-      setDeleteTarget(null)
-      setImage(null)
-      setLoadingData(true)
-      setOpenModal(false)
-    } else {
-      setTimeout(() => {
-        setLoading(false);
-      }, 1000);
+  /**
+   * Recarrega a listagem e limpa o estado de edicao apos uma mutacao.
+   * Os chamadores so invocam depois de a operacao ter tido sucesso.
+   */
+  async function refreshData(result: { success: boolean }) {
+    if (!result.success) {
+      setLoading(false)
+      return
     }
+
+    await fetchEndItemPoint()
+    setItemSelected(null)
+    setDeleteTarget(null)
+    setImage(null)
+    setLoadingData(true)
+    setOpenModal(false)
+    setLoading(false)
   }
 
   async function saveData (){
@@ -208,23 +213,27 @@ export default function Home() {
     }
 
     setLoading(true);
-    var dataValue = itemSelected[0]
-    var dataLocal = data.filter((e:any)=>e.title == endpointId)
-    const actor = getCurrentActor()
-    if(!dataValue["id"]){
-    const toastId = toast.loading("Criando item ...",{duration:4000});
-    const result = await itemService.createItem({endpointId: dataLocal[0]['id'],items: dataValue["data"]}, actor ?? undefined)
-      await refreshData(result)
-      toast.success("Item criado com sucesso",{duration:4000});
+    const dataValue = itemSelected[0]
+    const dataLocal: any[] = data.filter((e:any)=>e.title == endpointId)
+    const isNovo = !dataValue["id"]
+    const toastId = toast.loading(isNovo ? "Criando item ..." : "Atualizando item ...", { duration: 4000 });
+
+    try {
+      // A autoria (`createdBy`/`updatedBy`) e derivada da sessao no servidor.
+      if (isNovo) {
+        await adminApi.items.create(dataLocal[0]['id'], dataValue["data"])
+      } else {
+        await adminApi.items.update(dataValue["id_endpoint"], dataValue["id"], dataValue["data"])
+      }
+
       toast.dismiss(toastId)
-    }else{
-    const toastId = toast.loading("Atualizando item ...",{duration:4000});
-    toast.success("Item atualizado com sucesso",{duration:4000});
-      const result = await itemService.updateItem({itemId: dataValue["id"],endpointId: dataValue["id_endpoint"],items: dataValue["data"]}, actor ?? undefined)
-      await refreshData(result)
+      toast.success(isNovo ? "Item criado com sucesso" : "Item atualizado com sucesso", { duration: 4000 });
+      await refreshData({ success: true })
+    } catch (error) {
       toast.dismiss(toastId)
-    
-  }
+      toast.error(error instanceof Error ? error.message : "Erro ao salvar o item", { duration: 4000 });
+      setLoading(false)
+    }
 }
 
 const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
@@ -282,23 +291,42 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
     setLoading(true)
     const target = deleteTarget || itemSelected
     const itemId = target[0]['id']
-    const endpointId = target[0]['id_endpoint']
-    const actor = getCurrentActor()
-    const result = await itemService.deleteItem({itemId, endpointId}, actor ?? undefined)
-    if(dataItem.length == 1 || dataItem.length == 0){
-      setdataItem([])
-     }
-    await refreshData(result)
+    const targetEndpointId = target[0]['id_endpoint']
+
+    // Estes toasts ficavam dentro do itemService; como ele agora roda no servidor,
+    // o feedback precisa ser emitido aqui.
+    const toastId = toast.loading("Deletando item do endpoint...", { duration: 4000 })
+    try {
+      await adminApi.items.remove(targetEndpointId, itemId)
+      toast.dismiss(toastId)
+      toast.success("Item do endpoint deletado com sucesso", { duration: 4000 })
+
+      if (dataItem.length <= 1) setdataItem([])
+      await refreshData({ success: true })
+    } catch (error) {
+      toast.dismiss(toastId)
+      toast.error(error instanceof Error ? error.message : "Erro ao deletar o item do endpoint", { duration: 4000 })
+      setLoading(false)
+    }
   }
 
   async function deleteEndpoint() {
     setLoading(true)
-    const fetch: any = await endpointService.listEndpoints();
-    const objFormated = fetch.data.filter((e: any) => e.title === endpointId);
-    const result = await endpointService.deleteEndpoint(objFormated[0]['id'])
-    await refreshData(result)
-    r.push("/home")
+    const toastId = toast.loading("Deletando endpoint...", { duration: 4000 })
+    try {
+      const currentEndpoint: any = data[0]
+      if (!currentEndpoint?.id) throw new Error("Endpoint nao encontrado")
 
+      await adminApi.endpoints.remove(currentEndpoint.id)
+      toast.dismiss(toastId)
+      toast.success("Endpoint deletado com sucesso", { duration: 4000 })
+      r.push("/home")
+    } catch (error) {
+      toast.dismiss(toastId)
+      toast.error(error instanceof Error ? error.message : "Erro ao deletar o endpoint", { duration: 4000 })
+      setLoading(false)
+      setOpenModal(false)
+    }
    }
 
 
@@ -396,7 +424,9 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
       toast.error("Informe um TTL válido")
       return
     }
-    if (endpointSettings.accessMode === "password" && !endpointSettings.accessPassword.trim()) {
+    // Senha vazia com senha ja configurada = manter a atual.
+    const novaSenha = endpointSettings.accessPassword.trim()
+    if (endpointSettings.accessMode === "password" && !novaSenha && !endpointSettings.accessPasswordSet) {
       toast.error("Informe uma senha para deixar o endpoint privado")
       return
     }
@@ -407,20 +437,15 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
         fixedValuesEnabled: endpointSettings.fixedValuesEnabled,
         cacheTtlSeconds: ttl,
         accessMode: endpointSettings.accessMode,
-        accessPassword: endpointSettings.accessMode === "password" ? endpointSettings.accessPassword.trim() : "",
+        ...(endpointSettings.accessMode === "password" && novaSenha ? { accessPassword: novaSenha } : {}),
         ...(rename ? { title: nextName, router: nextName } : {}),
       }
-      const actor = getCurrentActor()
       const currentName = currentEndpoint.router || currentEndpoint.title || endpointId
       const summary = rename
         ? `Endpoint renomeado de "${currentName}" para "${nextName}"`
         : "Configurações do endpoint atualizadas"
-      const result = await endpointService.updateEndpoint(currentEndpoint.id, payload, actor ?? undefined, summary)
 
-      if (!result.success) {
-        toast.error("Erro ao salvar configurações")
-        return
-      }
+      await adminApi.endpoints.update(currentEndpoint.id, { ...payload, summary })
 
       toast.success(rename ? "Endpoint renomeado com sucesso" : "Configurações salvas")
       setSettingsModalOpen(false)
@@ -431,11 +456,22 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
         return
       }
 
+      const { accessPassword, ...persistido } = payload
       setdata((prev: any) => prev.map((endpoint: any) => (
-        endpoint.id === currentEndpoint.id ? { ...endpoint, ...payload } : endpoint
+        endpoint.id === currentEndpoint.id
+          ? {
+              ...endpoint,
+              ...persistido,
+              accessPasswordSet:
+                endpointSettings.accessMode === "password"
+                  ? !!novaSenha || endpointSettings.accessPasswordSet
+                  : false,
+            }
+          : endpoint
       )))
+      setEndpointSettings((prev) => ({ ...prev, accessPassword: "" }))
     } catch (error) {
-      toast.error("Erro ao salvar configurações")
+      toast.error(error instanceof Error ? error.message : "Erro ao salvar configurações")
     } finally {
       setSettingsLoading(false)
     }
@@ -447,19 +483,15 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
 
     setSettingsLoading(true)
     try {
-      const result = await endpointService.refreshEndpointCache(currentEndpoint.id)
-      if (!result.success) {
-        toast.error("Erro ao atualizar cache")
-        return
-      }
+      const result = await adminApi.endpoints.refreshCache(currentEndpoint.id)
 
-      const cacheRefreshedAt = new Date()
+      const cacheRefreshedAt = new Date(result.cacheRefreshedAt)
       setdata((prev: any) => prev.map((endpoint: any) => (
         endpoint.id === currentEndpoint.id ? { ...endpoint, cacheRefreshedAt } : endpoint
       )))
       toast.success("Cache atualizado")
     } catch (error) {
-      toast.error("Erro ao atualizar cache")
+      toast.error(error instanceof Error ? error.message : "Erro ao atualizar cache")
     } finally {
       setSettingsLoading(false)
     }
@@ -472,7 +504,7 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
 
     setHistoryLoading(true)
     try {
-      const result: any = await historyService.list(currentEndpoint.id)
+      const result = await adminApi.endpoints.history(currentEndpoint.id)
       setHistoryEntries(result?.data || [])
     } catch (error) {
       toast.error("Erro ao carregar histórico")
@@ -517,7 +549,11 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
     headerActions = loading && itemSelected[0]['id'] ? (
       <span className="loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin" />
     ) : itemSelected[0]['id'] != null ? (
-      <ButtonDropdown actiondelet={() => { setOpenModal(true) }} addItem={() => { createDados() }} isItem={true} />
+      <ButtonDropdown
+        actiondelet={canDelete ? () => { setOpenModal(true) } : undefined}
+        addItem={canWrite ? () => { createDados() } : undefined}
+        isItem={true}
+      />
     ) : null
   } else {
     headerPage = endpointName
@@ -525,7 +561,11 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
     headerActions = !loadingData || loading ? (
       <span className="loader border-4 border-black border-t-transparent rounded-full w-6 h-6 animate-spin" />
     ) : (
-      <ButtonDropdown actiondelet={() => { setOpenModal(true) }} addItem={() => { createDados() }} isItem={false} />
+      <ButtonDropdown
+        actiondelet={canDelete ? () => { setOpenModal(true) } : undefined}
+        addItem={canWrite ? () => { createDados() } : undefined}
+        isItem={false}
+      />
     )
   }
 
@@ -612,10 +652,12 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
                 </div>
               </div>
 
-              <HeroButton color="primary" className="h-12 w-full px-5 smi:w-auto" isLoading={loading} onClick={()=>{createDados()}}>
-                <Plus className="h-4 w-4" />
-                Adicionar dados
-              </HeroButton>
+              {canWrite ? (
+                <HeroButton color="primary" className="h-12 w-full px-5 smi:w-auto" isLoading={loading} onClick={()=>{createDados()}}>
+                  <Plus className="h-4 w-4" />
+                  Adicionar dados
+                </HeroButton>
+              ) : null}
             </div>
 
             <div className="mt-6 flex items-center justify-between border-b border-slate-100 pb-3">
@@ -637,10 +679,12 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
                 <p className="mt-1 max-w-md text-sm text-slate-500">
                   Crie o primeiro registro ou ajuste o termo pesquisado.
                 </p>
-                <HeroButton color="primary" variant="flat" className="mt-5 h-11 w-full smi:w-auto" isLoading={loading} onClick={()=>{createDados()}}>
-                  <Plus className="h-4 w-4" />
-                  Novo registro
-                </HeroButton>
+                {canWrite ? (
+                  <HeroButton color="primary" variant="flat" className="mt-5 h-11 w-full smi:w-auto" isLoading={loading} onClick={()=>{createDados()}}>
+                    <Plus className="h-4 w-4" />
+                    Novo registro
+                  </HeroButton>
+                ) : null}
               </div>
             ) : (
               <div className="mt-5 grid gap-3" key={forceUpdate}>
@@ -897,13 +941,26 @@ function EndpointSettingsDialog({ open, onOpenChange, settings, setSettings, loa
 
                 {settings.accessMode === "password" ? (
                   <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-700">Senha do endpoint</label>
+                    <label className="text-sm font-semibold text-slate-700">
+                      {settings.accessPasswordSet ? "Alterar a senha do endpoint" : "Senha do endpoint"}
+                    </label>
+
+                    {settings.accessPasswordSet ? (
+                      <div className="flex items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2">
+                        <Shield className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />
+                        <p className="text-xs leading-5 text-emerald-900">
+                          Senha configurada. Ela é guardada com hash e não pode mais ser exibida —
+                          deixe o campo vazio para mantê-la, ou digite uma nova para substituir.
+                        </p>
+                      </div>
+                    ) : null}
+
                     <div className="grid gap-2 smi:grid-cols-[1fr_auto]">
                       <input
                         type="text"
                         value={settings.accessPassword}
                         onChange={(event) => setSettings((prev: any) => ({ ...prev, accessPassword: event.target.value }))}
-                        placeholder="Defina uma senha forte"
+                        placeholder={settings.accessPasswordSet ? "Deixe vazio para manter a atual" : "Defina uma senha forte"}
                         className="h-11 w-full rounded-md border border-slate-200 px-3 font-mono text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                       />
                       <HeroButton
@@ -916,6 +973,16 @@ function EndpointSettingsDialog({ open, onOpenChange, settings, setSettings, loa
                         Randomizar
                       </HeroButton>
                     </div>
+
+                    {settings.accessPassword ? (
+                      <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
+                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
+                        <p className="text-xs leading-5 text-amber-900">
+                          Copie esta senha agora: depois de salvar ela não será exibida novamente.
+                        </p>
+                      </div>
+                    ) : null}
+
                     <p className="text-xs leading-5 text-slate-500">
                       Envie a senha no header `x-endpoint-password`.
                     </p>

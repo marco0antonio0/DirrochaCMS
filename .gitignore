@@ -26,7 +26,12 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
-.env*.local
+.env*
+!.env.example
+
+# credenciais do Firebase Admin (service account) - NUNCA versionar
+*adminsdk*.json
+serviceAccount*.json
 
 # vercel
 .vercel

@@ -1,14 +1,12 @@
-import { NextRequest } from "next/server";
-import { endpointController } from "@/backend/endpoint/endpoint.controller";
-import { runApiHandler } from "@/backend/common/next-route-adapter";
+import { handlePublicEndpoint } from "@/backend/endpoint/endpoint.controller";
 
-const handler = (request: NextRequest, context: { params: Promise<{ id: string }> }) => {
-  return runApiHandler(request, context, endpointController.handlePublicEndpoint);
-};
-
-export const GET = handler;
-export const OPTIONS = handler;
-export const PATCH = handler;
-export const DELETE = handler;
-export const POST = handler;
-export const PUT = handler;
+/**
+ * API publica de leitura de um endpoint.
+ *
+ * Antes todos os verbos apontavam para o mesmo handler de leitura, o que fazia um POST
+ * responder com a listagem. Agora apenas leitura e preflight sao expostos; o resto
+ * recebe 405 pelo proprio Next.
+ */
+export const GET = handlePublicEndpoint;
+export const HEAD = handlePublicEndpoint;
+export const OPTIONS = handlePublicEndpoint;

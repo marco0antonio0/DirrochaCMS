@@ -1,0 +1,27 @@
+rules_version = '2';
+
+// ---------------------------------------------------------------------------
+// ESTADO FINAL: deny-all.
+//
+// Nenhum cliente acessa o Firestore diretamente. Todo o acesso a dados acontece no
+// servidor, via Admin SDK (`backend/config/admin.ts`), que IGNORA estas rules por
+// design -- portanto negar tudo aqui nao afeta a aplicacao.
+//
+// Antes desta mudanca as rules precisavam ser permissivas: o SDK client rodava no
+// browser e, como a autenticacao e um JWT proprio (nao Firebase Auth), `request.auth`
+// era sempre null. Na pratica o banco ficava aberto a qualquer um que soubesse o
+// project ID.
+//
+// Se algum dia o acesso direto do browser voltar a ser necessario, sera preciso
+// adotar Firebase Auth e escrever regras baseadas em `request.auth.uid` -- nao
+// reabrir este arquivo.
+//
+// Deploy:  npx firebase deploy --only firestore:rules
+// ---------------------------------------------------------------------------
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

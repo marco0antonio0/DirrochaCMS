@@ -1,9 +1,10 @@
-export interface SessaoPayload {
+export interface SessaoRecord {
+  /** id do documento (`sid`), tambem presente nas claims do token */
+  sid: string;
+  userId: string;
   email: string;
-  token: string;
-}
-
-export interface SessaoRecord extends SessaoPayload {
+  /** SHA-256 do token; o token em si nunca e persistido */
+  tokenHash?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }

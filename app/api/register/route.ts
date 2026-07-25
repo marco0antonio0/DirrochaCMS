@@ -1,7 +1,6 @@
-import { NextRequest } from "next/server";
-import { authController } from "@/backend/auth/auth.controller";
-import { runApiHandler } from "@/backend/common/next-route-adapter";
+import { goneRoute } from "@/backend/common/goneRoute";
 
-export const POST = (request: NextRequest) => {
-  return runApiHandler(request, {}, authController.handleLegacyRegister);
-};
+const handler = goneRoute("POST /api/admin/auth/setup");
+
+export const GET = handler;
+export const POST = handler;

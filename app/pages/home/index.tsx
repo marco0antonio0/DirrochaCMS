@@ -22,10 +22,9 @@ import { Alert, AlertDescription } from "@/app/components/ui/alert"
 import { Separator } from "@/app/components/ui/separator"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/app/components/ui/dropdown-menu"
 import debounce from "lodash.debounce"
-import Cookies from "js-cookie"
-import axios from "axios"
 import { logout as handleLogout } from "@/app/services/logout"
-import { endpointService } from "@/backend/endpoint/endpoint.service"
+import { adminApi } from "@/app/services/adminApi"
+import { useRequireAuth } from "@/app/hooks/useCurrentUser"
 import { ScrollArea } from "@/app/components/ui/scroll-area"
 import ButtonDropdown from "@/app/components/dropButtonMenu"
 
@@ -38,51 +37,28 @@ export default function Home() {
 
   const router = useRouter()
 
-  useEffect(() => {
-    async function checkAuth() {
-      const token = Cookies.get("token")
-    
-      if (!token) {
-        return false
-      }
-    
-      try {
-        await axios.get("/api/verifyToken", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        return true
-      } catch (error) {
-        return false
-      }
-    }
-
-    checkAuth().then((isAuthenticated) => {
-      if (!isAuthenticated) {
-        handleLogout(router)
-      }
-    })
-  }, [])
+  // Redireciona para o login quando nao existe sessao valida.
+  const { user, loading: authLoading } = useRequireAuth()
 
   useEffect(() => {
+    if (authLoading || !user) return
+
     setLoading(true)
-    endpointService.listEndpoints()
-      .then((response: any) => {
-        if (response.data.length === 0) {
+    adminApi.endpoints
+      .list()
+      .then((response) => {
+        const endpoints = response?.data || []
+        if (endpoints.length === 0) {
           setIsEmptyData(true)
         } else {
-          setData(response.data)
-          setFilteredData(response.data)
+          setData(endpoints)
+          setFilteredData(endpoints)
           setIsEmptyData(false)
         }
-        setLoading(false)
       })
-      .catch(() => {
-        setIsEmptyData(true)
-        setLoading(false)
-      })
-  }, [])
+      .catch(() => setIsEmptyData(true))
+      .finally(() => setLoading(false))
+  }, [authLoading, user])
 
   const handleSearch = useCallback(
     debounce((value: string) => {

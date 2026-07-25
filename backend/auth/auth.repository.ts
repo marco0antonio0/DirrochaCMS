@@ -1,40 +1,48 @@
-import { db, IsStartedfirebaseConfig } from "@/backend/config/config";
+import "server-only";
+import { adminDb } from "@/backend/config/admin";
 import { AUTH_COLLECTIONS } from "@/backend/auth/auth.entity";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+
+/**
+ * Acesso ao administrador legado (`users/default`).
+ *
+ * Existe apenas para migrar o acesso antigo (senha unica compartilhada, identidade
+ * nao verificada) para o modelo por usuario em `users_collections`. Depois que
+ * `migratedAt` esta marcado, este documento deixa de ser caminho de autenticacao.
+ */
+
+const legacyDocRef = () =>
+  adminDb.collection(AUTH_COLLECTIONS.legacyUsers).doc(AUTH_COLLECTIONS.legacyDefaultUser);
+
+export interface LegacyUser {
+  name: string;
+  password: string;
+  migratedAt?: unknown;
+}
 
 export class AuthRepository {
-  async getLegacyUser() {
-    if (!IsStartedfirebaseConfig) return null;
-
+  async getLegacyUser(): Promise<LegacyUser | null> {
     try {
-      const docRef = doc(db, AUTH_COLLECTIONS.legacyUsers, AUTH_COLLECTIONS.legacyDefaultUser);
-      const docSnap = await getDoc(docRef);
-
-      if (!docSnap.exists()) {
-        return null;
-      }
-
-      return docSnap.data();
+      const doc = await legacyDocRef().get();
+      if (!doc.exists) return null;
+      return doc.data() as LegacyUser;
     } catch (error) {
-      console.error("Erro ao obter dados:", error);
+      console.error("Erro ao obter usuario legado:", error);
       return null;
     }
   }
 
-  async saveLegacyUser(data: { name: string; password: string }) {
-    if (!IsStartedfirebaseConfig) return null;
+  /** O acesso legado ainda pode autenticar? */
+  async isLegacyLoginAvailable() {
+    const legacy = await this.getLegacyUser();
+    return !!legacy && !legacy.migratedAt;
+  }
 
-    try {
-      const docRef = doc(db, AUTH_COLLECTIONS.legacyUsers, AUTH_COLLECTIONS.legacyDefaultUser);
-      await setDoc(docRef, data);
-      return { success: true };
-    } catch (error) {
-      console.error("Erro ao salvar dados:", error);
-      return { success: false, error };
-    }
+  async markLegacyAsMigrated(targetUserId: string) {
+    await legacyDocRef().set(
+      { migratedAt: new Date(), migratedToUserId: targetUserId },
+      { merge: true },
+    );
   }
 }
 
 export const authRepository = new AuthRepository();
-export const getData = () => authRepository.getLegacyUser();
-export const saveData = (data: { name: string; password: string }) => authRepository.saveLegacyUser(data);

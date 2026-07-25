@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { FooterComponent } from "@/app/components/footer";
+import { CurrentUserProvider } from "@/app/hooks/useCurrentUser";
 import "@/app/styles/globals.css";
 import { Toaster } from "react-hot-toast";
 
@@ -32,7 +33,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             },
           }}
         />
-        <div className="flex-1">{children}</div>
+        <CurrentUserProvider>
+          <div className="flex-1">{children}</div>
+        </CurrentUserProvider>
         <FooterComponent />
       </body>
     </html>

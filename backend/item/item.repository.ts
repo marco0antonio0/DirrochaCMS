@@ -1,103 +1,107 @@
-import { db } from "@/backend/config/config";
+import "server-only";
+import { adminDb } from "@/backend/config/admin";
 import { ENDPOINT_COLLECTION } from "@/backend/endpoint/endpoint.entity";
 import { ITEM_SUBCOLLECTION } from "@/backend/item/item.entity";
 import type { Actor } from "@/backend/common/actor";
-import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, updateDoc, where } from "firebase/firestore";
+
+const itemsRef = (endpointId: string) =>
+  adminDb.collection(ENDPOINT_COLLECTION).doc(endpointId).collection(ITEM_SUBCOLLECTION);
 
 export class ItemRepository {
   async deleteItemById({ itemId, endpointId }: { itemId: string; endpointId: string }) {
     try {
-      const itemRef = doc(db, `${ENDPOINT_COLLECTION}/${endpointId}/${ITEM_SUBCOLLECTION}`, itemId);
-      const itemSnap = await getDoc(itemRef);
+      const ref = itemsRef(endpointId).doc(itemId);
+      const snap = await ref.get();
 
-      if (!itemSnap.exists()) {
-        return { success: false, error: "O item não foi encontrado." };
+      if (!snap.exists) {
+        return { success: false as const, error: "O item nao foi encontrado." };
       }
 
-      const deletedItem = { id: itemSnap.id, ...itemSnap.data() };
-      await deleteDoc(itemRef);
-      return { success: true, data: deletedItem };
+      // Captura antes de apagar, para o historico poder descrever o que saiu.
+      const deletedItem = { id: snap.id, ...snap.data() };
+      await ref.delete();
+
+      return { success: true as const, data: deletedItem };
     } catch (error) {
       console.error("Erro ao deletar o item:", error);
-      return { success: false, error };
+      return { success: false as const, error };
     }
   }
 
   async createItemForEndpoint(endpointId: string, items: any[], actor?: Actor) {
     try {
-      const endpointRef = doc(db, ENDPOINT_COLLECTION, endpointId);
-      const endpointSnap = await getDoc(endpointRef);
-
-      if (!endpointSnap.exists()) {
-        return { success: false, error: "O endpoint não foi encontrado." };
+      const endpointSnap = await adminDb.collection(ENDPOINT_COLLECTION).doc(endpointId).get();
+      if (!endpointSnap.exists) {
+        return { success: false as const, error: "O endpoint nao foi encontrado." };
       }
 
-      const formattedData = this.toFormattedData(items);
-      const itemRef = collection(db, `${ENDPOINT_COLLECTION}/${endpointId}/${ITEM_SUBCOLLECTION}`);
-      const docRef = await addDoc(itemRef, {
+      const docRef = await itemsRef(endpointId).add({
         endpointId,
-        formattedData,
+        formattedData: this.toFormattedData(items),
         ...(actor ? { createdBy: actor } : {}),
         createdAt: new Date(),
       });
 
-      return { success: true, id: docRef.id };
+      return { success: true as const, id: docRef.id };
     } catch (error) {
       console.error("Erro ao criar novo item no endpoint:", error);
-      return { success: false, error };
+      return { success: false as const, error };
     }
   }
 
   async getItemsByEndpoint(endpointId: string) {
     try {
-      const itemsRef = collection(db, `${ENDPOINT_COLLECTION}/${endpointId}/${ITEM_SUBCOLLECTION}`);
-      const itemsQuery = query(itemsRef, where("endpointId", "==", endpointId));
-      const querySnapshot = await getDocs(itemsQuery);
-      const items = querySnapshot.docs.map((document) => ({
-        id: document.id,
-        ...document.data(),
-      }));
-
-      return { success: true, data: items };
+      const snapshot = await itemsRef(endpointId).get();
+      return {
+        success: true as const,
+        data: snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
+      };
     } catch (error) {
       console.error("Erro ao buscar itens do endpoint:", error);
-      return { success: false, error };
+      return { success: false as const, error, data: [] as any[] };
     }
   }
 
-  async updateItemForEndpoint({ itemId, endpointId, items }: { itemId: string; endpointId: string; items: any[] }, actor?: Actor) {
+  async updateItemForEndpoint(
+    { itemId, endpointId, items }: { itemId: string; endpointId: string; items: any[] },
+    actor?: Actor,
+  ) {
     try {
-      const itemRef = doc(db, `${ENDPOINT_COLLECTION}/${endpointId}/${ITEM_SUBCOLLECTION}`, itemId);
-      const itemSnap = await getDoc(itemRef);
+      const ref = itemsRef(endpointId).doc(itemId);
+      const snap = await ref.get();
 
-      if (!itemSnap.exists()) {
-        return { success: false, error: "O item não foi encontrado." };
+      if (!snap.exists) {
+        return { success: false as const, error: "O item nao foi encontrado." };
       }
 
-      const existingData = itemSnap.data()?.formattedData || {};
-      const formattedData = {
-        ...existingData,
-        ...this.toFormattedData(items),
-      };
+      const existingData = snap.data()?.formattedData || {};
 
-      await updateDoc(itemRef, {
-        formattedData,
+      await ref.update({
+        formattedData: { ...existingData, ...this.toFormattedData(items) },
         ...(actor ? { updatedBy: actor } : {}),
         updatedAt: new Date(),
       });
 
-      return { success: true };
+      return { success: true as const };
     } catch (error) {
       console.error("Erro ao atualizar item:", error);
-      return { success: false, error };
+      return { success: false as const, error };
     }
   }
 
-  private toFormattedData(items: any[]) {
-    return items.reduce<Record<string, unknown>>((acc, item) => {
-      acc[item.title] = item.value;
-      return acc;
-    }, {});
+  /**
+   * Os nomes de campo ja foram validados contra o schema em `itemValidation.ts`. A
+   * blindagem aqui e defesa em profundidade: `Object.create(null)` nao tem prototipo,
+   * portanto uma chave como `__proto__` viraria uma propriedade comum em vez de
+   * alterar o objeto silenciosamente.
+   */
+  private toFormattedData(items: Array<{ title: string; value: unknown }>) {
+    const destino = Object.create(null) as Record<string, unknown>;
+    for (const item of items) {
+      destino[item.title] = item.value;
+    }
+    // Volta a ser um objeto comum para o serializador do Firestore.
+    return { ...destino };
   }
 }
 

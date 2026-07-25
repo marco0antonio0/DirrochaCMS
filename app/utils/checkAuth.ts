@@ -1,18 +1,16 @@
-import axios from "axios";
-import Cookies from "js-cookie";
+import { adminApi } from "@/app/services/adminApi";
 
+/**
+ * Existe sessao valida?
+ *
+ * O cookie e HttpOnly, portanto nao ha como inspecionar o token no browser: a resposta
+ * vem do servidor, que verifica assinatura, revogacao e se a conta esta ativa.
+ */
 export async function checkAuth() {
-    const token = Cookies.get("token");
-    if (!token) { return false; }
-  
-    try {
-      const response = await axios.get("/api/verifyToken", {
-        headers: {
-          Authorization: `Bearer ${token}`, 
-        },
-      });
-      return true;
-    } catch (error) {
-      return false;
-    }
+  try {
+    await adminApi.auth.me();
+    return true;
+  } catch {
+    return false;
   }
+}

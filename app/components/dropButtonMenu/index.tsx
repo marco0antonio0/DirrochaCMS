@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   Dropdown,
   DropdownTrigger,
@@ -10,8 +10,8 @@ import {
   Button,
 } from "@heroui/react";
 import { FileText, Home, LogOut, Plus, Settings, Trash2 } from "lucide-react";
-import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
+import { useCurrentUser } from "@/app/hooks/useCurrentUser";
 
 type ButtonDropdownProps = {
   actiondelet?: () => void;
@@ -22,20 +22,6 @@ type ButtonDropdownProps = {
   onSettings?: () => void;
   onDocs?: () => void;
   onLogout?: () => void;
-};
-
-const getUserFromToken = () => {
-  try {
-    const token = Cookies.get("token");
-    const payload = token?.split(".")[1];
-    if (!payload) return null;
-
-    const normalizedPayload = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const decodedPayload = JSON.parse(window.atob(normalizedPayload));
-    return decodedPayload?.name || decodedPayload?.email || null;
-  } catch (error) {
-    return null;
-  }
 };
 
 export default function ButtonDropdown({
@@ -49,14 +35,14 @@ export default function ButtonDropdown({
   onLogout,
 }: ButtonDropdownProps) {
   const router = useRouter();
-  const [userName, setUserName] = useState<string | null>(null);
 
-  useEffect(() => {
-    setUserName(getUserFromToken());
-  }, []);
+  // O cookie de sessao e HttpOnly: a identidade vem de /api/admin/auth/me, nao de um
+  // decode do JWT no browser (que era, alem de invisivel agora, nao verificado).
+  const { user } = useCurrentUser();
+  const userName = user?.name?.trim() || user?.email || null;
 
   const userInitial = useMemo(() => {
-    const value = userName?.trim() || "Dirrocha";
+    const value = userName || "Dirrocha";
     return value.charAt(0).toUpperCase();
   }, [userName]);
 

@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Eye, EyeOff, Shield, Zap, Database } from "lucide-react"
 import { Button } from "@/app/components/ui/button"
@@ -10,37 +10,21 @@ import { Input } from "@/app/components/ui/input"
 import { Label } from "@/app/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card"
 import { Alert, AlertDescription } from "@/app/components/ui/alert"
-import { Textarea } from "@/app/components/ui/textarea"
 import toast from "react-hot-toast"
-import { getData } from "@/backend/auth/auth.repository";
-import axios from "axios";
-import Cookies from "js-cookie";
+import { adminApi, ApiError } from "@/app/services/adminApi"
+import { checkAuth } from "@/app/utils/checkAuth"
+import { useCurrentUser } from "@/app/hooks/useCurrentUser"
+import { AltchaCaptcha } from "@/app/components/altcha-captcha"
 
 export default function LoginPage() {
   const [isFirstAccess, setIsFirstAccess] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [copied, setCopied] = useState(false)
-  const textAreaRef = useRef<HTMLTextAreaElement>(null)
-  const router = useRouter()
-  async function checkAuth() {
-    const token = Cookies.get("token");
-    if (!token) {
-      return false;
-    }
-  
-    try {
-      const response = await axios.get("/api/verifyToken", {
-        headers: {
-          Authorization: `Bearer ${token}`, 
-        },
-      });
-  
-      return response;
-    } catch (error) {
-      return false;
-    }
-  }
+  const [altchaPayload, setAltchaPayload] = useState("")
+  const [altchaResetKey, setAltchaResetKey] = useState(0)
+  const r = useRouter()
+  const { refresh } = useCurrentUser()
+
   const [credentials, setCredentials] = useState({
     name: "",
     password: "",
@@ -51,31 +35,25 @@ export default function LoginPage() {
     name: false,
     password: false,
     confirmPassword: false,
+    captcha: false,
     unauthorized: false,
     unauthorized_firebase: false,
   })
 
-  const envText = `NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
-NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
-NEXT_PUBLIC_ENV=development
-SECRET_KEY=your_secret_key`
-const r = useRouter()
-useEffect(()=>{
-  checkAuth().then((isAuthenticated) => {
-    if (isAuthenticated) {
-      r.push("/home")
-    }
-  });
-}, [])
-useEffect(() => {
-  getData().then((data) => {
-    setIsFirstAccess(!(data != null) ? true : false);
-  });
-}, []);
+  useEffect(() => {
+    checkAuth().then((isAuthenticated) => {
+      if (isAuthenticated) r.push("/home")
+    })
+  }, [r])
+
+  // O servidor decide se e o primeiro acesso; antes o browser lia `users/default`
+  // direto do Firestore para descobrir isso.
+  useEffect(() => {
+    adminApi.auth
+      .setupState()
+      .then((state) => setIsFirstAccess(state.needsSetup))
+      .catch(() => setIsFirstAccess(false))
+  }, [])
 
   const handleCredentialChange = (field: string, value: string) => {
     setCredentials((prev) => ({ ...prev, [field]: value }))
@@ -92,6 +70,7 @@ useEffect(() => {
       name: credentials.name.trim() === "",
       password: credentials.password.trim() === "",
       confirmPassword: isFirstAccess ? credentials.confirmPassword.trim() === "" : false,
+      captcha: !altchaPayload,
       unauthorized: false,
       unauthorized_firebase: false,
     }
@@ -109,70 +88,59 @@ useEffect(() => {
   }
 
   const handleSubmit = async () => {
-    if (!validateFields()) return;
-  
-    setLoading(true);
+    if (!validateFields()) return
+
+    setLoading(true)
     try {
       if (isFirstAccess) {
-        const responseRegister = await axios.post("/api/register", {
+        await adminApi.auth.createFirstAdmin({
           name: credentials.name,
+          email: credentials.name,
           password: credentials.password,
-        });
-        if (responseRegister.status === 200){
-          Cookies.set("token", responseRegister.data.token, { expires: 1 });
-          localStorage.setItem("cms_configured", "true");
-  
-          toast.success("Conta criada com sucesso", { duration: 4000 });
-          toast.success("Seja bem-vindo(a)", { duration: 4000 });
-  
-          setTimeout(() => {
-            window.location.href = "/home";
-          }, 0);
-        } else {
-          toast.error("Erro ao criar conta");
-        }
-  
+          altcha: altchaPayload,
+        })
+        toast.success("Conta criada com sucesso", { duration: 4000 })
       } else {
-        const response = await axios.post("/api/login", {
-          name: credentials.name,
+        const result = await adminApi.auth.login({
+          email: credentials.name,
           password: credentials.password,
-        });
-  
-        if (response.status === 200 && response.data.token) {
-          Cookies.set("token", response.data.token, { expires: 1 });
-          toast.success("Login realizado com sucesso!");
-          window.location.href = "/home";
+          altcha: altchaPayload,
+        })
+
+        // O acesso legado (senha única compartilhada) acabou de ser convertido numa
+        // conta real — vale avisar, porque o e-mail passa a ser o identificador.
+        if (result.migratedTo) {
+          toast.success(`Seu login agora é ${result.migratedTo} — a senha continua a mesma.`, {
+            duration: 8000,
+          })
         } else {
-          toast.error("Falha na autenticação");
+          toast.success("Login realizado com sucesso!")
         }
       }
-    } catch (error: any) {
-      if (error.response?.status === 401) {
-        toast.error("Usuário ou senha incorretos");
-        setErrors((prev) => ({ ...prev, unauthorized: true }));
+
+      // O cookie de sessão é definido pelo servidor; só precisamos recarregar a identidade.
+      await refresh()
+      r.push("/home")
+    } catch (error) {
+      setAltchaPayload("")
+      setAltchaResetKey((key) => key + 1)
+      const status = error instanceof ApiError ? error.status : 0
+
+      if (status === 401 || status === 403) {
+        toast.error(error instanceof Error ? error.message : "Usuário ou senha incorretos")
+        setErrors((prev) => ({ ...prev, unauthorized: true }))
       } else {
-        toast.error("Erro ao autenticar");
+        toast.error(error instanceof Error ? error.message : "Erro ao autenticar")
       }
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
-  
+  }
+
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       handleSubmit()
-    }
-  }
-
-  const copyEnvConfig = () => {
-    if (textAreaRef.current) {
-      textAreaRef.current.select()
-      navigator.clipboard.writeText(envText).then(() => {
-        setCopied(true)
-        toast.success("Environment configuration copied!")
-        setTimeout(() => setCopied(false), 2000)
-      })
     }
   }
 
@@ -230,43 +198,19 @@ useEffect(() => {
                   {isFirstAccess ? "Set up your DirrochaCMS instance" : "Sign in to your account to continue"}
                 </CardDescription>
               </div>
-              {!process.env.NEXT_PUBLIC_ENV && (
-                <div className="flex justify-center mt-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsFirstAccess(!isFirstAccess)}
-                    className="h-auto whitespace-normal text-center text-blue-600 hover:text-blue-700"
-                  >
-                    {isFirstAccess ? "Already have an account? Sign in" : "First time? Create account"}
-                  </Button>
-                </div>
-              )}
             </CardHeader>
 
             <CardContent className="space-y-5 p-4 pt-0 smi:space-y-6 smi:p-6 smi:pt-0">
-              {!process.env.NEXT_PUBLIC_ENV && isFirstAccess ? (
-                <div className="space-y-4">
-                  <Alert>
-                    <Shield className="h-4 w-4" />
-                    <AlertDescription>Configure your Firebase credentials to get started</AlertDescription>
-                  </Alert>
+              {isFirstAccess && (
+                <Alert>
+                  <Shield className="h-4 w-4" />
+                  <AlertDescription>
+                    Nenhuma conta existe ainda. A primeira conta criada terá permissão para
+                    gerenciar as demais.
+                  </AlertDescription>
+                </Alert>
+              )}
 
-                  <div className="space-y-3">
-                    <Label htmlFor="env-config">Environment Configuration</Label>
-                    <Textarea
-                      ref={textAreaRef}
-                      value={envText}
-                      readOnly
-                      className="h-32 font-mono text-xs smi:text-sm"
-                      id="env-config"
-                    />
-                    <Button onClick={copyEnvConfig} className="w-full" disabled={loading}>
-                      {copied ? "Copied!" : "Copy Configuration"}
-                    </Button>
-                  </div>
-                </div>
-              ) : (
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address</Label>
@@ -349,6 +293,17 @@ useEffect(() => {
                     </Alert>
                   )}
 
+                  <div className="space-y-2">
+                    <Label>Verificação</Label>
+                    <AltchaCaptcha value={altchaPayload} resetKey={altchaResetKey} onChange={(value) => {
+                      setAltchaPayload(value)
+                      setErrors((prev) => ({ ...prev, captcha: false }))
+                    }} />
+                    {errors.captcha && (
+                      <p className="text-sm text-red-600">Confirme a verificação anti-bot para continuar.</p>
+                    )}
+                  </div>
+
                   <Button onClick={handleSubmit} className="h-12 w-full text-base font-medium" disabled={loading}>
                     {loading ? (
                       <div className="flex items-center space-x-2">
@@ -362,7 +317,6 @@ useEffect(() => {
                     )}
                   </Button>
                 </div>
-              )}
             </CardContent>
           </Card>
         </div>

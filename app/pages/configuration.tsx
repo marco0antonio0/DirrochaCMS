@@ -22,8 +22,6 @@ import {
   Users,
   Wand2,
 } from "lucide-react"
-import Cookies from "js-cookie"
-import axios from "axios"
 import toast from "react-hot-toast"
 import { AppHeader } from "@/app/components/app-header"
 import ButtonDropdown from "@/app/components/dropButtonMenu"
@@ -56,9 +54,8 @@ import {
 } from "@/app/components/ui/alert-dialog"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/app/components/ui/tooltip"
 import { logout } from "@/app/services/logout"
-import { getCurrentActor } from "@/app/utils/getCurrentActor"
-import { endpointService } from "@/backend/endpoint/endpoint.service"
-import { User } from "@/backend/user/user.service"
+import { adminApi } from "@/app/services/adminApi"
+import { useCurrentUser } from "@/app/hooks/useCurrentUser"
 
 type FieldType = "string" | "number" | "date" | "img"
 
@@ -68,15 +65,41 @@ interface EndpointFieldSchema {
   mult: boolean
 }
 
+type UserRole = "admin" | "editor" | "viewer"
+
 interface ManagedUser {
   id: string
   name: string
   email: string
   disabled?: boolean
+  role: UserRole
   canManageUsers?: boolean
 }
 
-const hasAccountsAccess = (user?: { canManageUsers?: boolean } | null) => user?.canManageUsers !== false
+/** Rótulos e descrições espelham `backend/user/user.entity.ts`. */
+const ROLE_OPTIONS: Array<{ value: UserRole; label: string; description: string }> = [
+  { value: "admin", label: "Administrador", description: "Acesso total, incluindo gerenciar contas." },
+  { value: "editor", label: "Editor", description: "Cria, edita e exclui conteúdo. Não gerencia contas." },
+  { value: "viewer", label: "Leitor", description: "Somente leitura. Não altera nada." },
+]
+
+const ROLE_LABELS: Record<UserRole, string> = {
+  admin: "Administrador",
+  editor: "Editor",
+  viewer: "Leitor",
+}
+
+const ROLE_BADGE: Record<UserRole, string> = {
+  admin: "bg-indigo-100 text-indigo-700 ring-indigo-200",
+  editor: "bg-blue-100 text-blue-700 ring-blue-200",
+  viewer: "bg-slate-100 text-slate-600 ring-slate-200",
+}
+
+/**
+ * Espelha a regra do servidor: quem gerencia contas é apenas o papel `admin`.
+ * A UI não deve prometer o que o guard vai negar.
+ */
+const hasAccountsAccess = (user?: { role?: UserRole } | null) => user?.role === "admin"
 
 function IconActionButton({
   label,
@@ -161,52 +184,35 @@ export default function ConfigurationPage() {
   const [users, setUsers] = useState<ManagedUser[]>([])
   const [userSearch, setUserSearch] = useState("")
   const [editingUserId, setEditingUserId] = useState("")
-  const [userForm, setUserForm] = useState({ name: "", email: "", password: "", canManageUsers: false })
+  const [userForm, setUserForm] = useState<{ name: string; email: string; password: string; role: UserRole }>(
+    { name: "", email: "", password: "", role: "editor" },
+  )
   const [userDialogOpen, setUserDialogOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<ManagedUser | null>(null)
-  const [currentUserAccess, setCurrentUserAccess] = useState(false)
+
+  // A identidade vem de /api/admin/auth/me (cookie HttpOnly), nao mais de um decode
+  // do JWT no browser. Isto controla apenas a UI: o guard do servidor decide de fato.
+  const { user: currentUser, loading: currentUserLoading } = useCurrentUser()
+  const currentUserAccess = hasAccountsAccess(currentUser)
+  // `viewer` é somente leitura: esconder a ação evita prometer o que o guard vai negar.
+  const canWrite = currentUser ? currentUser.role !== "viewer" : false
 
   useEffect(() => {
-    async function checkAuth() {
-      const token = Cookies.get("token")
-      if (!token) return false
-
-      try {
-        await axios.get("/api/verifyToken", {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        return true
-      } catch (error) {
-        return false
-      }
+    if (currentUserLoading) return
+    if (!currentUser) {
+      logout(router)
+      return
     }
-
-    async function loadOwnAccess() {
-      try {
-        const actor = getCurrentActor()
-        if (!actor) return
-
-        const record: any = await User.getUserByEmail(actor.email)
-        setCurrentUserAccess(hasAccountsAccess(record))
-      } catch (error) {
-        setCurrentUserAccess(false)
-      }
-    }
-
-    checkAuth().then((isAuthenticated) => {
-      if (!isAuthenticated) logout(router)
-    })
-    loadOwnAccess()
-    fetchUsers()
-  }, [])
+    if (currentUserAccess) fetchUsers()
+  }, [currentUserLoading, currentUser, currentUserAccess, router])
 
   const fetchUsers = async () => {
     setUsersLoading(true)
     try {
-      const response: any = await User.listUsers()
+      const response = await adminApi.users.list()
       setUsers(response?.data || [])
     } catch (error) {
-      toast.error("Erro ao carregar usuários")
+      toast.error(error instanceof Error ? error.message : "Erro ao carregar usuários")
     } finally {
       setUsersLoading(false)
     }
@@ -306,17 +312,12 @@ export default function ConfigurationPage() {
 
     setLoading(true)
     try {
-      const actor = getCurrentActor()
-      const result = await endpointService.addEndpoint(payload, actor ?? undefined)
-      if (!result?.success) {
-        toast.error("Erro ao criar endpoint")
-        return
-      }
-
+      // A autoria (`createdBy`) e derivada da sessao no servidor, nao enviada pelo client.
+      await adminApi.endpoints.create(payload)
       toast.success("Endpoint criado com sucesso")
       router.push("/home")
     } catch (error) {
-      toast.error("Erro ao criar endpoint")
+      toast.error(error instanceof Error ? error.message : "Erro ao criar endpoint")
     } finally {
       setLoading(false)
     }
@@ -324,7 +325,7 @@ export default function ConfigurationPage() {
 
   const resetUserForm = () => {
     setEditingUserId("")
-    setUserForm({ name: "", email: "", password: "", canManageUsers: false })
+    setUserForm({ name: "", email: "", password: "", role: "editor" })
   }
 
   const openCreateUserDialog = () => {
@@ -362,20 +363,23 @@ export default function ConfigurationPage() {
 
     setUsersLoading(true)
     try {
-      const result = editingUserId
-        ? await User.updateUser(editingUserId, { name, email, password, canManageUsers: userForm.canManageUsers })
-        : await User.createUser({ name, email, password, canManageUsers: userForm.canManageUsers })
-
-      if (!result?.success) {
-        toast.error("error" in result ? String(result.error) : "Erro ao salvar usuário")
-        return
+      if (editingUserId) {
+        await adminApi.users.update(editingUserId, {
+          name,
+          email,
+          role: userForm.role,
+          // Senha vazia = manter a atual.
+          ...(password ? { password } : {}),
+        })
+      } else {
+        await adminApi.users.create({ name, email, password, role: userForm.role })
       }
 
       toast.success(editingUserId ? "Usuário atualizado" : "Usuário criado")
       closeUserDialog()
       await fetchUsers()
     } catch (error) {
-      toast.error("Erro ao salvar usuário")
+      toast.error(error instanceof Error ? error.message : "Erro ao salvar usuário")
     } finally {
       setUsersLoading(false)
     }
@@ -383,36 +387,39 @@ export default function ConfigurationPage() {
 
   const handleEditUser = (user: ManagedUser) => {
     setEditingUserId(user.id)
-    setUserForm({ name: user.name || "", email: user.email || "", password: "", canManageUsers: hasAccountsAccess(user) })
+    setUserForm({ name: user.name || "", email: user.email || "", password: "", role: user.role ?? "editor" })
   }
 
   const handleToggleUser = async (user: ManagedUser) => {
     setUsersLoading(true)
     try {
-      const result = await User.updateUser(user.id, { disabled: !user.disabled })
-      if (!result?.success) {
-        toast.error("Erro ao alterar status")
-        return
-      }
+      await adminApi.users.update(user.id, { disabled: !user.disabled })
       setUsers((prev) => prev.map((item) => (item.id === user.id ? { ...item, disabled: !user.disabled } : item)))
       toast.success(user.disabled ? "Usuário ativado" : "Usuário desativado")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao alterar status")
     } finally {
       setUsersLoading(false)
     }
   }
 
+  /** Alterna rapidamente entre Administrador e Editor, direto na linha da lista. */
   const handleTogglePanelAccess = async (user: ManagedUser) => {
-    const nextAccess = !hasAccountsAccess(user)
+    const nextRole: UserRole = user.role === "admin" ? "editor" : "admin"
     setUsersLoading(true)
     try {
-      const result = await User.updateUser(user.id, { canManageUsers: nextAccess })
-      if (!result?.success) {
-        toast.error("Erro ao alterar permissão")
-        return
-      }
-      setUsers((prev) => prev.map((item) => (item.id === user.id ? { ...item, canManageUsers: nextAccess } : item)))
-      if (editingUserId === user.id) setUserForm((prev) => ({ ...prev, canManageUsers: nextAccess }))
-      toast.success(nextAccess ? "Acesso à aba Contas do painel concedido" : "Acesso à aba Contas do painel revogado")
+      await adminApi.users.update(user.id, { role: nextRole })
+      setUsers((prev) =>
+        prev.map((item) =>
+          item.id === user.id
+            ? { ...item, role: nextRole, canManageUsers: nextRole === "admin" }
+            : item,
+        ),
+      )
+      if (editingUserId === user.id) setUserForm((prev) => ({ ...prev, role: nextRole }))
+      toast.success(`Perfil alterado para ${ROLE_LABELS[nextRole]}`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao alterar permissão")
     } finally {
       setUsersLoading(false)
     }
@@ -422,14 +429,12 @@ export default function ConfigurationPage() {
     if (!deleteTarget) return
     setUsersLoading(true)
     try {
-      const result = await User.deleteUserById(deleteTarget.id)
-      if (!result?.success) {
-        toast.error("Erro ao excluir usuário")
-        return
-      }
+      await adminApi.users.remove(deleteTarget.id)
       setUsers((prev) => prev.filter((item) => item.id !== deleteTarget.id))
       if (editingUserId === deleteTarget.id) closeUserDialog()
       toast.success("Usuário excluído")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao excluir usuário")
     } finally {
       setUsersLoading(false)
       setDeleteTarget(null)
@@ -666,15 +671,25 @@ export default function ConfigurationPage() {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3 rounded-md border border-blue-100 bg-blue-50 p-4 smi:flex-row smi:items-center smi:justify-between">
-                  <p className="text-sm text-blue-800">
-                    {endpointName ? `/api/${endpointName}` : "Informe o nome da rota"} com {builderFields.length} campo{builderFields.length === 1 ? "" : "s"}.
-                  </p>
-                  <Button onClick={handleCreateEndpoint} className="h-12 w-full smi:w-auto" disabled={loading}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    {loading ? "Criando..." : "Criar endpoint"}
-                  </Button>
-                </div>
+                {canWrite ? (
+                  <div className="flex flex-col gap-3 rounded-md border border-blue-100 bg-blue-50 p-4 smi:flex-row smi:items-center smi:justify-between">
+                    <p className="text-sm text-blue-800">
+                      {endpointName ? `/api/${endpointName}` : "Informe o nome da rota"} com {builderFields.length} campo{builderFields.length === 1 ? "" : "s"}.
+                    </p>
+                    <Button onClick={handleCreateEndpoint} className="h-12 w-full smi:w-auto" disabled={loading}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      {loading ? "Criando..." : "Criar endpoint"}
+                    </Button>
+                  </div>
+                ) : (
+                  <Alert>
+                    <Shield className="h-4 w-4" />
+                    <AlertDescription>
+                      Seu perfil é <strong>Leitor</strong>, que tem acesso somente de leitura.
+                      Solicite a um administrador para criar endpoints.
+                    </AlertDescription>
+                  </Alert>
+                )}
               </TabsContent>
 
               {currentUserAccess ? (
@@ -727,12 +742,12 @@ export default function ConfigurationPage() {
                           <div className="flex flex-wrap items-center gap-2">
                             <p className="truncate font-semibold text-slate-900">{user.name || "Sem nome"}</p>
                             {user.disabled ? <Badge variant="destructive">Desativado</Badge> : null}
-                            {hasAccountsAccess(user) ? (
-                              <Badge variant="secondary" className="gap-1">
-                                <Shield className="h-3 w-3" />
-                                Acesso a contas
-                              </Badge>
-                            ) : null}
+                            <span
+                              className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset ${ROLE_BADGE[user.role]}`}
+                            >
+                              <Shield className="h-3 w-3" />
+                              {ROLE_LABELS[user.role]}
+                            </span>
                           </div>
                           <p className="truncate text-sm text-slate-500">{user.email}</p>
                         </div>
@@ -828,20 +843,34 @@ export default function ConfigurationPage() {
             <div className="space-y-2">
               <Label>{editingUserId ? "Nova senha" : "Senha"}</Label>
               <Input type="password" value={userForm.password} onChange={(event) => setUserForm((prev) => ({ ...prev, password: event.target.value }))} />
+              {!editingUserId ? (
+                <p className="text-xs text-slate-500">Mínimo de 10 caracteres. Evite senhas comuns.</p>
+              ) : null}
             </div>
-            <div className="flex items-start justify-between gap-3 rounded-md border border-slate-200 p-3">
-              <div className="flex items-start gap-2">
-                <Shield className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
-                <div>
-                  <p className="text-sm font-medium text-slate-900">Acesso à aba Contas do painel</p>
-                  <p className="mt-0.5 text-xs text-slate-500">Permite que esta conta veja e gerencie outras contas do painel.</p>
-                </div>
-              </div>
-              <Switch
-                className="mt-0.5 shrink-0"
-                checked={userForm.canManageUsers}
-                onCheckedChange={(checked: any) => setUserForm((prev) => ({ ...prev, canManageUsers: checked }))}
-              />
+
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-slate-500" />
+                Perfil de acesso
+              </Label>
+              <Select
+                value={userForm.role}
+                onValueChange={(value) => setUserForm((prev) => ({ ...prev, role: value as UserRole }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o perfil" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROLE_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs leading-5 text-slate-500">
+                {ROLE_OPTIONS.find((option) => option.value === userForm.role)?.description}
+              </p>
             </div>
           </div>
 
