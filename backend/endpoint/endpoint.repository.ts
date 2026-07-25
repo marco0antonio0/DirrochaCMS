@@ -1,10 +1,14 @@
 import { db } from "@/backend/config/config";
 import { ENDPOINT_COLLECTION } from "@/backend/endpoint/endpoint.entity";
 import type { EndpointPayload, EndpointUpdatePayload } from "@/backend/endpoint/endpoint.model";
+import type { Actor } from "@/backend/common/actor";
 import { addDoc, collection, deleteDoc, doc, getDocs, updateDoc } from "firebase/firestore";
 
 export class EndpointRepository {
-  async createEndpoint({ title, router, campos, fixedValuesEnabled, cacheTtlSeconds, accessMode, accessPassword }: EndpointPayload) {
+  async createEndpoint(
+    { title, router, campos, fixedValuesEnabled, cacheTtlSeconds, accessMode, accessPassword }: EndpointPayload,
+    actor?: Actor,
+  ) {
     try {
       const docRef = await addDoc(collection(db, ENDPOINT_COLLECTION), {
         title,
@@ -14,6 +18,7 @@ export class EndpointRepository {
         cacheTtlSeconds: cacheTtlSeconds ?? 300,
         accessMode: accessMode ?? "public",
         accessPassword: accessMode === "password" ? accessPassword || "" : "",
+        ...(actor ? { createdBy: actor } : {}),
         createdAt: new Date(),
       });
 
@@ -51,11 +56,12 @@ export class EndpointRepository {
     }
   }
 
-  async updateEndpointById(endpointId: string, payload: EndpointUpdatePayload) {
+  async updateEndpointById(endpointId: string, payload: EndpointUpdatePayload, actor?: Actor) {
     try {
       const endpointRef = doc(db, ENDPOINT_COLLECTION, endpointId);
       await updateDoc(endpointRef, {
         ...payload,
+        ...(actor ? { updatedBy: actor } : {}),
         updatedAt: new Date(),
       });
 

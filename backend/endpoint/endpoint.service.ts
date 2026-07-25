@@ -1,14 +1,26 @@
 import { IsStartedfirebaseConfig } from "@/backend/config/config";
 import { endpointRepository, EndpointRepository } from "@/backend/endpoint/endpoint.repository";
 import type { EndpointPayload, EndpointUpdatePayload } from "@/backend/endpoint/endpoint.model";
+import type { Actor } from "@/backend/common/actor";
+import { historyService } from "@/backend/history/history.service";
 import toast from "react-hot-toast";
 
 export class EndpointService {
   constructor(private readonly repository: EndpointRepository) {}
 
-  async addEndpoint(payload: EndpointPayload) {
+  async addEndpoint(payload: EndpointPayload, actor?: Actor) {
     if (!IsStartedfirebaseConfig) return { success: false, error: "Firebase não inicializado" };
-    return this.repository.createEndpoint(payload);
+    const result = await this.repository.createEndpoint(payload, actor);
+
+    if (result.success && actor && result.id) {
+      await historyService.record(result.id, {
+        action: "endpoint_created",
+        actor,
+        summary: `Endpoint "${payload.title}" criado`,
+      });
+    }
+
+    return result;
   }
 
   async listEndpoints() {
@@ -38,9 +50,19 @@ export class EndpointService {
     }
   }
 
-  async updateEndpoint(endpointId: string, payload: EndpointUpdatePayload) {
+  async updateEndpoint(endpointId: string, payload: EndpointUpdatePayload, actor?: Actor, summary?: string) {
     if (!IsStartedfirebaseConfig) return { success: false, error: "Firebase não inicializado" };
-    return this.repository.updateEndpointById(endpointId, payload);
+    const result = await this.repository.updateEndpointById(endpointId, payload, actor);
+
+    if (result.success && actor) {
+      await historyService.record(endpointId, {
+        action: "endpoint_updated",
+        actor,
+        summary: summary || "Configurações do endpoint atualizadas",
+      });
+    }
+
+    return result;
   }
 
   async refreshEndpointCache(endpointId: string) {

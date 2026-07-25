@@ -67,8 +67,13 @@ export class EndpointController {
       return res.status(searchResults.statusCode).json(searchResults);
     }
 
-    return res.status(200).json({ data: data.data, statusCode: 200 });
+    return res.status(200).json({ data: data.data.map(this.sanitizeItemForPublic), statusCode: 200 });
   };
+
+  private sanitizeItemForPublic(item: any) {
+    const { createdBy, updatedBy, ...publicItem } = item;
+    return publicItem;
+  }
 
   private searchByTituloIdentificador(data: any, searchTerm: string) {
     if (!data || !data.data || data.data.length === 0) {
@@ -85,7 +90,7 @@ export class EndpointController {
       return { error: "Nenhum resultado encontrado", statusCode: 404 };
     }
 
-    return { data: results, statusCode: 200 };
+    return { data: results.map(this.sanitizeItemForPublic), statusCode: 200 };
   }
 
   private getRequestPassword(req: NextApiRequest) {

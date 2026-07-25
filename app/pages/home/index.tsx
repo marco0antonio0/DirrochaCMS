@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Plus, Search, ExternalLink, Trash2, Eye, Settings, Database, FileText, LogOut, Users } from "lucide-react"
+import { Plus, Search, ExternalLink, Eye, FileText } from "lucide-react"
 import { AppHeader } from "@/app/components/app-header"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
@@ -21,14 +21,11 @@ import { Textarea } from "@/app/components/ui/textarea"
 import { Alert, AlertDescription } from "@/app/components/ui/alert"
 import { Separator } from "@/app/components/ui/separator"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/app/components/ui/dropdown-menu"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs"
 import debounce from "lodash.debounce"
-import toast from "react-hot-toast"
 import Cookies from "js-cookie"
 import axios from "axios"
 import { logout as handleLogout } from "@/app/services/logout"
 import { endpointService } from "@/backend/endpoint/endpoint.service"
-import { User } from "@/backend/user/user.service"
 import { ScrollArea } from "@/app/components/ui/scroll-area"
 import ButtonDropdown from "@/app/components/dropButtonMenu"
 
@@ -37,11 +34,6 @@ export default function Home() {
   const [data, setData] = useState<any>([])
   const [filteredData, setFilteredData] = useState<any>([])
   const [isEmptyData, setIsEmptyData] = useState(false)
-  const [selectedTab, setSelectedTab] = useState("endpoints")
-  const [authSettings, setAuthSettings] = useState({
-    loginEnabled: false,
-    registerEnabled: false,
-  })
   const [showDocs, setShowDocs] = useState(false)
 
   const router = useRouter()
@@ -71,51 +63,26 @@ export default function Home() {
         handleLogout(router)
       }
     })
-
-    async function fetchAuthSettings() {
-      const settings = await User.getAuthVisibility()
-      setAuthSettings(settings)
-    }
-
-    fetchAuthSettings()
   }, [])
 
   useEffect(() => {
     setLoading(true)
-    if (selectedTab === "endpoints") {
-      endpointService.listEndpoints()
-        .then((response: any) => {
-          if (response.data.length === 0) {
-            setIsEmptyData(true)
-          } else {
-            setData(response.data)
-            setFilteredData(response.data)
-            setIsEmptyData(false)
-          }
-          setLoading(false)
-        })
-        .catch(() => {
+    endpointService.listEndpoints()
+      .then((response: any) => {
+        if (response.data.length === 0) {
           setIsEmptyData(true)
-          setLoading(false)
-        })
-    } else if (selectedTab === "users") {
-      User.listUsers()
-        .then((response: any) => {
-          if (response.data.length === 0) {
-            setIsEmptyData(true)
-          } else {
-            setData(response.data)
-            setFilteredData(response.data)
-            setIsEmptyData(false)
-          }
-          setLoading(false)
-        })
-        .catch(() => {
-          setIsEmptyData(true)
-          setLoading(false)
-        })
-    }
-  }, [selectedTab])
+        } else {
+          setData(response.data)
+          setFilteredData(response.data)
+          setIsEmptyData(false)
+        }
+        setLoading(false)
+      })
+      .catch(() => {
+        setIsEmptyData(true)
+        setLoading(false)
+      })
+  }, [])
 
   const handleSearch = useCallback(
     debounce((value: string) => {
@@ -123,31 +90,24 @@ export default function Home() {
         setFilteredData(data)
         return
       }
-      
+
       const filtered = data.filter((item: any) =>
-        (selectedTab === "endpoints" ? item.title : item.email)
-          .toLowerCase()
-          .includes(value.toLowerCase())
+        item.title.toLowerCase().includes(value.toLowerCase())
       )
       setFilteredData(filtered)
     }, 300),
-    [data, selectedTab]
+    [data]
   )
-
-  function handleUserDelete(email: string) {
-    setData((prev: any) => prev.filter((user: any) => user.email !== email))
-    setFilteredData((prev: any) => prev.filter((user: any) => user.email !== email))
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <AppHeader
         actions={
           <ButtonDropdown
-            addItem={() => router.push("/create")}
+            addItem={() => router.push("/configuration")}
             addLabel="Novo endpoint"
             addDescription="Cria uma nova rota de API"
-            onSettings={() => router.push("/create")}
+            onSettings={() => router.push("/configuration")}
             onDocs={() => setShowDocs(true)}
             onLogout={() => handleLogout(router)}
           />
@@ -162,170 +122,90 @@ export default function Home() {
               <div className="min-w-0">
                 <CardTitle className="text-xl smi:text-2xl">Painel de conteúdo</CardTitle>
                 <CardDescription className="mt-1 text-sm smi:text-base">
-                  Gerencie endpoints e usuários em um só lugar.
+                  Gerencie os endpoints do seu painel.
                 </CardDescription>
               </div>
 
-              {selectedTab === "endpoints" && (
-                <Button onClick={() => router.push("/create")} className="w-full smi:w-auto">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Novo endpoint
-                </Button>
-              )}
+              <Button onClick={() => router.push("/configuration")} className="w-full smi:w-auto">
+                <Plus className="w-4 h-4 mr-2" />
+                Novo endpoint
+              </Button>
             </div>
           </CardHeader>
 
           <CardContent className="space-y-6 p-4 pt-0 smi:p-6 smi:pt-0">
-            <Tabs 
-              value={selectedTab} 
-              onValueChange={(value:any) => setSelectedTab(value)}
-              className="w-full"
-            >
-              <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="endpoints" className="flex items-center space-x-2 text-xs smi:text-sm">
-                    <Database className="w-4 h-4" />
-                    <span>Endpoints</span>
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="users"
-                    className="flex items-center space-x-2 text-xs smi:text-sm"
-                    disabled={!authSettings.loginEnabled && !authSettings.registerEnabled}
+            <div className="space-y-2">
+              <Label>Buscar endpoints</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Buscar por nome..."
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="flex justify-center py-12">
+                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : isEmptyData ? (
+              <div className="px-4 py-10 text-center smi:py-12">
+                <Eye className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-base font-medium text-gray-900 smi:text-lg">Nenhum endpoint encontrado</h3>
+                <p className="mx-auto mb-4 mt-2 max-w-md text-sm text-gray-600 smi:text-base">
+                  Um endpoint define um tipo de conteúdo e sua API. Crie o primeiro para começar.
+                </p>
+                <Button onClick={() => router.push("/configuration")} className="w-full smi:w-auto">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo endpoint
+                </Button>
+              </div>
+            ) : (
+              <div className="grid gap-4 mdi:grid-cols-2 lgi:grid-cols-3">
+                {filteredData.map((endpoint: any) => (
+                  <Card
+                    key={endpoint.id}
+                    className="hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-blue-200"
+                    onClick={() => router.push(`/home/${endpoint.router}`)}
                   >
-                    <Users className="w-4 h-4" />
-                    <span>Users</span>
-                  </TabsTrigger>
-                </TabsList>
-
-              <TabsContent value="endpoints" className="space-y-6">
-                <div className="space-y-2">
-                  <Label>Buscar endpoints</Label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input
-                      placeholder="Buscar por nome..."
-                      onChange={(e) => handleSearch(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-
-                {loading ? (
-                  <div className="flex justify-center py-12">
-                    <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                  </div>
-                ) : isEmptyData ? (
-                  <div className="px-4 py-10 text-center smi:py-12">
-                    <Eye className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-base font-medium text-gray-900 smi:text-lg">Nenhum endpoint encontrado</h3>
-                    <p className="mx-auto mb-4 mt-2 max-w-md text-sm text-gray-600 smi:text-base">
-                      Um endpoint define um tipo de conteúdo e sua API. Crie o primeiro para começar.
-                    </p>
-                    <Button onClick={() => router.push("/create")} className="w-full smi:w-auto">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Novo endpoint
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="grid gap-4 mdi:grid-cols-2 lgi:grid-cols-3">
-                    {filteredData.map((endpoint: any) => (
-                      <Card
-                        key={endpoint.id}
-                        className="hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-blue-200"
-                        onClick={() => router.push(`/home/${endpoint.router}`)}
-                      >
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-lg truncate">{endpoint.title}</CardTitle>
-                          <CardDescription className="text-sm">/{endpoint.router}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="flex items-center justify-between gap-3">
-                            <span className="text-sm text-gray-600">
-                              {endpoint.campos?.length || 0} fields
-                            </span>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                const hostname = window.location.hostname
-                                const protocol = hostname === "localhost" || hostname === "0.0.0.0" ? "http://" : "https://"
-                                const port = hostname === "localhost" || hostname === "0.0.0.0" ? ":3000" : ""
-                                window.open(`${protocol}${hostname}${port}/api/${endpoint.router}`, "_blank")
-                              }}
-                            >
-                              <ExternalLink className="w-4 h-4 mr-2" />
-                              API
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="users" className="space-y-6">
-                <div className="space-y-2">
-                  <Label>Buscar usuários</Label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input
-                      placeholder="Buscar por e-mail..."
-                      onChange={(e) => handleSearch(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-
-                {loading ? (
-                  <div className="flex justify-center py-12">
-                    <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                  </div>
-                ) : isEmptyData ? (
-                  <div className="px-4 py-10 text-center smi:py-12">
-                    <Eye className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-base font-medium text-gray-900 smi:text-lg">Nenhum usuário encontrado</h3>
-                    <p className="text-sm text-gray-600 smi:text-base">O cadastro de usuários pode estar desativado.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {filteredData.map((user: any) => (
-                      <Card key={user.email}>
-                        <CardContent className="flex flex-col gap-3 p-4 smi:flex-row smi:items-center smi:justify-between">
-                          <div className="min-w-0">
-                            <p className="truncate font-medium">{user.name}</p>
-                            <p className="truncate text-sm text-gray-600">{user.email}</p>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full text-red-600 hover:text-red-700 smi:w-auto"
-                            onClick={() => {
-                              User.deleteUser(user.email).then(() => {
-                                handleUserDelete(user.email)
-                                toast.success("User deleted successfully")
-                              }).catch(() => {
-                                toast.error("Failed to delete user")
-                              })
-                            }}
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Excluir
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg truncate">{endpoint.title}</CardTitle>
+                      <CardDescription className="text-sm">/{endpoint.router}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-sm text-gray-600">
+                          {endpoint.campos?.length || 0} fields
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            const hostname = window.location.hostname
+                            const protocol = hostname === "localhost" || hostname === "0.0.0.0" ? "http://" : "https://"
+                            const port = hostname === "localhost" || hostname === "0.0.0.0" ? ":3000" : ""
+                            window.open(`${protocol}${hostname}${port}/api/${endpoint.router}`, "_blank")
+                          }}
+                        >
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          API
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </main>
 
       {/* Documentation Modal */}
       <Dialog open={showDocs} onOpenChange={setShowDocs}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-h-[80vh] max-w-[calc(100vw-24px)] overflow-y-auto smi:max-w-4xl">
           <DialogHeader>
             <DialogTitle className="text-2xl flex items-center gap-2">
               <span className="text-blue-600">📄</span>
@@ -382,8 +262,7 @@ export default function Home() {
                 User Management
               </h3>
               <p className="mt-2 text-gray-700">
-                When user authentication is enabled, you can manage registered users in the Users tab. 
-                Administrators can delete users as needed.
+                Administrators can create, edit, disable and delete panel accounts from the Configuration page.
               </p>
             </div>
           </div>

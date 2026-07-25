@@ -1,1 +1,5 @@
-export { default } from "@/app/pages/create";
+import { redirect } from "next/navigation";
+
+export default function CreateRedirectPage() {
+  redirect("/configuration");
+}

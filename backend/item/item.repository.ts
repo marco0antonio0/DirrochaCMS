@@ -1,6 +1,7 @@
 import { db } from "@/backend/config/config";
 import { ENDPOINT_COLLECTION } from "@/backend/endpoint/endpoint.entity";
 import { ITEM_SUBCOLLECTION } from "@/backend/item/item.entity";
+import type { Actor } from "@/backend/common/actor";
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, updateDoc, where } from "firebase/firestore";
 
 export class ItemRepository {
@@ -13,15 +14,16 @@ export class ItemRepository {
         return { success: false, error: "O item não foi encontrado." };
       }
 
+      const deletedItem = { id: itemSnap.id, ...itemSnap.data() };
       await deleteDoc(itemRef);
-      return { success: true };
+      return { success: true, data: deletedItem };
     } catch (error) {
       console.error("Erro ao deletar o item:", error);
       return { success: false, error };
     }
   }
 
-  async createItemForEndpoint(endpointId: string, items: any[]) {
+  async createItemForEndpoint(endpointId: string, items: any[], actor?: Actor) {
     try {
       const endpointRef = doc(db, ENDPOINT_COLLECTION, endpointId);
       const endpointSnap = await getDoc(endpointRef);
@@ -32,13 +34,14 @@ export class ItemRepository {
 
       const formattedData = this.toFormattedData(items);
       const itemRef = collection(db, `${ENDPOINT_COLLECTION}/${endpointId}/${ITEM_SUBCOLLECTION}`);
-      await addDoc(itemRef, {
+      const docRef = await addDoc(itemRef, {
         endpointId,
         formattedData,
+        ...(actor ? { createdBy: actor } : {}),
         createdAt: new Date(),
       });
 
-      return { success: true };
+      return { success: true, id: docRef.id };
     } catch (error) {
       console.error("Erro ao criar novo item no endpoint:", error);
       return { success: false, error };
@@ -62,7 +65,7 @@ export class ItemRepository {
     }
   }
 
-  async updateItemForEndpoint({ itemId, endpointId, items }: { itemId: string; endpointId: string; items: any[] }) {
+  async updateItemForEndpoint({ itemId, endpointId, items }: { itemId: string; endpointId: string; items: any[] }, actor?: Actor) {
     try {
       const itemRef = doc(db, `${ENDPOINT_COLLECTION}/${endpointId}/${ITEM_SUBCOLLECTION}`, itemId);
       const itemSnap = await getDoc(itemRef);
@@ -79,6 +82,7 @@ export class ItemRepository {
 
       await updateDoc(itemRef, {
         formattedData,
+        ...(actor ? { updatedBy: actor } : {}),
         updatedAt: new Date(),
       });
 

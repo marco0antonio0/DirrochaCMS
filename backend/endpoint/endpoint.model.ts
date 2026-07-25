@@ -1,3 +1,5 @@
+import type { Actor } from "@/backend/common/actor";
+
 export interface EndpointField {
   name: string;
   type: "string" | "number" | "date" | "img";
@@ -28,4 +30,6 @@ export interface EndpointUpdatePayload {
 export interface EndpointRecord extends EndpointPayload {
   id: string;
   createdAt?: Date;
+  createdBy?: Actor;
+  updatedBy?: Actor;
 }

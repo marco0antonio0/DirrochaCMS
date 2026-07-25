@@ -5,9 +5,10 @@ export class UserController {
 
   listUsers = this.service.listUsers.bind(this.service);
   getUserByEmail = this.service.getUserByEmail.bind(this.service);
-  getAuthVisibility = this.service.getAuthVisibility.bind(this.service);
-  setAuthVisibility = this.service.setAuthVisibility.bind(this.service);
+  createUser = this.service.createUser.bind(this.service);
+  updateUser = this.service.updateUser.bind(this.service);
   deleteUser = this.service.deleteUser.bind(this.service);
+  deleteUserById = this.service.deleteUserById.bind(this.service);
 }
 
 export const userController = new UserController(userService);

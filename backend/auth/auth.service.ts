@@ -25,6 +25,7 @@ export class AuthService {
   async login(email: string, password: string) {
     const user: any = await this.users.findUserByEmail(email);
     if (!user) throw new Error("User not found");
+    if (user.disabled) throw new Error("User disabled");
 
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) throw new Error("Invalid password");

@@ -43,7 +43,7 @@ O DirrochaCMS foi pensado para projetos que precisam de uma API simples e editá
 - Listagem, busca, criação, edição e remoção de registros no painel.
 - Modal de confirmação para exclusões.
 - Autenticação com JWT e sessão persistida.
-- Configuração para habilitar ou desabilitar login, cadastro e logout de usuários.
+- Gestão administrativa de contas do painel, com criação, alteração de senha, desativação e exclusão.
 - Persistência com Firebase Firestore.
 - Interface em Next.js App Router.
 - Backend organizado por módulos em `/backend`.
@@ -227,18 +227,18 @@ npm run start
 | `/` | Login e primeira configuração. |
 | `/home` | Lista endpoints e usuários. |
 | `/home/[id]` | Gerencia os registros de um endpoint. |
-| `/create` | Cria endpoints e ajusta configurações de usuário. |
+| `/configuration` | Cria endpoints e administra contas do painel. |
 | `/api/[id]` | API de consulta dos dados de um endpoint criado. Pode ser pública ou protegida por senha. |
-| `/api/user/login` | Login de usuário configurável. |
-| `/api/user/register` | Cadastro de usuário configurável. |
-| `/api/user/logout` | Logout de usuário configurável. |
+| `/api/user/login` | Login de usuário. |
+| `/api/user/register` | Cadastro de usuário. |
+| `/api/user/logout` | Logout de usuário. |
 | `/api/verifyToken` | Validação de token JWT. |
 
 ## Como Usar
 
 ### Criar um endpoint
 
-1. Acesse `/create`.
+1. Acesse `/configuration`.
 2. Informe o nome da rota, por exemplo `posts`.
 3. Adicione campos no builder.
 4. Escolha o tipo de cada campo:
@@ -275,10 +275,11 @@ Endpoints existentes permanecem públicos por padrão até que sejam alterados p
 
 ### Gerenciar usuários
 
-1. Acesse `/create`.
-2. Abra a aba de usuários/configurações.
-3. Ative ou desative login, cadastro e logout.
-4. Salve a configuração.
+1. Acesse `/configuration`.
+2. Na seção `Contas do painel`, preencha nome, e-mail e senha para criar uma conta.
+3. Use `Editar` para alterar nome, e-mail ou definir uma nova senha.
+4. Use `Desativar` para bloquear o acesso sem excluir a conta.
+5. Use `Excluir` para remover definitivamente uma conta.
 
 ## API
 
@@ -331,7 +332,7 @@ Não envie senhas pela URL ou query string.
 
 ### Autenticação
 
-Login de usuário, quando habilitado:
+Login de usuário:
 
 ```bash
 curl -X POST http://localhost:3000/api/user/login \
@@ -339,7 +340,7 @@ curl -X POST http://localhost:3000/api/user/login \
   -d '{"email":"admin@example.com","password":"senha123"}'
 ```
 
-Cadastro de usuário, quando habilitado:
+Cadastro de usuário:
 
 ```bash
 curl -X POST http://localhost:3000/api/user/register \

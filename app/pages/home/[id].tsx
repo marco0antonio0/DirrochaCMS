@@ -3,7 +3,7 @@
 import localFont from "next/font/local";
 import { useCallback, useEffect, useState } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { AlertTriangle, Clock, Copy, Database, Dices, Inbox, KeyRound, ListChecks, Plus, RefreshCw, Save, Search, Settings, Shield, Trash2 } from "lucide-react";
+import { AlertTriangle, Clock, Copy, Database, Dices, History, Inbox, KeyRound, ListChecks, Plus, RefreshCw, Save, Search, Settings, Shield, Trash2 } from "lucide-react";
 import {  generateDynamicObject } from "@/app/utils/generateDynamicObject";
 import { toKeyValueList } from "@/app/utils/toKeyValueList";
 import formatDataToDynamicObject from "@/app/utils/formatDataToDynamicObject";
@@ -15,6 +15,8 @@ import { optimizeImage } from "@/app/services/optimizeImage";
 import { Button as HeroButton } from "@heroui/react";
 import { endpointService } from "@/backend/endpoint/endpoint.service";
 import { itemService } from "@/backend/item/item.service";
+import { historyService } from "@/backend/history/history.service";
+import { getCurrentActor } from "@/app/utils/getCurrentActor";
 import { AppHeader } from "@/app/components/app-header";
 import { Card, CardHeader, CardDescription, CardContent, CardTitle } from "@/app/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/app/components/ui/dialog";
@@ -57,6 +59,9 @@ export default function Home() {
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
   const [confirmRenameOpen, setConfirmRenameOpen] = useState(false)
   const [settingsLoading, setSettingsLoading] = useState(false)
+  const [historyModalOpen, setHistoryModalOpen] = useState(false)
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [historyEntries, setHistoryEntries] = useState<any[]>([])
   const [endpointSettings, setEndpointSettings] = useState<{
     name: string;
     fixedValuesEnabled: boolean;
@@ -204,17 +209,18 @@ export default function Home() {
 
     setLoading(true);
     var dataValue = itemSelected[0]
-    var dataLocal = data.filter((e:any)=>e.title == endpointId) 
+    var dataLocal = data.filter((e:any)=>e.title == endpointId)
+    const actor = getCurrentActor()
     if(!dataValue["id"]){
     const toastId = toast.loading("Criando item ...",{duration:4000});
-    const result = await itemService.createItem({endpointId: dataLocal[0]['id'],items: dataValue["data"]})
+    const result = await itemService.createItem({endpointId: dataLocal[0]['id'],items: dataValue["data"]}, actor ?? undefined)
       await refreshData(result)
       toast.success("Item criado com sucesso",{duration:4000});
       toast.dismiss(toastId)
     }else{
     const toastId = toast.loading("Atualizando item ...",{duration:4000});
     toast.success("Item atualizado com sucesso",{duration:4000});
-      const result = await itemService.updateItem({itemId: dataValue["id"],endpointId: dataValue["id_endpoint"],items: dataValue["data"]})
+      const result = await itemService.updateItem({itemId: dataValue["id"],endpointId: dataValue["id_endpoint"],items: dataValue["data"]}, actor ?? undefined)
       await refreshData(result)
       toast.dismiss(toastId)
     
@@ -277,7 +283,8 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
     const target = deleteTarget || itemSelected
     const itemId = target[0]['id']
     const endpointId = target[0]['id_endpoint']
-    const result = await itemService.deleteItem({itemId, endpointId})
+    const actor = getCurrentActor()
+    const result = await itemService.deleteItem({itemId, endpointId}, actor ?? undefined)
     if(dataItem.length == 1 || dataItem.length == 0){
       setdataItem([])
      }
@@ -403,7 +410,12 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
         accessPassword: endpointSettings.accessMode === "password" ? endpointSettings.accessPassword.trim() : "",
         ...(rename ? { title: nextName, router: nextName } : {}),
       }
-      const result = await endpointService.updateEndpoint(currentEndpoint.id, payload)
+      const actor = getCurrentActor()
+      const currentName = currentEndpoint.router || currentEndpoint.title || endpointId
+      const summary = rename
+        ? `Endpoint renomeado de "${currentName}" para "${nextName}"`
+        : "Configurações do endpoint atualizadas"
+      const result = await endpointService.updateEndpoint(currentEndpoint.id, payload, actor ?? undefined, summary)
 
       if (!result.success) {
         toast.error("Erro ao salvar configurações")
@@ -450,6 +462,22 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
       toast.error("Erro ao atualizar cache")
     } finally {
       setSettingsLoading(false)
+    }
+  }
+
+  const openHistory = async () => {
+    setHistoryModalOpen(true)
+    const currentEndpoint: any = data[0]
+    if (!currentEndpoint?.id) return
+
+    setHistoryLoading(true)
+    try {
+      const result: any = await historyService.list(currentEndpoint.id)
+      setHistoryEntries(result?.data || [])
+    } catch (error) {
+      toast.error("Erro ao carregar histórico")
+    } finally {
+      setHistoryLoading(false)
     }
   }
 
@@ -544,15 +572,26 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
                   <Copy className="h-4 w-4 shrink-0" />
                   <span className="min-w-0 truncate">{url}</span>
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setSettingsModalOpen(true)}
-                  className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 smi:w-10 smi:px-0"
-                  title="Configurações do endpoint"
-                >
-                  <Settings className="h-4 w-4" />
-                  <span className="smi:hidden">Configurações</span>
-                </button>
+                <div className="grid grid-cols-2 gap-2 smi:contents">
+                  <button
+                    type="button"
+                    onClick={openHistory}
+                    className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 smi:w-10 smi:px-0"
+                    title="Histórico do endpoint"
+                  >
+                    <History className="h-4 w-4" />
+                    <span className="smi:hidden">Histórico</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSettingsModalOpen(true)}
+                    className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 smi:w-10 smi:px-0"
+                    title="Configurações do endpoint"
+                  >
+                    <Settings className="h-4 w-4" />
+                    <span className="smi:hidden">Configurações</span>
+                  </button>
+                </div>
               </div>
             </div>
           </CardHeader>
@@ -713,6 +752,13 @@ const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
         nextName={endpointSettings.name.trim()}
         loading={settingsLoading}
         onConfirm={() => saveEndpointSettings({ rename: true })}
+      />
+
+      <HistoryDialog
+        open={historyModalOpen}
+        onOpenChange={setHistoryModalOpen}
+        loading={historyLoading}
+        entries={historyEntries}
       />
     </div>
   );
@@ -900,16 +946,16 @@ function EndpointSettingsDialog({ open, onOpenChange, settings, setSettings, loa
               <Clock className="h-4 w-4 text-blue-600" />
               TTL do cache
             </label>
-            <div className="grid gap-2 smi:grid-cols-[1fr_auto] smi:items-center">
+            <div className="flex items-center gap-2">
               <input
                 type="number"
                 min={0}
                 value={settings.cacheTtlSeconds}
                 disabled={!settings.fixedValuesEnabled}
                 onChange={(event) => setSettings((prev: any) => ({ ...prev, cacheTtlSeconds: Number(event.target.value) }))}
-                className="h-11 w-full rounded-md border border-slate-200 px-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-400"
+                className="h-11 w-full min-w-0 flex-1 rounded-md border border-slate-200 px-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-400"
               />
-              <span className="text-sm font-medium text-slate-500">segundos</span>
+              <span className="shrink-0 text-sm font-medium text-slate-500">segundos</span>
             </div>
             <p className="text-xs leading-5 text-slate-500">
               Exemplo: `300` mantém o endpoint cacheado por 5 minutos no sistema.
@@ -980,6 +1026,77 @@ function ConfirmEndpointRenameDialog({ open, onOpenChange, currentName, nextName
           </HeroButton>
           <HeroButton color="danger" className="h-11" onClick={onConfirm} isLoading={loading}>
             Confirmar alteração
+          </HeroButton>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+const HISTORY_ACTION_META: Record<string, { label: string; icon: any; className: string }> = {
+  endpoint_created: { label: "Endpoint criado", icon: Database, className: "bg-blue-100 text-blue-700" },
+  endpoint_updated: { label: "Configurações atualizadas", icon: Settings, className: "bg-slate-100 text-slate-700" },
+  item_created: { label: "Item adicionado", icon: Plus, className: "bg-green-100 text-green-700" },
+  item_updated: { label: "Item atualizado", icon: Save, className: "bg-amber-100 text-amber-700" },
+  item_deleted: { label: "Item excluído", icon: Trash2, className: "bg-red-100 text-red-700" },
+}
+
+function toHistoryDate(value: any): Date | null {
+  if (!value) return null
+  if (typeof value?.toDate === "function") return value.toDate()
+  const parsed = new Date(value)
+  return isNaN(parsed.getTime()) ? null : parsed
+}
+
+function HistoryDialog({ open, onOpenChange, loading, entries }: any) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[85vh] max-w-[calc(100vw-24px)] overflow-y-auto smi:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <History className="h-5 w-5 text-blue-600" />
+            Histórico do endpoint
+          </DialogTitle>
+          <DialogDescription>
+            Quem criou, editou ou adicionou dados neste endpoint.
+          </DialogDescription>
+        </DialogHeader>
+
+        {loading ? (
+          <div className="flex min-h-40 items-center justify-center">
+            <span className="loader h-10 w-10 rounded-full border-4 border-slate-200 border-t-blue-600 animate-spin" />
+          </div>
+        ) : !entries || entries.length === 0 ? (
+          <div className="rounded-md border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">
+            Nenhum registro de histórico ainda.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {entries.map((entry: any) => {
+              const meta = HISTORY_ACTION_META[entry.action] || { label: entry.action, icon: Clock, className: "bg-slate-100 text-slate-700" }
+              const Icon = meta.icon
+              const date = toHistoryDate(entry.createdAt)
+              return (
+                <div key={entry.id} className="flex items-start gap-3 rounded-md border border-slate-200 p-3">
+                  <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md ${meta.className}`}>
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-slate-900">{entry.summary || meta.label}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      {entry.actor?.email || "desconhecido"}
+                      {date ? ` · ${date.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}` : ""}
+                    </p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        <DialogFooter>
+          <HeroButton variant="flat" className="h-11" onClick={() => onOpenChange(false)}>
+            Fechar
           </HeroButton>
         </DialogFooter>
       </DialogContent>

@@ -54,23 +54,17 @@ export class AuthController {
   };
 
   handleConfiguredLogin = async (req: any, res: any) => {
-    const response = await this.users.getAuthVisibility();
-    const isEnabled = response.loginEnabled ?? false;
-    if (req.method === "POST" && isEnabled) return this.handleLogin(req, res);
+    if (req.method === "POST") return this.handleLogin(req, res);
     return res.status(405).json({ error: "Method not allowed" });
   };
 
   handleConfiguredRegister = async (req: any, res: any) => {
-    const response = await this.users.getAuthVisibility();
-    const isEnabled = response.registerEnabled ?? false;
-    if (req.method === "POST" && isEnabled) return this.handleRegister(req, res);
+    if (req.method === "POST") return this.handleRegister(req, res);
     return res.status(405).json({ error: "Method not allowed" });
   };
 
   handleConfiguredLogout = async (req: any, res: any) => {
-    const response = await this.users.getAuthVisibility();
-    const isEnabled = response.logoutEnabled ?? false;
-    if (req.method === "POST" && isEnabled) return this.handleLogout(req, res);
+    if (req.method === "POST") return this.handleLogout(req, res);
     return res.status(405).json({ error: "Method not allowed" });
   };
 

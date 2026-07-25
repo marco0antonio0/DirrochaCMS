@@ -1,7 +1,7 @@
 import { db } from "@/backend/config/config";
-import { AUTH_SETTINGS_DOC, CONFIGURATION_COLLECTION, USER_COLLECTION } from "@/backend/user/user.entity";
-import type { AuthVisibilitySettings, UserPayload } from "@/backend/user/user.model";
-import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, where } from "firebase/firestore";
+import { USER_COLLECTION } from "@/backend/user/user.entity";
+import type { UserPayload, UserUpdatePayload } from "@/backend/user/user.model";
+import { addDoc, collection, deleteDoc, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
 
 export class UserRepository {
   async findUserByEmail(email: string) {
@@ -28,32 +28,33 @@ export class UserRepository {
 
   async createUser(userData: UserPayload) {
     const userRef = collection(db, USER_COLLECTION);
-    const docRef = await addDoc(userRef, userData);
+    const docRef = await addDoc(userRef, {
+      ...userData,
+      disabled: userData.disabled ?? false,
+      canManageUsers: userData.canManageUsers ?? false,
+      createdAt: new Date(),
+    });
     return docRef.id;
   }
 
-  async setAuthVisibility(status: AuthVisibilitySettings) {
-    const settingsRef = doc(db, CONFIGURATION_COLLECTION, AUTH_SETTINGS_DOC);
-    await setDoc(settingsRef, {
-      loginEnabled: status.login,
-      registerEnabled: status.register,
-      logoutEnabled: status.logout,
+  async updateUserById(userId: string, payload: UserUpdatePayload) {
+    const userDocRef = doc(db, USER_COLLECTION, userId);
+    await updateDoc(userDocRef, {
+      ...payload,
+      updatedAt: new Date(),
     });
+    return { success: true };
   }
 
-  async getAuthVisibility() {
-    const settingsRef = doc(db, CONFIGURATION_COLLECTION, AUTH_SETTINGS_DOC);
-    const settingsDoc = await getDoc(settingsRef);
-
-    if (settingsDoc.exists()) {
-      return {
-        loginEnabled: settingsDoc.data().loginEnabled ?? false,
-        registerEnabled: settingsDoc.data().registerEnabled ?? false,
-        logoutEnabled: settingsDoc.data().logoutEnabled ?? false,
-      };
+  async deleteUserById(userId: string) {
+    try {
+      const userDocRef = doc(db, USER_COLLECTION, userId);
+      await deleteDoc(userDocRef);
+      return { success: true };
+    } catch (error) {
+      console.error("Erro ao deletar usuário:", error);
+      return { success: false, error: "Erro ao deletar usuário" };
     }
-
-    return { loginEnabled: false, registerEnabled: false, logoutEnabled: false };
   }
 
   async deleteUserByEmail(email: string) {
