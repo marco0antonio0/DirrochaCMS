@@ -7,6 +7,10 @@ and this project uses semantic versioning while preparing public releases.
 
 ## [Unreleased]
 
+- No unreleased changes.
+
+## [1.0.0] - 2026-07-25
+
 ### Added
 
 - JOSS submission material under `paper/`, `docs/`, and `examples/`.
@@ -20,6 +24,11 @@ and this project uses semantic versioning while preparing public releases.
 - Documentation was reorganized into English and Brazilian Portuguese versions.
 - Academic use-case documentation was expanded for UFPA research-group use,
   OsteoPlay Vet, and Charmosinha/MakeAPI.
+
+### Security
+
+- Endpoint-level password access is documented and tested to require the
+  `x-endpoint-password` header, not URL query parameters.
 
 ## [0.1.0] - 2026-07-25
 
@@ -49,5 +58,6 @@ and this project uses semantic versioning while preparing public releases.
 - Endpoint passwords are hashed before storage.
 - Public item responses omit administrative ownership metadata.
 
-[Unreleased]: https://github.com/marco0antonio0/DirrochaCMS/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/marco0antonio0/DirrochaCMS/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/marco0antonio0/DirrochaCMS/releases/tag/v1.0.0
 [0.1.0]: https://github.com/marco0antonio0/DirrochaCMS/releases/tag/v0.1.0

@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use DirrochaCMS in academic work, please cite it using the metadata below."
 title: "DirrochaCMS: a lightweight serverless backend architecture for small research and student applications"
-version: "0.1.0"
+version: "1.0.0"
 date-released: "2026-07-25"
 repository-code: "https://github.com/marco0antonio0/DirrochaCMS"
 url: "https://github.com/marco0antonio0/DirrochaCMS"
