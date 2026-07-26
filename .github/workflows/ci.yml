@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    name: Typecheck and build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prepare build environment
+        run: |
+          node <<'NODE'
+          const { generateKeyPairSync } = require("crypto");
+          const { privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
+          const serviceAccount = {
+            project_id: "dirrochacms-ci",
+            client_email: "ci@dirrochacms-ci.iam.gserviceaccount.com",
+            private_key: privateKey.export({ type: "pkcs8", format: "pem" }),
+          };
+
+          const encoded = Buffer.from(JSON.stringify(serviceAccount)).toString("base64");
+          require("fs").appendFileSync(process.env.GITHUB_ENV, [
+            `FIREBASE_SERVICE_ACCOUNT_B64=${encoded}`,
+            "SECRET_KEY=ci_secret_key_for_typecheck_and_build_only_0123456789",
+            "NEXT_PUBLIC_ENV=ci",
+          ].join("\n") + "\n");
+          NODE
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build

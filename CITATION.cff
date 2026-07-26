@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use DirrochaCMS in academic work, please cite it using the metadata below."
+title: "DirrochaCMS: a lightweight serverless backend architecture for small research and student applications"
+version: "0.1.0"
+date-released: "2026-07-25"
+repository-code: "https://github.com/marco0antonio0/DirrochaCMS"
+url: "https://github.com/marco0antonio0/DirrochaCMS"
+license: "MIT"
+authors:
+  - family-names: "Mesquita"
+    given-names: "Marco Antonio da Silva"
+    orcid: "https://orcid.org/0009-0002-9644-4011"
+    affiliation: "Computer Science undergraduate student, Universidade da Amazonia (UNAMA), Campus Parque Shopping, Belem, Para, Brazil"
+keywords:
+  - "serverless"
+  - "backend"
+  - "content management"
+  - "research software"
+  - "Next.js"
+  - "Firebase"
+abstract: >-
+  DirrochaCMS is an open-source tool for creating lightweight, configurable
+  serverless backends through an administrative interface. It targets small
+  research groups, student teams, and applied projects that need to publish
+  editable HTTP APIs without maintaining dedicated backend infrastructure.

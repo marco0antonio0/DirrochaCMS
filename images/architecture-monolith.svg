@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
+  <title id="title">DirrochaCMS monolithic architecture</title>
+  <desc id="desc">Academic architecture diagram showing browser clients, a monolithic Next.js application, internal backend modules, and Firebase Firestore.</desc>
+  <defs>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1f5faa" />
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2f7d46" />
+    </marker>
+    <style>
+      .bg { fill: #ffffff; }
+      .title { font: 700 30px Arial, sans-serif; fill: #172033; }
+      .subtitle { font: 600 16px Arial, sans-serif; fill: #3c4658; }
+      .label { font: 600 18px Arial, sans-serif; fill: #172033; }
+      .small { font: 500 14px Arial, sans-serif; fill: #3c4658; }
+      .tiny { font: 500 12px Arial, sans-serif; fill: #3c4658; }
+      .mono { font: 600 13px Arial, sans-serif; fill: #172033; }
+      .box { fill: #f8fbff; stroke: #1f5faa; stroke-width: 2; rx: 10; }
+      .layer-blue { fill: #eef5ff; stroke: #1f5faa; stroke-width: 1.5; rx: 8; }
+      .layer-green { fill: #effaf2; stroke: #2f7d46; stroke-width: 1.5; rx: 8; }
+      .layer-gray { fill: #f6f7f9; stroke: #7b8494; stroke-width: 1.5; rx: 8; }
+      .node { fill: #ffffff; stroke: #8fa4c2; stroke-width: 1.4; rx: 7; }
+      .db { fill: #effaf2; stroke: #2f7d46; stroke-width: 2; rx: 10; }
+      .external { fill: #ffffff; stroke: #1f5faa; stroke-width: 2; rx: 10; }
+      .arrow-blue { stroke: #1f5faa; stroke-width: 2.4; fill: none; marker-end: url(#arrow-blue); }
+      .arrow-green { stroke: #2f7d46; stroke-width: 2.4; fill: none; marker-end: url(#arrow-green); }
+      .arrow-gray { stroke: #5f6b7a; stroke-width: 2; fill: none; marker-end: url(#arrow-blue); }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1200" height="620" />
+  <text x="600" y="45" text-anchor="middle" class="title">DirrochaCMS: Arquitetura Monolítica Full-stack</text>
+  <text x="600" y="72" text-anchor="middle" class="subtitle">Frontend, rotas HTTP e backend interno no mesmo projeto Next.js</text>
+
+  <rect x="330" y="100" width="540" height="395" class="box" />
+  <text x="600" y="132" text-anchor="middle" class="label">Aplicação Next.js Monolítica</text>
+
+  <rect x="360" y="155" width="480" height="78" class="layer-blue" />
+  <text x="600" y="181" text-anchor="middle" class="label">Frontend / Painel Administrativo</text>
+  <text x="600" y="207" text-anchor="middle" class="small">Login, configuração, home, endpoints, itens e usuários</text>
+
+  <rect x="360" y="255" width="220" height="96" class="layer-green" />
+  <text x="470" y="283" text-anchor="middle" class="label">API Admin</text>
+  <text x="470" y="309" text-anchor="middle" class="mono">/api/admin/**</text>
+  <text x="470" y="332" text-anchor="middle" class="small">Sessão HttpOnly</text>
+
+  <rect x="620" y="255" width="220" height="96" class="layer-green" />
+  <text x="730" y="283" text-anchor="middle" class="label">API Pública</text>
+  <text x="730" y="309" text-anchor="middle" class="mono">/api/[endpoint]</text>
+  <text x="730" y="332" text-anchor="middle" class="small">Pública ou via header</text>
+
+  <rect x="360" y="380" width="480" height="86" class="layer-gray" />
+  <text x="600" y="407" text-anchor="middle" class="label">Backend interno /backend</text>
+
+  <rect x="382" y="424" width="62" height="28" class="node" />
+  <text x="413" y="443" text-anchor="middle" class="tiny">auth</text>
+  <rect x="452" y="424" width="62" height="28" class="node" />
+  <text x="483" y="443" text-anchor="middle" class="tiny">user</text>
+  <rect x="522" y="424" width="72" height="28" class="node" />
+  <text x="558" y="443" text-anchor="middle" class="tiny">endpoint</text>
+  <rect x="602" y="424" width="62" height="28" class="node" />
+  <text x="633" y="443" text-anchor="middle" class="tiny">item</text>
+  <rect x="672" y="424" width="62" height="28" class="node" />
+  <text x="703" y="443" text-anchor="middle" class="tiny">audit</text>
+  <rect x="742" y="424" width="76" height="28" class="node" />
+  <text x="780" y="443" text-anchor="middle" class="tiny">common</text>
+
+  <rect x="55" y="185" width="190" height="112" class="external" />
+  <text x="150" y="225" text-anchor="middle" class="label">Navegador do</text>
+  <text x="150" y="250" text-anchor="middle" class="label">administrador</text>
+  <text x="150" y="276" text-anchor="middle" class="small">Painel + cookie HttpOnly</text>
+
+  <rect x="955" y="195" width="190" height="102" class="external" />
+  <text x="1050" y="234" text-anchor="middle" class="label">Sites e apps</text>
+  <text x="1050" y="259" text-anchor="middle" class="label">externos</text>
+  <text x="1050" y="283" text-anchor="middle" class="small">Consomem API pública</text>
+
+  <rect x="430" y="535" width="340" height="60" class="db" />
+  <text x="600" y="562" text-anchor="middle" class="label">Firebase Firestore</text>
+  <text x="600" y="584" text-anchor="middle" class="small">Acesso somente pelo Firebase Admin SDK</text>
+
+  <path d="M245 220 C275 190, 300 178, 330 176" class="arrow-blue" />
+  <path d="M245 265 C290 265, 315 285, 360 303" class="arrow-blue" />
+  <path d="M840 303 C885 303, 910 250, 955 246" class="arrow-green" />
+  <path d="M470 351 L470 380" class="arrow-green" />
+  <path d="M730 351 L730 380" class="arrow-green" />
+  <path d="M600 466 L600 535" class="arrow-green" />
+
+  <text x="290" y="250" text-anchor="middle" class="small">Admin UI</text>
+  <text x="315" y="292" text-anchor="middle" class="small">API protegida</text>
+  <text x="900" y="287" text-anchor="middle" class="small">GET</text>
+  <text x="900" y="307" text-anchor="middle" class="tiny">x-endpoint-password</text>
+  <text x="900" y="323" text-anchor="middle" class="tiny">quando privado</text>
+
+  <rect x="78" y="525" width="255" height="52" fill="#fff" stroke="#2f7d46" stroke-width="1.5" stroke-dasharray="5 5" rx="8" />
+  <text x="205" y="546" text-anchor="middle" class="small">Credenciais Firebase não vão</text>
+  <text x="205" y="566" text-anchor="middle" class="small">para o navegador</text>
+  <path d="M333 551 L430 565" class="arrow-green" />
+
+  <rect x="850" y="520" width="265" height="75" fill="#f8fbff" stroke="#1f5faa" stroke-width="1.5" rx="8" />
+  <text x="982" y="545" text-anchor="middle" class="label">CI / Qualidade</text>
+  <text x="982" y="570" text-anchor="middle" class="small">npm ci · tsc · npm test · build</text>
+</svg>

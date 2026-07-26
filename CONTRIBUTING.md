@@ -1,18 +1,32 @@
-# Contribuindo para o DirrochaCMS
+# Contributing to DirrochaCMS
 
-Obrigado por considerar contribuir com o DirrochaCMS. Este documento define um fluxo simples para manter o projeto organizado e fácil de revisar.
+<p>
+  <strong>English</strong> · <a href="./CONTRIBUTING.pt-BR.md">Português (Brasil)</a>
+</p>
 
-## Como contribuir
+Thank you for considering a contribution to DirrochaCMS. This document defines a simple flow
+that keeps the project organized and easy to review.
 
-1. Verifique se já existe uma issue relacionada.
-2. Se não existir, abra uma issue explicando o problema, melhoria ou proposta.
-3. Faça um fork do repositório.
-4. Crie uma branch com nome claro.
-5. Implemente a mudança em escopo pequeno.
-6. Rode as validações locais.
-7. Abra um pull request com descrição objetiva.
+> Issues and pull requests may be written in English or Portuguese.
 
-## Ambiente local
+## Where to get help
+
+For questions about installing or using DirrochaCMS, open a
+[GitHub issue](https://github.com/marco0antonio0/DirrochaCMS/issues) using the bug report or
+feature request template. That is the project's support channel, and answers stay searchable
+for other users. Vulnerabilities follow the separate flow in [SECURITY.md](./SECURITY.md).
+
+## How to contribute
+
+1. Check whether a related issue already exists.
+2. If it does not, open an issue describing the problem, improvement or proposal.
+3. Fork the repository.
+4. Create a branch with a clear name.
+5. Implement the change in a small scope.
+6. Run the local checks.
+7. Open a pull request with a focused description.
+
+## Local environment
 
 ```bash
 git clone https://github.com/marco0antonio0/DirrochaCMS.git
@@ -22,11 +36,13 @@ cp .env.example .env
 npm run dev
 ```
 
-Preencha o `.env` com as credenciais do Firebase antes de testar os fluxos com persistência.
+Fill in `.env` with the Firebase credentials before testing any flow that persists data. See
+the [Firebase Admin Credential](./README.md#firebase-admin-credential-service-account) section
+of the README for how to obtain them.
 
-## Padrão de branch
+## Branch naming
 
-Use nomes curtos e descritivos:
+Use short, descriptive names:
 
 ```text
 feature/criar-endpoint
@@ -37,7 +53,7 @@ refactor/backend-auth
 
 ## Commits
 
-Prefira mensagens diretas:
+Prefer direct messages:
 
 ```text
 feat: adiciona ordenacao de campos
@@ -45,66 +61,77 @@ fix: corrige estilo da tela de endpoint
 docs: melhora guia de instalacao
 ```
 
-## Antes de abrir PR
+## Before opening a pull request
 
-Rode:
+Run:
 
 ```bash
 npx tsc --noEmit
 npm run build
 ```
 
-Inclua no pull request:
+The same pair of commands runs in CI ([`.github/workflows/ci.yml`](./.github/workflows/ci.yml)).
+To validate the interface and API flows, follow the checklist in
+[`docs/manual-verification.md`](./docs/manual-verification.md).
 
-- O que mudou.
-- Por que mudou.
-- Como testar.
-- Prints ou gravação curta quando a mudança afetar UI.
-- Observações sobre migração, variáveis ou riscos.
+Include in the pull request:
 
-## Padrões de código
+- What changed.
+- Why it changed.
+- How to test it.
+- Screenshots or a short recording when the change affects the UI.
+- Notes about migrations, environment variables or risks.
 
-- Siga a estrutura atual do projeto.
-- Mantenha frontend em `/app`.
-- Mantenha lógica de backend em `/backend`.
-- Para novos módulos do backend, use:
+## Code standards
+
+- Follow the project's existing structure.
+- Keep frontend code in `/app`.
+- Keep backend logic in `/backend`.
+- For new backend modules, use:
 
 ```text
-.module.ts
-.service.ts
-.repository.ts
-.controller.ts
-.entity.ts
-.model.ts
+<module>.service.ts      # business rules and validation
+<module>.repository.ts   # Firestore access through the Admin SDK
+<module>.entity.ts       # constants, defaults and domain contracts
+<module>.model.ts        # TypeScript types of the domain
 ```
 
-- Evite refatorações fora do escopo do PR.
-- Prefira nomes claros em português ou inglês, sem misturar no mesmo contexto.
-- Atualize o README quando mudar comportamento público.
+- Every file in `/backend` starts with `import "server-only"`. Nothing under `/backend` may be
+  imported by a client component — Firestore is accessed from the server only.
+- HTTP routes live in `app/api/admin/**/route.ts` (Next.js Route Handlers) and are protected by
+  the `withAuth` guard in `backend/common/serverAuth.ts`. There is no longer a `.controller.ts`
+  or `.module.ts` layer.
+- Avoid refactors outside the scope of the pull request.
+- Prefer clear names in either Portuguese or English, without mixing the two in the same
+  context.
+- Update the README — both [`README.md`](./README.md) and
+  [`README.pt-BR.md`](./README.pt-BR.md) — when public behavior changes.
 
-## Reportando bugs
+## Reporting bugs
 
-Ao abrir uma issue de bug, informe:
+When opening a bug issue, provide:
 
-- Passos para reproduzir.
-- Resultado esperado.
-- Resultado atual.
-- Ambiente usado, como Node, npm, navegador e sistema operacional.
-- Prints, logs ou payloads quando ajudarem.
+- Steps to reproduce.
+- Expected result.
+- Actual result.
+- The environment used: Node, npm, browser and operating system.
+- Screenshots, logs or payloads when they help.
 
-## Propondo funcionalidades
+## Proposing features
 
-Explique:
+Explain:
 
-- Problema que a funcionalidade resolve.
-- Fluxo esperado.
-- Impacto em usuários existentes.
-- Possíveis alternativas.
+- The problem the feature solves.
+- The expected flow.
+- The impact on existing users.
+- Possible alternatives.
 
-## Segurança
+## Security
 
-Não publique vulnerabilidades em issues. Use o fluxo descrito em [SECURITY.md](./SECURITY.md).
+Do not publish vulnerabilities in issues. Use the flow described in
+[SECURITY.md](./SECURITY.md).
 
-## Código de conduta
+## Code of conduct
 
-Toda participação no projeto deve seguir [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
+All participation in the project must follow
+[CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).

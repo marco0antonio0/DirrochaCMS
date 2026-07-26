@@ -39,3 +39,7 @@ serviceAccount*.json
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# diretorios de ferramentas locais
+.agents/
+.claude/

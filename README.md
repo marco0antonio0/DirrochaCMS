@@ -4,62 +4,74 @@
 
 <h1 align="center">DirrochaCMS</h1>
 
-CMS leve para criar endpoints dinâmicos e gerenciar conteúdo usando Next.js, React e Firebase.
+<p align="center">
+  <strong>English</strong> · <a href="./README.pt-BR.md">Português (Brasil)</a>
+</p>
+
+A lightweight CMS for creating dynamic HTTP endpoints and managing their content, built with Next.js, React and Firebase.
 
 <p>
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js&logoColor=white">
   <img alt="React" src="https://img.shields.io/badge/React-19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white">
-  <img alt="Firebase" src="https://img.shields.io/badge/Firebase-11-FFCA28?style=for-the-badge&logo=firebase&logoColor=black">
+  <img alt="Firebase" src="https://img.shields.io/badge/Firebase-Admin%20SDK-FFCA28?style=for-the-badge&logo=firebase&logoColor=black">
   <img alt="License MIT" src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge">
 </p>
 
-O DirrochaCMS foi pensado para projetos que precisam de uma API simples e editável sem criar uma área administrativa do zero. Pelo painel, você cria uma rota, define os campos daquele endpoint e passa a gerenciar registros pela interface.
+DirrochaCMS is aimed at projects that need a simple, editable API without building an admin area from scratch. Through the admin panel you create a route, define the fields of that endpoint, and manage its records from the interface.
 
-## Conteúdo
+> **Documentation status.** This documentation and the material under `paper/` and `docs/` are a
+> working draft under active revision, not a final version. Wording, structure and some claims
+> are still being reviewed. Corrections are welcome through an
+> [issue](https://github.com/marco0antonio0/DirrochaCMS/issues).
 
-- [Principais Recursos](#principais-recursos)
-- [Capturas de Tela](#capturas-de-tela)
+## Contents
+
+- [Features](#features)
+- [Screenshots](#screenshots)
 - [Stack](#stack)
-- [Estrutura do Projeto](#estrutura-do-projeto)
-- [Como Rodar Localmente](#como-rodar-localmente)
-- [Credencial do Firebase Admin](#credencial-do-firebase-admin-service-account)
-- [Variaveis de Ambiente](#variaveis-de-ambiente)
-- [Rodando em Producao](#rodando-em-producao)
-- [Rotas Principais](#rotas-principais)
-- [Como Usar](#como-usar)
+- [Architecture](#architecture)
+- [Project Structure](#project-structure)
+- [Running Locally](#running-locally)
+- [Firebase Admin Credential](#firebase-admin-credential-service-account)
+- [Environment Variables](#environment-variables)
+- [Running in Production](#running-in-production)
+- [Main Routes](#main-routes)
+- [Usage](#usage)
 - [API](#api)
-- [Desenvolvimento](#desenvolvimento)
-- [Contribuicao](#contribuicao)
-- [Codigo de Conduta](#codigo-de-conduta)
-- [Seguranca](#seguranca)
-- [Licenca](#licenca)
+- [Development](#development)
+- [Academic Use and JOSS Submission](#academic-use-and-joss-submission)
+- [Changelog](#changelog)
+- [Contributing](#contributing)
+- [Code of Conduct](#code-of-conduct)
+- [Security](#security)
+- [License](#license)
 
-## Principais Recursos
+## Features
 
-- Criação de endpoints personalizados por interface.
-- Builder de campos com nomes livres e tipos categorizados.
-- Ordenação dos campos por arrastar e soltar.
-- Campo `titulo_identificador` gerado automaticamente.
-- Listagem, busca, criação, edição e remoção de registros no painel.
-- Modal de confirmação para exclusões.
-- Autenticação com JWT e sessão persistida.
-- Proteção anti-bot self-hosted com ALTCHA no login e na criação da primeira conta.
-- Gestão administrativa de contas do painel, com criação, alteração de senha, desativação e exclusão.
-- Persistência com Firebase Firestore.
-- Interface em Next.js App Router.
-- Backend organizado por módulos em `/backend`.
-- Dockerfile para build e execução em container.
+- Create custom endpoints through the interface.
+- Field builder with free-form names and categorized types.
+- Drag-and-drop field ordering.
+- Automatically generated `titulo_identificador` (slug) field.
+- List, search, create, edit and delete records from the panel.
+- Confirmation dialog for deletions.
+- JWT authentication with a persisted, revocable session.
+- Self-hosted anti-bot protection with ALTCHA on login and first-account creation.
+- Role-based account management (`admin` / `editor` / `viewer`), including password changes, deactivation and deletion.
+- Persistence with Firebase Firestore.
+- Next.js App Router interface.
+- Backend organized by module under `/backend`.
+- Dockerfile for containerized builds.
 
-## Capturas de Tela
+## Screenshots
 
-Tela de login:
+Login screen:
 
-![Tela de login do DirrochaCMS](./images/tela-login.png)
+![DirrochaCMS login screen](./images/tela-login.png)
 
-Painel de conteúdo, com os endpoints criados:
+Content panel, listing the created endpoints:
 
-![Painel de conteudo do DirrochaCMS](./images/tela-home.png)
+![DirrochaCMS content panel](./images/tela-home.png)
 
 ## Stack
 
@@ -69,199 +81,214 @@ Painel de conteúdo, com os endpoints criados:
 - Tailwind CSS
 - Radix UI
 - HeroUI
-- Firebase Firestore (via Firebase Admin SDK, somente no servidor)
-- jose (tokens de sessão)
+- Firebase Firestore (through the Firebase Admin SDK, server-side only)
+- jose (session tokens)
 - bcryptjs
 - Docker
 
-## Estrutura do Projeto
+## Architecture
+
+DirrochaCMS uses a monolithic full-stack architecture: the administrative
+frontend, HTTP API routes, and internal backend modules live in the same Next.js
+application. Firestore remains external and is accessed only from the server
+through the Firebase Admin SDK.
+
+![DirrochaCMS monolithic architecture](./images/architecture-monolith.svg)
+
+## Project Structure
 
 ```text
 DirrochaCMS/
 ├── app/
 │   ├── api/
-│   │   ├── [id]/            # API pública de um endpoint (única rota anônima)
-│   │   └── admin/           # API do painel, protegida por sessão
-│   ├── components/          # Componentes de UI
-│   ├── hooks/               # Hooks (ex.: identidade da sessão)
-│   ├── pages/               # Implementações das telas
-│   ├── services/            # Cliente HTTP do painel (adminApi)
-│   ├── styles/              # Estilos globais
-│   └── utils/               # Utilitários do frontend
-├── backend/                 # Somente servidor (marcado com `server-only`)
+│   │   ├── [id]/            # Public API of an endpoint (the only anonymous route)
+│   │   └── admin/           # Panel API, protected by session
+│   ├── components/          # UI components
+│   ├── hooks/               # Hooks (e.g. session identity)
+│   ├── pages/               # Screen implementations
+│   ├── services/            # Panel HTTP client (adminApi)
+│   ├── styles/              # Global styles
+│   └── utils/               # Frontend utilities
+├── backend/                 # Server-only (marked with `server-only`)
+│   ├── audit/
 │   ├── auth/
 │   ├── endpoint/
 │   ├── history/
 │   ├── item/
 │   ├── sessao/
 │   ├── user/
-│   ├── common/              # Guard de autorização, tokens, erros de API
-│   └── config/              # Inicialização do Admin SDK
-├── middleware.ts            # Redireciona visitantes sem sessão
-├── firestore.rules          # Regras do Firestore (deny-all)
-├── images/                  # Imagens usadas na documentação
-├── public/                  # Arquivos públicos
+│   ├── common/              # Authorization guard, tokens, API errors
+│   └── config/              # Admin SDK initialization
+├── docs/                    # Verification guide and JOSS material
+├── examples/                # Documented use cases
+├── paper/                   # JOSS paper
+├── middleware.ts            # Redirects visitors without a session
+├── firestore.rules          # Firestore rules (deny-all)
+├── images/                  # Images used in the documentation
+├── public/                  # Public assets
 ├── Dockerfile
 ├── package.json
-└── README.md
+├── README.md                # English documentation
+└── README.pt-BR.md          # Portuguese documentation
 ```
 
-O fluxo de dados é sempre o mesmo:
+The data flow is always the same:
 
 ```text
-componente client → app/services/adminApi.ts (fetch + cookie HttpOnly)
-    → app/api/admin/**/route.ts → withAuth (autorização)
-        → backend/<modulo>/service.ts → repository.ts → Firestore (Admin SDK)
+client component → app/services/adminApi.ts (fetch + HttpOnly cookie)
+    → app/api/admin/**/route.ts → withAuth (authorization)
+        → backend/<module>/service.ts → repository.ts → Firestore (Admin SDK)
 ```
 
-Cada domínio do backend segue a organização:
+Each backend domain follows the same layout:
 
 ```text
-backend/<modulo>/
-├── <modulo>.service.ts
-├── <modulo>.repository.ts
-├── <modulo>.entity.ts
-└── <modulo>.model.ts
+backend/<module>/
+├── <module>.service.ts
+├── <module>.repository.ts
+├── <module>.entity.ts
+└── <module>.model.ts
 ```
 
-Responsabilidades principais:
+Main responsibilities:
 
-- `service.ts`: regras de negócio e validação.
-- `repository.ts`: acesso ao Firestore. Nunca devolve material secreto (senhas, hashes).
-- `entity.ts`: constantes, defaults e contratos de domínio.
-- `model.ts`: tipos TypeScript do domínio.
+- `service.ts`: business rules and validation.
+- `repository.ts`: Firestore access. Never returns secret material (passwords, hashes).
+- `entity.ts`: constants, defaults and domain contracts.
+- `model.ts`: TypeScript types of the domain.
 
-Nada em `backend/` pode ser importado por um componente client: os arquivos são marcados
-com `server-only`, o que transforma qualquer tentativa em erro de build.
+Nothing under `backend/` may be imported by a client component: the files are marked with
+`server-only`, which turns any such attempt into a build error.
 
-## Como Rodar Localmente
+## Running Locally
 
-### Pré-requisitos
+### Prerequisites
 
-- Node.js 18 ou superior.
+- Node.js 18 or newer.
 - npm.
-- Uma conta/projeto no Firebase com Firestore habilitado.
-- Uma **service account** do Firebase Admin (instruções abaixo).
+- A Firebase account/project with Firestore enabled.
+- A Firebase Admin **service account** (instructions below).
 
-### Passo a passo
+### Step by step
 
-1. Clone o repositório:
+1. Clone the repository:
 
 ```bash
 git clone https://github.com/marco0antonio0/DirrochaCMS.git
 cd DirrochaCMS
 ```
 
-2. Instale as dependências:
+2. Install the dependencies:
 
 ```bash
 npm install
 ```
 
-3. Crie o arquivo de ambiente:
+3. Create the environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-4. Gere a credencial do Firebase Admin e preencha o `.env`. Veja
-   [Credencial do Firebase Admin](#credencial-do-firebase-admin-service-account).
+4. Generate the Firebase Admin credential and fill in `.env`. See
+   [Firebase Admin Credential](#firebase-admin-credential-service-account).
 
-5. Rode o projeto em desenvolvimento:
+5. Start the development server:
 
 ```bash
 npm run dev
 ```
 
-6. Acesse:
+6. Open:
 
 ```text
 http://localhost:3000
 ```
 
-No primeiro acesso, o sistema orienta a criação do usuário administrador.
+On first access, the application guides you through creating the administrator account.
 
-## Credencial do Firebase Admin (service account)
+## Firebase Admin Credential (service account)
 
-O CMS acessa o Firestore **somente pelo servidor**, usando o Firebase Admin SDK. Nenhuma
-credencial do Firebase vai para o navegador, e as security rules do Firestore ficam
-fechadas (`deny-all`) — o Admin SDK as ignora por design.
+The CMS accesses Firestore **from the server only**, using the Firebase Admin SDK. No Firebase
+credential is ever sent to the browser, and the Firestore security rules stay closed
+(`deny-all`): the Admin SDK bypasses them by design.
 
-Por isso é necessária uma service account. Ela substitui as antigas variáveis
-`NEXT_PUBLIC_FIREBASE_*`, que não são mais usadas.
+That is why a service account is required. It replaces the former `NEXT_PUBLIC_FIREBASE_*`
+variables, which are no longer used.
 
-### 1. Obter o arquivo JSON
+### 1. Get the JSON file
 
-1. Abra o [Firebase Console](https://console.firebase.google.com/) e selecione seu projeto.
-2. Na barra lateral, clique em **Configurações** ⚙️ e depois em **Contas de serviço**.
+1. Open the [Firebase Console](https://console.firebase.google.com/) and select your project.
+2. In the sidebar, click **Settings** ⚙️ and then **Service accounts**.
 
-   ![Caminho para Contas de serviço no Firebase Console](./images/passo-1.png)
+   ![Path to Service accounts in the Firebase Console](./images/passo-1.png)
 
-3. Com **SDK Admin do Firebase** selecionado, mantenha *Node.js* marcado e clique em
-   **Gerar nova chave privada**.
+3. With **Firebase Admin SDK** selected, keep *Node.js* checked and click
+   **Generate new private key**.
 
-   ![Botao Gerar nova chave privada em SDK Admin do Firebase](./images/passo-2.png)
+   ![Generate new private key button in the Firebase Admin SDK section](./images/passo-2.png)
 
-4. Confirme em **Gerar chave**. O download começa: um arquivo parecido com
-   `seu-projeto-firebase-adminsdk-xxxxx-abc123.json`.
+4. Confirm with **Generate key**. The download starts: a file similar to
+   `your-project-firebase-adminsdk-xxxxx-abc123.json`.
 
-> Esse arquivo é uma **chave privada** com acesso total ao seu banco. Trate como senha:
-> nunca versione, nunca cole em chat/issue, e apague a cópia local depois de configurar.
-> Se vazar, revogue em *Contas de serviço → Gerenciar permissões da conta de serviço*.
+> This file is a **private key** with full access to your database. Treat it like a password:
+> never commit it, never paste it into a chat or issue, and delete the local copy once
+> configured. If it leaks, revoke it under *Service accounts → Manage service account
+> permissions*.
 
-### 2. Converter para base64
+### 2. Convert it to base64
 
-O JSON não pode ir cru para o `.env`: a `private_key` contém quebras de linha (`\n`), o que
-quebra o parsing do arquivo `.env` e causa erros de *invalid PEM* em painéis de deploy.
-Convertendo para base64, tudo cabe numa única linha.
+The raw JSON cannot go into `.env`: the `private_key` field contains newlines (`\n`), which
+breaks `.env` parsing and causes *invalid PEM* errors in deployment dashboards. Encoding it as
+base64 fits everything on a single line.
 
 Linux:
 
 ```bash
-base64 -w0 ~/Downloads/seu-projeto-firebase-adminsdk-xxxxx.json
+base64 -w0 ~/Downloads/your-project-firebase-adminsdk-xxxxx.json
 ```
 
-macOS (não tem a flag `-w0`):
+macOS (no `-w0` flag available):
 
 ```bash
-base64 -i ~/Downloads/seu-projeto-firebase-adminsdk-xxxxx.json | tr -d '\n'
+base64 -i ~/Downloads/your-project-firebase-adminsdk-xxxxx.json | tr -d '\n'
 ```
 
 Windows (PowerShell):
 
 ```powershell
-[Convert]::ToBase64String([IO.File]::ReadAllBytes("$HOME\Downloads\seu-projeto-firebase-adminsdk-xxxxx.json"))
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("$HOME\Downloads\your-project-firebase-adminsdk-xxxxx.json"))
 ```
 
-Copie a saída inteira (uma linha longa, sem espaços).
+Copy the entire output (one long line, no spaces).
 
-### 3. Gerar o `SECRET_KEY`
+### 3. Generate `SECRET_KEY`
 
-O `SECRET_KEY` assina os tokens de sessão. Precisa ter **no mínimo 32 caracteres** — a
-aplicação se recusa a iniciar com um valor mais curto. O projeto inclui um comando para
-isso, que funciona em qualquer sistema operacional:
+`SECRET_KEY` signs the session tokens. It must be **at least 32 characters**: the application
+refuses to start with a shorter value. The project ships a command for this that works on any
+operating system:
 
 ```bash
 npm run generate:secret
 ```
 
-Saída (exemplo — gere a sua, não copie esta):
+Output (example — generate your own, do not copy this one):
 
 ```text
 PdAEEgNHGCtuztFMFrGr6qk+Mnh4CpwbrmxIAWtV5jxYd3wSZo/j0Oic+/AtsR1J
 ```
 
-Alternativas equivalentes, se preferir não usar o npm:
+Equivalent alternatives, if you prefer not to use npm:
 
 ```bash
 openssl rand -base64 48
 node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"
 ```
 
-> Use um valor **diferente** em cada ambiente (desenvolvimento, staging, produção).
-> Trocar o `SECRET_KEY` invalida todas as sessões ativas, exigindo novo login.
+> Use a **different** value in each environment (development, staging, production).
+> Changing `SECRET_KEY` invalidates every active session and forces a new login.
 
-### 4. Colocar no `.env`
+### 4. Put it in `.env`
 
 ```env
 FIREBASE_SERVICE_ACCOUNT_B64=eyJ0eXBlIjoic2VydmljZV9hY2NvdW50IiwicHJvamVjdF9pZCI6...
@@ -269,66 +296,66 @@ SECRET_KEY=PdAEEgNHGCtuztFMFrGr6qk+Mnh4CpwbrmxIAWtV5jxYd3wSZo/j0Oic+/AtsR1J
 NEXT_PUBLIC_ENV=development
 ```
 
-Atalho para gravar as duas variáveis sem exibir os segredos no terminal:
+Shortcut to write both variables without printing the secrets to the terminal:
 
 ```bash
 printf 'FIREBASE_SERVICE_ACCOUNT_B64=%s\n' \
-  "$(base64 -w0 ~/Downloads/seu-projeto-firebase-adminsdk-xxxxx.json)" >> .env
+  "$(base64 -w0 ~/Downloads/your-project-firebase-adminsdk-xxxxx.json)" >> .env
 
 printf 'SECRET_KEY=%s\n' "$(npm run generate:secret --silent)" >> .env
 ```
 
-### 5. Verificar e limpar
+### 5. Verify and clean up
 
-Confirme que a variável decodifica corretamente:
+Confirm the variable decodes correctly:
 
 ```bash
 node -e 'require("fs").readFileSync(".env","utf8").split("\n").forEach(l=>{const i=l.indexOf("=");if(i>0)process.env[l.slice(0,i)]=l.slice(i+1)});
 const j=JSON.parse(Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_B64,"base64").toString());
-console.log("OK - projeto:", j.project_id)'
+console.log("OK - project:", j.project_id)'
 ```
 
-Depois apague o JSON baixado — a chave já está no `.env`:
+Then delete the downloaded JSON, since the key already lives in `.env`:
 
 ```bash
-shred -u ~/Downloads/seu-projeto-firebase-adminsdk-xxxxx.json
+shred -u ~/Downloads/your-project-firebase-adminsdk-xxxxx.json
 ```
 
-> O `project_id` da service account precisa ser o **mesmo** projeto do banco que você quer
-> usar. Se divergir, a aplicação sobe normalmente mas conversa com outro Firestore.
+> The service account's `project_id` must match the **same** project as the database you intend
+> to use. If they differ, the application still starts but talks to a different Firestore.
 
-### 6. Fechar as regras do Firestore
+### 6. Close the Firestore rules
 
-Com todo o acesso a dados no servidor, as rules podem (e devem) negar tudo. O arquivo
-[`firestore.rules`](./firestore.rules) já vem nesse estado:
+With every data access happening on the server, the rules can (and should) deny everything.
+The [`firestore.rules`](./firestore.rules) file already ships in that state:
 
 ```bash
 npx firebase login
 npx firebase deploy --only firestore:rules
 ```
 
-Sem esse passo, o banco continua acessível por qualquer pessoa que conheça o ID do projeto.
+Without this step, the database remains reachable by anyone who knows the project ID.
 
-### Erros comuns
+### Common errors
 
-| Mensagem | Causa |
+| Message | Cause |
 | --- | --- |
-| `FIREBASE_SERVICE_ACCOUNT_B64 ausente` | Variável não definida no `.env` ou no ambiente de deploy. |
-| `FIREBASE_SERVICE_ACCOUNT_B64 nao contem um JSON valido em base64` | Base64 truncado/com quebras de linha. Refaça usando `-w0` (ou `tr -d '\n'`). |
-| `Service account invalida: campo "private_key" ausente` | Foi convertido o arquivo errado (ex.: o `google-services.json` do app mobile, que não é service account). |
-| `SECRET_KEY ausente ou curta demais` | `SECRET_KEY` faltando ou com menos de 32 caracteres. |
+| `FIREBASE_SERVICE_ACCOUNT_B64 ausente` | Variable not set in `.env` or in the deployment environment. |
+| `FIREBASE_SERVICE_ACCOUNT_B64 nao contem um JSON valido em base64` | Truncated base64, or base64 containing newlines. Redo it with `-w0` (or `tr -d '\n'`). |
+| `Service account invalida: campo "private_key" ausente` | The wrong file was encoded (e.g. the mobile app's `google-services.json`, which is not a service account). |
+| `SECRET_KEY ausente ou curta demais` | `SECRET_KEY` missing or shorter than 32 characters. |
 
-## Variaveis de Ambiente
+## Environment Variables
 
-São apenas três variáveis. Nenhuma delas é exposta ao navegador, exceto `NEXT_PUBLIC_ENV`.
+There are only three variables. None of them is exposed to the browser, except `NEXT_PUBLIC_ENV`.
 
-| Variável | Obrigatória | Descrição |
+| Variable | Required | Description |
 | --- | --- | --- |
-| `FIREBASE_SERVICE_ACCOUNT_B64` | Sim | JSON da service account do Firebase Admin, em base64 numa única linha. Veja [como obter](#credencial-do-firebase-admin-service-account). |
-| `SECRET_KEY` | Sim | Assina os tokens de sessão (HMAC). Mínimo de 32 caracteres — gere com `npm run generate:secret`. Trocar o valor invalida todas as sessões ativas. |
-| `NEXT_PUBLIC_ENV` | Não | Ambiente atual, por exemplo `development` ou `production`. |
+| `FIREBASE_SERVICE_ACCOUNT_B64` | Yes | Firebase Admin service account JSON, base64-encoded on a single line. See [how to obtain it](#firebase-admin-credential-service-account). |
+| `SECRET_KEY` | Yes | Signs the session tokens (HMAC). Minimum of 32 characters — generate one with `npm run generate:secret`. Changing the value invalidates every active session. |
+| `NEXT_PUBLIC_ENV` | No | Current environment, for example `development` or `production`. |
 
-Exemplo:
+Example:
 
 ```env
 FIREBASE_SERVICE_ACCOUNT_B64=eyJ0eXBlIjoic2VydmljZV9hY2NvdW50IiwicHJvamVjdF9pZCI6...
@@ -336,25 +363,25 @@ SECRET_KEY=change_this_to_a_strong_random_secret_min_32_chars
 NEXT_PUBLIC_ENV=development
 ```
 
-A aplicação **falha ao iniciar** se `FIREBASE_SERVICE_ACCOUNT_B64` estiver ausente/inválida
-ou se `SECRET_KEY` tiver menos de 32 caracteres. Isso é intencional: uma configuração
-incorreta é detectada no boot, e não silenciosamente durante uma requisição.
+The application **fails to start** if `FIREBASE_SERVICE_ACCOUNT_B64` is missing or invalid, or
+if `SECRET_KEY` is shorter than 32 characters. This is intentional: a misconfiguration is
+detected at boot instead of silently during a request.
 
-> **Migrando de uma versão anterior:** as variáveis `NEXT_PUBLIC_FIREBASE_*` foram removidas.
-> Todo o acesso ao Firestore passou para o servidor via Admin SDK, então o navegador não
-> recebe mais nenhuma credencial. Substitua-as por `FIREBASE_SERVICE_ACCOUNT_B64` e
-> faça o deploy das regras em [`firestore.rules`](./firestore.rules).
+> **Migrating from an earlier version:** the `NEXT_PUBLIC_FIREBASE_*` variables were removed.
+> All Firestore access moved to the server through the Admin SDK, so the browser no longer
+> receives any credential. Replace them with `FIREBASE_SERVICE_ACCOUNT_B64` and deploy the
+> rules in [`firestore.rules`](./firestore.rules).
 
-## Rodando em Producao
+## Running in Production
 
-### Build local
+### Local build
 
 ```bash
 npm run build
 npm run start
 ```
 
-A aplicação sobe em `http://localhost:3000`.
+The application listens on `http://localhost:3000`.
 
 ### Docker
 
@@ -363,9 +390,10 @@ docker build -t dirrochacms .
 docker run --env-file .env -p 3000:3000 dirrochacms
 ```
 
-### Deploy em Vercel ou servidor próprio
+### Deploying to Vercel or your own server
 
-Configure as mesmas variáveis do `.env` no ambiente de produção e use o fluxo padrão de build do Next.js:
+Configure the same variables from `.env` in the production environment and use the standard
+Next.js build flow:
 
 ```bash
 npm install
@@ -373,101 +401,111 @@ npm run build
 npm run start
 ```
 
-Na Vercel, adicione em *Settings → Environment Variables*:
+On Vercel, add them under *Settings → Environment Variables*:
 
-- `FIREBASE_SERVICE_ACCOUNT_B64` — a mesma string base64 do `.env`. Por ser uma única linha,
-  cola sem problema no painel.
-- `SECRET_KEY` — use um valor **diferente** do de desenvolvimento.
+- `FIREBASE_SERVICE_ACCOUNT_B64` — the same base64 string from `.env`. Being a single line, it
+  pastes cleanly into the dashboard.
+- `SECRET_KEY` — use a value **different** from the development one.
 
-Não marque essas variáveis como públicas: elas não têm o prefixo `NEXT_PUBLIC_`, portanto
-ficam apenas no servidor.
+Do not mark these variables as public: they carry no `NEXT_PUBLIC_` prefix, so they stay on the
+server.
 
-## Rotas Principais
+## Main Routes
 
-| Rota | Descrição |
+| Route | Description |
 | --- | --- |
-| `/` | Login e primeira configuração. |
-| `/home` | Lista os endpoints. |
-| `/home/[id]` | Gerencia os registros de um endpoint. |
-| `/configuration` | Cria endpoints e administra contas do painel. |
-| `/api/[id]` | API pública de consulta dos dados de um endpoint. Pode ser pública ou protegida por senha. |
+| `/` | Login and initial setup. |
+| `/home` | Lists the endpoints. |
+| `/home/[id]` | Manages the records of an endpoint. |
+| `/configuration` | Creates endpoints and administers panel accounts. |
+| `/api/[id]` | Public read API for an endpoint's data. Can be public or password-protected. |
 
-Rotas administrativas (exigem sessão; o cookie é `HttpOnly` e enviado automaticamente):
+Administrative routes (require a session; the cookie is `HttpOnly` and sent automatically):
 
-| Rota | Método | Descrição |
+| Route | Method | Description |
 | --- | --- | --- |
-| `/api/admin/auth/login` | POST | Autentica e define o cookie de sessão. |
-| `/api/admin/auth/logout` | POST | Encerra a sessão e revoga o token. |
-| `/api/admin/auth/me` | GET | Identidade e permissões da sessão atual. |
-| `/api/admin/auth/setup` | GET, POST | Estado da configuração inicial e criação do primeiro administrador. |
-| `/api/admin/endpoints` | GET, POST | Lista e cria endpoints. |
-| `/api/admin/endpoints/[id]` | GET, PATCH, DELETE | Consulta, atualiza e exclui um endpoint (com os registros e o histórico). |
-| `/api/admin/endpoints/[id]/cache-refresh` | POST | Invalida o cache do endpoint. |
-| `/api/admin/endpoints/[id]/items` | GET, POST | Lista e cria registros. |
-| `/api/admin/endpoints/[id]/items/[itemId]` | PATCH, DELETE | Atualiza e exclui um registro. |
-| `/api/admin/endpoints/[id]/history` | GET | Histórico de alterações do endpoint. |
-| `/api/admin/users` | GET, POST | Lista e cria contas. Exige a permissão de gerenciar contas. |
-| `/api/admin/users/[userId]` | PATCH, DELETE | Atualiza e exclui contas. Exige a permissão de gerenciar contas. |
+| `/api/admin/auth/login` | POST | Authenticates and sets the session cookie. |
+| `/api/admin/auth/logout` | POST | Ends the session and revokes the token. |
+| `/api/admin/auth/me` | GET | Identity and permissions of the current session. |
+| `/api/admin/auth/setup` | GET, POST | Initial setup state and creation of the first administrator. |
+| `/api/admin/endpoints` | GET, POST | Lists and creates endpoints. |
+| `/api/admin/endpoints/[id]` | GET, PATCH, DELETE | Reads, updates and deletes an endpoint (along with its records and history). |
+| `/api/admin/endpoints/[id]/cache-refresh` | POST | Invalidates the endpoint cache. |
+| `/api/admin/endpoints/[id]/items` | GET, POST | Lists and creates records. |
+| `/api/admin/endpoints/[id]/items/[itemId]` | PATCH, DELETE | Updates and deletes a record. |
+| `/api/admin/endpoints/[id]/history` | GET | Change history of the endpoint. |
+| `/api/admin/users` | GET, POST | Lists and creates accounts. Requires the account-management permission. |
+| `/api/admin/users/[userId]` | PATCH, DELETE | Updates and deletes accounts. Requires the account-management permission. |
 
-As rotas `/api/login`, `/api/register`, `/api/user/*` e `/api/verifyToken` foram removidas e
-respondem `410 Gone`, indicando a rota substituta.
+The `/api/login`, `/api/register`, `/api/user/*` and `/api/verifyToken` routes were removed and
+now answer `410 Gone`, pointing to their replacement.
 
-## Como Usar
+## Usage
 
-### Criar um endpoint
+### Creating an endpoint
 
-1. Acesse `/configuration`.
-2. Informe o nome da rota, por exemplo `posts`.
-3. Adicione campos no builder.
-4. Escolha o tipo de cada campo:
-   - `Texto`
-   - `Numero`
-   - `Data`
-   - `Imagem`
-5. Arraste os campos para ajustar a ordem.
-6. Use `Multi-Linha` apenas em campos de texto.
-7. Clique em `Criar endpoint`.
+1. Go to `/configuration`.
+2. Enter the route name, for example `posts`.
+3. Add fields in the builder.
+4. Choose the type of each field:
+   - `Texto` (text)
+   - `Numero` (number)
+   - `Data` (date)
+   - `Imagem` (image)
+5. Drag the fields to adjust their order.
+6. Use `Multi-Linha` (multiline) only on text fields.
+7. Click `Criar endpoint`.
 
-O campo `titulo_identificador` não precisa ser declarado. Ele é criado automaticamente.
+The `titulo_identificador` field does not need to be declared. It is created automatically.
 
-### Gerenciar registros
+### Managing records
 
-1. Acesse `/home`.
-2. Clique no endpoint desejado.
-3. Cadastre novos registros.
-4. Edite registros existentes.
-5. Exclua registros pelo botão de deletar e confirme no modal.
+1. Go to `/home`.
+2. Click the desired endpoint.
+3. Create new records.
+4. Edit existing records.
+5. Delete records with the delete button and confirm in the dialog.
 
-### Configurar acesso do endpoint
+### Configuring endpoint access
 
-1. Acesse `/home`.
-2. Clique no endpoint desejado.
-3. Abra o modal de configurações pelo botão de engrenagem.
-4. Em `Acesso da API`, escolha entre:
-   - `Público`: qualquer cliente consegue consultar `/api/nome_do_endpoint`.
-   - `Privado`: a API exige uma senha no header `x-endpoint-password`.
-5. Ao escolher `Privado`, informe uma senha manualmente ou use `Randomizar` para gerar uma senha segura.
-6. Salve as alterações.
+1. Go to `/home`.
+2. Click the desired endpoint.
+3. Open the settings dialog with the gear button.
+4. Under `Acesso da API` (API access), choose between:
+   - `Público` (public): any client can query `/api/endpoint_name`.
+   - `Privado` (private): the API requires a password in the `x-endpoint-password` header.
+5. When choosing `Privado`, type a password manually or use `Randomizar` to generate a strong
+   one. The value is shown once and stored as an HMAC, so copy it before closing the dialog.
+6. Save the changes.
 
-Endpoints existentes permanecem públicos por padrão até que sejam alterados para `Privado`.
+Existing endpoints stay public by default until they are switched to `Privado`.
 
-### Gerenciar usuários
+### Managing users
 
-1. Acesse `/configuration`.
-2. Na seção `Contas do painel`, preencha nome, e-mail e senha para criar uma conta.
-3. Use `Editar` para alterar nome, e-mail ou definir uma nova senha.
-4. Use `Desativar` para bloquear o acesso sem excluir a conta.
-5. Use `Excluir` para remover definitivamente uma conta.
+1. Go to `/configuration`.
+2. Under `Contas do painel` (panel accounts), fill in name, e-mail, password and role to create
+   an account.
+3. Use `Editar` to change the name, e-mail, role, or set a new password.
+4. Use `Desativar` to block access without deleting the account.
+5. Use `Excluir` to remove an account permanently.
+
+Roles and capabilities:
+
+| Role | Read | Write | Delete | Manage accounts |
+| --- | :---: | :---: | :---: | :---: |
+| `admin` | yes | yes | yes | yes |
+| `editor` | yes | yes | yes | no |
+| `viewer` | yes | no | no | no |
 
 ## API
 
-Depois de criar um endpoint chamado `posts`, os registros podem ser consultados por:
+After creating an endpoint named `posts`, its records can be queried with:
 
 ```bash
 curl http://localhost:3000/api/posts
 ```
 
-Resposta:
+Response:
 
 ```json
 {
@@ -476,8 +514,8 @@ Resposta:
       "id": "abc123",
       "endpointId": "endpoint-id",
       "formattedData": {
-        "titulo": "Primeiro post",
-        "titulo_identificador": "primeiro-post"
+        "titulo": "First post",
+        "titulo_identificador": "first-post"
       },
       "createdAt": "2026-07-23T00:00:00.000Z"
     }
@@ -486,150 +524,217 @@ Resposta:
 }
 ```
 
-Pesquisa pelo `titulo_identificador`:
+Searching by `titulo_identificador`:
 
 ```bash
-curl "http://localhost:3000/api/posts?t=primeiro-post"
+curl "http://localhost:3000/api/posts?t=first-post"
 ```
 
-Se o endpoint estiver privado, envie a senha pelo header `x-endpoint-password`:
+If the endpoint is private, send the password in the `x-endpoint-password` header:
 
 ```bash
 curl http://localhost:3000/api/posts \
-  -H "x-endpoint-password: SUA_SENHA"
+  -H "x-endpoint-password: YOUR_PASSWORD"
 ```
 
-Pesquisa em endpoint privado:
+Searching a private endpoint:
 
 ```bash
-curl "http://localhost:3000/api/posts?t=primeiro-post" \
-  -H "x-endpoint-password: SUA_SENHA"
+curl "http://localhost:3000/api/posts?t=first-post" \
+  -H "x-endpoint-password: YOUR_PASSWORD"
 ```
 
-Não envie senhas pela URL ou query string.
+Never send passwords in the URL or query string.
 
-### Autenticação
+### Authentication
 
-A sessão vive num cookie `HttpOnly` definido pelo servidor. Não há token para o cliente
-manipular, então não existe header `Authorization` — em `curl`, use um cookie jar.
+The session lives in an `HttpOnly` cookie set by the server. There is no token for the client to
+handle, so there is no `Authorization` header; with `curl`, use a cookie jar.
 
-Login (grava o cookie em `cookies.txt`):
+Log in (stores the cookie in `cookies.txt`):
 
 ```bash
 curl -c cookies.txt -X POST http://localhost:3000/api/admin/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@example.com","password":"senha123"}'
+  -d '{"email":"admin@example.com","password":"your-strong-password"}'
 ```
 
-Usar a sessão:
+Use the session:
 
 ```bash
 curl -b cookies.txt http://localhost:3000/api/admin/auth/me
 ```
 
-Logout (revoga a sessão no servidor, não apenas apaga o cookie):
+Log out (revokes the session on the server, not just clears the cookie):
 
 ```bash
 curl -b cookies.txt -X POST http://localhost:3000/api/admin/auth/logout
 ```
 
-Criar o primeiro administrador, quando o painel ainda não tem nenhuma conta:
+Create the first administrator, while the panel still has no accounts:
 
 ```bash
 curl http://localhost:3000/api/admin/auth/setup   # {"needsSetup":true,...}
 
 curl -c cookies.txt -X POST http://localhost:3000/api/admin/auth/setup \
   -H "Content-Type: application/json" \
-  -d '{"name":"Admin","email":"admin@example.com","password":"senha123"}'
+  -d '{"name":"Admin","email":"admin@example.com","password":"your-strong-password"}'
 ```
 
-Notas de comportamento:
+Behavioral notes:
 
-- Requisições que alteram estado validam o header `Origin` contra o `Host` (proteção CSRF).
-- Desativar ou excluir uma conta revoga as sessões dela imediatamente.
-- Trocar a senha de uma conta também encerra as sessões existentes.
+- State-changing requests validate `Sec-Fetch-Site`, falling back to `Origin` against `Host`
+  (CSRF protection).
+- Login attempts are rate-limited per account and per IP address.
+- Deactivating or deleting an account revokes its sessions immediately.
+- Changing an account's password also terminates its existing sessions.
+- Passwords must be at least 10 characters and are rejected if they appear in a common-password
+  list.
 
-## Desenvolvimento
+## Development
 
-Comandos úteis:
+Useful commands:
 
 ```bash
-npm run dev               # servidor de desenvolvimento
-npm run build             # build de producao
-npm run start             # sobe o build
+npm run dev               # development server
+npm run build             # production build
+npm run start             # serve the build
 npm run lint              # lint
-npm run generate:secret   # gera um SECRET_KEY valido (48 bytes em base64)
-npx tsc --noEmit          # checagem de tipos
+npm run generate:secret   # generate a valid SECRET_KEY (48 random bytes, base64)
+npm test                  # automated tests
+npx tsc --noEmit          # type checking
 ```
 
-Antes de abrir um pull request:
+Before opening a pull request:
 
-1. Rode `npx tsc --noEmit`.
-2. Rode `npm run build`.
-3. Teste manualmente os fluxos alterados.
-4. Atualize a documentação se mudar rotas, variáveis ou comportamento público.
+1. Run `npx tsc --noEmit`.
+2. Run `npm test`.
+3. Run `npm run build`.
+4. Manually exercise the flows you changed — see
+   [`docs/manual-verification.md`](./docs/manual-verification.md).
+5. Update the documentation if you change routes, variables or public behavior.
+
+Continuous integration runs `npm ci`, `npx tsc --noEmit`, `npm test` and
+`npm run build` on every push and pull request
+([`.github/workflows/ci.yml`](./.github/workflows/ci.yml)).
+
+## Academic Use and JOSS Submission
+
+DirrochaCMS is being prepared for submission to the Journal of Open Source Software (JOSS),
+framed as a lightweight serverless backend architecture for small research and teaching
+applications.
+
+| File | Purpose |
+| --- | --- |
+| [`paper/paper.md`](./paper/paper.md) | JOSS paper (English, the submitted version). |
+| [`paper/paper.ptbr.md`](./paper/paper.ptbr.md) | Portuguese version of the paper. |
+| [`paper/paper.bib`](./paper/paper.bib) | Bibliography. |
+| [`CITATION.cff`](./CITATION.cff) | Citation metadata. |
+| [`docs/joss-readiness.md`](./docs/joss-readiness.md) | Submission plan and detailed case-study records. |
+| [`docs/joss-readiness.ptbr.md`](./docs/joss-readiness.ptbr.md) | Portuguese version of the submission plan. |
+| [`docs/manual-verification.md`](./docs/manual-verification.md) | Manual verification checklist for reviewers. |
+| [`docs/manual-verification.ptbr.md`](./docs/manual-verification.ptbr.md) | Portuguese version of the manual verification checklist. |
+| [`examples/`](./examples) | Documented use cases (see below). |
+
+Three documented use cases:
+
+- [`examples/research-group-backend`](./examples/research-group-backend) — a UFPA research group
+  used DirrochaCMS to publish project and semester-planning information on a web platform.
+  Reported at a high level only, since it was a third-party deployment.
+- [`examples/osteoplay-vet`](./examples/osteoplay-vet) — OsteoPlay Vet, a veterinary medicine
+  capstone project (TCC) at UNAMA Parque Shopping, Belém, Pará, Brazil. A React/Vite educational
+  game consumed a DirrochaCMS backend of 6 endpoints and 66 records.
+- [`examples/charmosinha-makeapi`](./examples/charmosinha-makeapi) — a classroom demonstration
+  for computer science students in a software engineering course, run under the codename MakeAPI.
+  A Next.js storefront consumed a backend of 4 endpoints and 19 records. All content is
+  fictional and was used solely for teaching.
+
+Full participant credits, observed endpoint schemas and record counts are recorded in
+[`docs/joss-readiness.md`](./docs/joss-readiness.md).
+
+If you use DirrochaCMS in academic work, please cite it using the metadata in
+[`CITATION.cff`](./CITATION.cff).
+
+## Changelog
+
+Release notes are maintained in [`CHANGELOG.md`](./CHANGELOG.md).
 
 ## Roadmap
 
-Ideias que combinam com o projeto:
+Ideas that fit the project:
 
-- Documentação visual da API gerada por endpoint.
-- Importação e exportação de dados.
-- Controle de permissões por usuário.
-- Testes automatizados para backend e rotas.
-- Templates de endpoints para casos comuns.
+- Automated tests for the backend and the routes.
+- Generated visual API documentation per endpoint.
+- Data import and export.
+- Per-endpoint permissions.
+- Endpoint templates for common cases.
 
-## Contribuicao
+## Contributing
 
-Contribuições são bem-vindas. Leia [CONTRIBUTING.md](./CONTRIBUTING.md) antes de abrir uma issue ou pull request.
+Contributions are welcome. Read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening an issue or a
+pull request. Issues and pull requests may be written in English or Portuguese.
 
-O repositório inclui templates para bug report, feature request e pull request em [`.github/`](./.github).
+The repository includes templates for bug reports, feature requests and pull requests under
+[`.github/`](./.github).
 
-Fluxo recomendado:
+Recommended flow:
 
-1. Abra uma issue descrevendo o problema ou proposta.
-2. Faça um fork do projeto.
-3. Crie uma branch com nome claro, como `feature/builder-campos` ou `fix/login`.
-4. Implemente a mudança.
-5. Rode as validações.
-6. Abra um pull request com contexto, prints quando houver UI, e passos de teste.
+1. Open an issue describing the problem or proposal.
+2. Fork the project.
+3. Create a branch with a clear name, such as `feature/field-builder` or `fix/login`.
+4. Implement the change.
+5. Run the checks.
+6. Open a pull request with context, screenshots when UI is involved, and testing steps.
 
-## Codigo de Conduta
+**Getting help.** For questions about installing or using DirrochaCMS, open a
+[GitHub issue](https://github.com/marco0antonio0/DirrochaCMS/issues) using the bug report or
+feature request template — that is the project's support channel, and answers stay searchable
+for other users.
 
-Este projeto segue uma política de convivência documentada em [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md). Esperamos respeito, clareza e colaboração objetiva em issues, pull requests e discussões.
+## Code of Conduct
 
-## Seguranca
+This project follows the policy documented in [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md). We
+expect respect, clarity and constructive collaboration in issues, pull requests and discussions.
 
-Para vulnerabilidades, não abra uma issue pública com detalhes exploráveis. Siga as orientações em [SECURITY.md](./SECURITY.md).
+## Security
 
-Como o acesso a dados funciona:
+For vulnerabilities, do not open a public issue containing exploitable details. Follow the
+guidance in [SECURITY.md](./SECURITY.md).
 
-- Todo acesso ao Firestore acontece no servidor, via Firebase Admin SDK. O navegador não
-  recebe credencial nenhuma e não fala com o Firestore.
-- As regras do Firestore ficam em `deny-all` ([`firestore.rules`](./firestore.rules)). Como o
-  Admin SDK ignora regras, isso não afeta a aplicação — e bloqueia qualquer acesso direto.
-- A autorização é aplicada no servidor, em cada requisição: assinatura do token, sessão
-  ativa (permite revogação), conta não desativada e permissões da conta.
-- A sessão usa cookie `HttpOnly` + `SameSite=Lax` + verificação de `Origin` nas escritas.
-- Login e criação da primeira conta exigem ALTCHA. O desafio é gerado e validado no
-  próprio servidor com `SECRET_KEY`, sem chaves ou chamadas para serviços de terceiros.
-- A senha de endpoint privado é guardada como HMAC-SHA256 e nunca é devolvida pela API.
-- A autoria (`createdBy`/`updatedBy`) é derivada da sessão no servidor, então não pode ser
-  falsificada pelo cliente, e não aparece na resposta da API pública.
+How data access works:
 
-Boas práticas ao usar o projeto:
+- Every Firestore access happens on the server, through the Firebase Admin SDK. The browser
+  receives no credential and never talks to Firestore.
+- The Firestore rules are `deny-all` ([`firestore.rules`](./firestore.rules)). Since the Admin
+  SDK bypasses rules, this does not affect the application, and it blocks any direct access.
+- Authorization is enforced on the server on every request: token signature, active session
+  (which makes revocation possible), account not disabled, and the account's role capabilities.
+- The session uses an `HttpOnly` + `SameSite=Lax` cookie, plus a same-site check on writes.
+- Login and first-account creation require ALTCHA. The challenge is generated and validated by
+  the server itself using `SECRET_KEY`, with no third-party keys or calls.
+- Login is rate-limited per account and per IP address; the public API is rate-limited per IP and
+  route.
+- The private-endpoint password is stored as an HMAC-SHA256 digest and is never returned by the
+  API.
+- Record payloads are validated against the endpoint's declared fields, with size limits and
+  rejection of prototype-polluting keys.
+- Authorship (`createdBy`/`updatedBy`) is derived from the session on the server, so it cannot be
+  forged by the client, and it is stripped from the public API response.
+- Account and endpoint mutations are recorded in an audit log.
 
-- Não versione `.env` nem o JSON da service account (o `.gitignore` já cobre ambos).
-- Use um `SECRET_KEY` forte e exclusivo por ambiente (`npm run generate:secret`).
-- Faça o deploy das regras (`npx firebase deploy --only firestore:rules`) antes de expor o
-  projeto publicamente.
-- Se a service account vazar, revogue a chave em *Firebase Console → Contas de serviço →
-  Gerenciar chaves* e gere uma nova.
+Good practices when using the project:
 
-## Licenca
+- Do not commit `.env` or the service account JSON (`.gitignore` already covers both).
+- Use a strong, per-environment `SECRET_KEY` (`npm run generate:secret`).
+- Deploy the rules (`npx firebase deploy --only firestore:rules`) before exposing the project
+  publicly.
+- If the service account leaks, revoke the key in *Firebase Console → Service accounts → Manage
+  keys* and generate a new one.
 
-Distribuído sob a licença MIT. Veja [LICENSE](./LICENSE) para mais detalhes.
+## License
 
-## Autor
+Distributed under the MIT license. See [LICENSE](./LICENSE) for details.
 
-Desenvolvido por [@marco0antonio0](https://github.com/marco0antonio0).
+## Author
+
+Developed by [@marco0antonio0](https://github.com/marco0antonio0).
